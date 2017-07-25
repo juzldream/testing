@@ -35,7 +35,7 @@ STF 是一个分享软件测试基础知识的平台。如果我们要“陈腔�
 * White Box Testing（白盒测试）
 * Gray Box Testing （灰盒测试）
 * [Agile Testing](敏捷测试.md)（敏捷测试）
-* Ad hoc Testing  （）
+* [Ad hoc Testing](随机测试.md)（随机测试）
 
 ### Types（类型）
 
