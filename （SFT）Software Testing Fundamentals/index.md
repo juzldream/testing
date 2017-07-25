@@ -22,7 +22,7 @@ STF 是一个分享软件测试基础知识的平台。如果我们要“陈腔�
 * Definition of test（定义测试）
 * Software Testing Myths（软件测试神话）
 
-### Levels（级别）
+### Levels（阶段）
 
 * Unit Testing（单元测试）
 * Integration Testing（集成测试）
