@@ -40,11 +40,11 @@ STF 是一个分享软件测试基础知识的平台。如果我们要“陈腔�
 ### Types（类型）
 
 * Smoke Testing（冒烟测试）
-* Function Testing（单元测试）
+* Function Testing（功能测试）
 * [Usability Testing](易用性测试.md)（易用性测试）
 * Security Testing （安全测试）
 * Performance testing （性能测试）
-* Compliance Testing（验证测试）
+* Compliance Testing（符合性测试）
 
 ### Artifacts（测试产品）
 
