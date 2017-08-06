@@ -26,8 +26,8 @@ STF 是一个分享软件测试基础知识的平台。如果我们要“陈腔�
 
 * [Unit Testing](单元测试.md)（单元测试）
 * [Integration Testing](集成测试.md)（集成测试）
-* System testing（系统测试）
-* Acceptance testing（验收测试）
+* [System testing](系统测试.md)（系统测试）
+* [Acceptance testing](验收测试.md)（验收测试）
 
 ### Methods （方法）
 
