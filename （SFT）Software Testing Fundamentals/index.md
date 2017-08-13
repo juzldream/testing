@@ -74,5 +74,5 @@ STF 是一个分享软件测试基础知识的平台。如果我们要“陈腔�
 * Software Testing Jobs（软件测试工作）
 * Software Testing Exercises（软件测试练习）
 * Software Testing Magazines（软件测试杂志）
-* Software Testing Blogs（软件测试博客）
+* [Software Testing Blogs](软件测试博客.md)（软件测试博客）
 * Software Testing Certifications（软件测试证书）
