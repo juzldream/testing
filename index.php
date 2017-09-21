@@ -1,7 +1,10 @@
-<script>
-	function displayDate(no){
-		alert(no)
-	}
-	displayDate("Hello world!")
-	document.write(Date())
-</script>
+<!DOCTYPE html>
+<html>
+<body>
+
+<?php
+echo "Hello World!";
+?>
+
+</body>
+</html>
