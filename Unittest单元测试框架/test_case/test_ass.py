@@ -5,18 +5,18 @@ from calculator import Count
 import unittest
 
 
-class TestAdd(unittest.TestCase):
+class TestAss(unittest.TestCase):
 	"""docstring for ClassName"""
 	def setUp(self):
 		print("test add start")		
-
-	def test_add(self):
-		j = Count(9,7)
-		self.assertEqual(j.add(),16)
+	for x in range(1,3):
+		def test_ass(self):
+			s = x 
+			self.assertTrue(s, msg="chenggou")
 
 	def test_add1(self):
-		j = Count(-1,23)
-		self.assertEqual(j.add(),2,msg="add方法执行成功！")
+		s = ''
+		self.assertTrue(s, msg="shibai")
 
 	def tearDown(self):
 		print("test add end")

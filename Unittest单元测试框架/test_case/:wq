@@ -1,0 +1,20 @@
+class test():
+
+    name = "jhinno"
+    def run(self):
+        return self.name
+
+
+
+l = test()
+
+print(l)
+
+
+
+
+lists = [('arg11','arg12'),('arg21','arg22')]
+
+for a in lists:
+    print(a)
+    print(a[0])
