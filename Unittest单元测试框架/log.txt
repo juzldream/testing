@@ -1,8 +1,3 @@
-....
-----------------------------------------------------------------------
-Ran 4 tests in 0.001s
-
-OK
 test add start
 test add end
 test add start
