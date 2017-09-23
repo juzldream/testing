@@ -7,12 +7,12 @@ import time
 import os
 
 test_dir = os.path.join(os.getcwd(), "test_case")
+print(test_dir)
 report_dir = os.path.join(os.getcwd(), "report")
-
+print(report_dir)
 def all_case():
 	discover = unittest.defaultTestLoader.discover(test_dir,pattern='test_*.py')
 	return discover
-
 
 if __name__ == '__main__':
 	runner = unittest.TextTestRunner()
