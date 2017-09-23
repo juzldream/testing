@@ -1,0 +1,55 @@
+{
+    "login": [
+        {
+            "case1": [
+                {
+                    "data": {
+                        "username": "jhadmin",
+                        "password": "jhadmin"
+                    }
+                }
+            ],
+            "case2": [
+                {
+                    "data": {
+                        "username": "user1",
+                        "password": "jhadmin"
+                    }
+                }
+            ],
+            "case3": [
+                {
+                    "data": {
+                        "username": "user1",
+                        "password": "jhadmin"
+                    }
+                }
+            ]
+        }
+    ],
+    "logout": [
+        {
+            "case1": [
+                {
+                    "data": {
+                        "token": "jhadmin"
+                    }
+                }
+            ],
+            "case2": [
+                {
+                    "data": {
+                        "token": "jhadmin"
+                    }
+                }
+            ],
+            "case3": [
+                {
+                    "data": {
+                        "token": "jhadmin"
+                    }
+                }
+            ]
+        }
+    ]
+}
