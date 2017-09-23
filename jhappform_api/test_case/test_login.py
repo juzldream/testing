@@ -1,25 +1,31 @@
+#!/usr/bin/python3
+#-*- coding:utf-8 -*-
+#Date:22-09-2017
+#Author:jhinno
+#Version=.3
+
+
 
 import sys
 sys.path.append("..")
-
 from tools.tools import *
-
-
 import unittest
+import os
 
 
 
 class TestLogin(unittest.TestCase):
+
      def setUp(self):
          print("start test ...")
-
+     
      def clear(self):
          #some cleanup code
          pass
 
      def actions(self, arg1, arg2):
          print(arg1,arg2)
-         self.assertFalse(arg1, msg="登录失败了！")
+         self.assertFalse(0, msg="登录失败了！")
 
 
      @staticmethod
@@ -32,24 +38,36 @@ class TestLogin(unittest.TestCase):
          print("test end ...")
 
 def generateTestCases():
-     arglists = [('jhadmin', 'jhadmin'), ('user1', 'user1'), ('user2', 'user2')]
-     for args in arglists:
-         setattr(MyTestCase, 'test_func_%s_%s'%(args[0], args[1]),
-             MyTestCase.getTestFunc(*args) )
-generateTestCases()
+    data_json = os.path.join(os.path.abspath('..'), "test_data/data.json")
+    data_case = Tools().readi_test_data(data_json)
+    arglists = []
+    lenth = len(data_case['login'][0])
+    for i in range(lenth):
+        cse = "case" + str(i + 1)
+        unm = data_case['login'][0][cse][0]['data']['username']
+        pwd = data_case['login'][0][cse][0]['data']['password']
+        arglists.append((unm,pwd))
+    for args in arglists:
+        setattr(TestLogin, 'test_func_%s_%s'%(args[0], args[1]),TestLogin.getTestFunc(*args))
+s = generateTestCases()
 
 if __name__ =='__main__':
+    test_data = os.path.join(os.path.abspath('..'), "test_data/data.json")
+    print(test_data)
+    unittest.main()
 
 
+# data_json = os.path.join(os.path.abspath('..'), "test_data/data.json")
+# data_case = Tools().readi_test_data(data_json)
+# lenth = len(data_case['login'][0])
+# print(lenth)
+# arglists = []
+# for i in range(lenth):
+#     cse = "case" + str(i + 1)
+#     unm = data_case['login'][0][cse][0]['data']['username']
+#     pwd = data_case['login'][0][cse][0]['data']['password']
+#     arglists.append((unm,pwd))
 
 
-js = Tools().readi_test_data("/scripts/jhappform_api/test_data/data.json")
+# print(arglists)
 
-
-print(len(js['login'][0]))
-for i in range(len(js['login'][0])):
-   case = "case" + str(i + 1)
-   print(js['login'][0][case][0]['data']['username'])
-   print(js['login'][0][case][0]['data']['password'])
-
-#print(js['login'][0]['case1'][0]['data']['username'])

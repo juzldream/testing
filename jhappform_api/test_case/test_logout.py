@@ -23,6 +23,9 @@ class TestLogout(unittest.TestCase):
 #		self.assertFalse(s, msg="登录失败了！")
 
 	def test_03(self):
+		"""
+		注销测试case01
+		"""
 		js = Tools().readi_test_data('/scripts/jhappform_api/test_data/data.json')
 		self.assertFalse(js, msg="登录失败了！")
 
