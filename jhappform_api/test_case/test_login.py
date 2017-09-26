@@ -38,8 +38,9 @@ class TestLogin(unittest.TestCase):
          print("test end ...")
 
 def generateTestCases():
-    data_json = os.path.join(os.path.abspath('..'), "test_data/data.json")
+    data_json = os.path.join(os.path.abspath('/scripts/testing/jhappform_api'), "test_data/data.json")
     data_case = Tools().readi_test_data(data_json)
+    print(type(data_case))
     arglists = []
     lenth = len(data_case['login'][0])
     for i in range(lenth):
