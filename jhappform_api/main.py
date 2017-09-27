@@ -22,6 +22,7 @@ if __name__ == '__main__':
 	report_file = os.path.join(report_dir, "result_" + now + ".html")
 
 	fp = open(report_file, "wb")
+	print(report_file)
 	runner = HTMLTestRunner.HTMLTestRunner(stream = fp,title = 'jhappform rest_api 自动化测试报告,测试结果如下：',description = '用例执行情况：')
 	runner.run(all_case())
 	fp.close()
