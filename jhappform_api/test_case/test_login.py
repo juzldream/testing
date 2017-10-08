@@ -17,15 +17,16 @@ import os
 class TestLogin(unittest.TestCase):
 
      def setUp(self):
-         print("start test ...")
+         print("start test login ...")
      
      def clear(self):
          #some cleanup code
          pass
 
      def actions(self, arg1, arg2):
-         print(arg1,arg2)
-         self.assertFalse(0, msg="登录失败了！")
+         url = "http://192.168.5.128:8080/appform/ws/" + "login?username="  + arg1 + "&password=" + arg2
+         s = Tools().access_web(url)
+         self.assertTrue(s["data"][0]["token"], msg = "用户名或密码错误，没有获取到token值。登录appform失败！")
 
 
      @staticmethod
@@ -35,9 +36,10 @@ class TestLogin(unittest.TestCase):
          return func
 
      def tearDown(self):
-         print("test end ...")
+         print("test end login...")
 
 def generateTestCases():
+    data_json = os.path.join(os.path.abspath('..'), "jhappform_api/test_data/data.json")
     data_json = os.path.join(os.path.abspath('/scripts/testing/jhappform_api'), "test_data/data.json")
     data_case = Tools().readi_test_data(data_json)
     print(type(data_case))
@@ -49,26 +51,11 @@ def generateTestCases():
         pwd = data_case['login'][0][cse][0]['data']['password']
         arglists.append((unm,pwd))
     for args in arglists:
-        setattr(TestLogin, 'test_func_%s_%s'%(args[0], args[1]),TestLogin.getTestFunc(*args))
+        setattr(TestLogin, 'test_login_%s_%s'%(args[0], args[1]),TestLogin.getTestFunc(*args))
 s = generateTestCases()
 
 if __name__ =='__main__':
-    test_data = os.path.join(os.path.abspath('..'), "test_data/data.json")
-    print(test_data)
     unittest.main()
 
 
-# data_json = os.path.join(os.path.abspath('..'), "test_data/data.json")
-# data_case = Tools().readi_test_data(data_json)
-# lenth = len(data_case['login'][0])
-# print(lenth)
-# arglists = []
-# for i in range(lenth):
-#     cse = "case" + str(i + 1)
-#     unm = data_case['login'][0][cse][0]['data']['username']
-#     pwd = data_case['login'][0][cse][0]['data']['password']
-#     arglists.append((unm,pwd))
-
-
-# print(arglists)
 

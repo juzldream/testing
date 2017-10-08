@@ -1,18 +1,26 @@
 #!/usr/bin/python3
 #-*- coding:utf-8 -*-
+#Date:04-10-2017
+#Author:jhinno
+#Version=.3
+
+
 
 import unittest
 import HTMLTestRunner  
 import time
 import os
 
+
 test_dir = os.path.join(os.getcwd(), "test_case")
-print(test_dir)
+
 report_dir = os.path.join(os.getcwd(), "report")
-print(report_dir)
+
+
 def all_case():
 	discover = unittest.defaultTestLoader.discover(test_dir,pattern='test_*.py')
 	return discover
+
 
 if __name__ == '__main__':
 	runner = unittest.TextTestRunner()
@@ -22,7 +30,11 @@ if __name__ == '__main__':
 	report_file = os.path.join(report_dir, "result_" + now + ".html")
 
 	fp = open(report_file, "wb")
+
+	runner = HTMLTestRunner.HTMLTestRunner(stream = fp,title = 'JHAppform rest_api 自动化测试报告,测试结果如下：',description = '用例执行情况：')
+
 	print(report_file)
 	runner = HTMLTestRunner.HTMLTestRunner(stream = fp,title = 'jhappform rest_api 自动化测试报告,测试结果如下：',description = '用例执行情况：')
+
 	runner.run(all_case())
 	fp.close()
