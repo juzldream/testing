@@ -33,8 +33,6 @@ if __name__ == '__main__':
 
 	runner = HTMLTestRunner.HTMLTestRunner(stream = fp,title = 'JHAppform rest_api 自动化测试报告,测试结果如下：',description = '用例执行情况：')
 
-	print(report_file)
-	runner = HTMLTestRunner.HTMLTestRunner(stream = fp,title = 'jhappform rest_api 自动化测试报告,测试结果如下：',description = '用例执行情况：')
 
 	runner.run(all_case())
 	fp.close()

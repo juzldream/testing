@@ -1,42 +1,47 @@
 #!/usr/bin/python3
 #-*- coding:utf-8 -*-
-#Date:22-09-2017
+#Date:12-10-2017
 #Author:jhinno
 #Version=.3
 
 import sys
 sys.path.append("..")
+from tools.get_access_token import * 
 from tools.tools import *
 import unittest
 
+
+
 class TestLogout(unittest.TestCase):
-	"""注销appform"""
-	def setUp(self):
-		print("test add start")		
+    """测试 appform 注销 case："""
 
-#	def test_001(self):
-#		s = Jobs().login()
-#		self.assertTrue(s, msg="登录失败了！")
+    def setUp(self):
+        print("start test login ...")
+     
+    def clear(self):
+        #some cleanup code
+        pass
 
-#	def test_002(self):
-#		s = Jobs().login()
-#		self.assertFalse(s, msg="登录失败了！")
-
-	def test_03(self):
-		"""
-		注销测试case01
-		"""
-		js = Tools().readi_test_data('/scripts/jhappform_api/test_data/data.json')
-		self.assertFalse(js, msg="登录失败了！")
-
-	def test_04(self):
-		js = Tools().readi_test_data('/scripts/jhappform_api/test_data/data.json')
-		self.assertTrue(js, msg="登录失败了！")
+    def actions(self, arg1):
+        self.assertTrue(arg1, msg = "用户名或密码错误，没有获取到token值。登录appform失败！")
 
 
+    @staticmethod
+    def getTestFunc(arg1):
+        def func(self):
+            self.actions(arg1)
+        return func
 
-	def tearDown(self):
-		print("test add end")
+    def tearDown(self):
+        print("test end login...")
+
+def generateTestCases():
+    arglists = [('arg11',), ('arg21', ), ('arg31',)]
+    for args in arglists:
+        setattr(TestLogout, 'test_func_%s'%(args[0]), TestLogout.getTestFunc(*args) )
+
+
+s = generateTestCases()
 
 
 

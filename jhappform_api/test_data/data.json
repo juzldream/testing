@@ -1,11 +1,22 @@
 {
+    "other_param": [
+        {
+            "baseUrl": "http://192.168.0.157:8080/appform/ws/",
+            "loginUser": [
+                {
+                    "username": "jhadmin",
+                    "password": "jhadmin"
+                }
+            ]
+        }
+    ],
     "login": [
         {
             "case1": [
                 {
                     "data": {
                         "username": "jhadmin",
-                        "password": "Jhadmin123"
+                        "password": "jhadmin"
                     }
                 }
             ],
@@ -24,9 +35,48 @@
                         "password": "Letmein123"
                     }
                 }
+            ],
+            "case4": [
+                {
+                    "data": {
+                        "username": "jhadmin",
+                        "password": "Letmein123"
+                    }
+                }
+            ],
+            "case5": [
+                {
+                    "data": {
+                        "username": "jhadmin",
+                        "password": ""
+                    }
+                }
             ]
         }
     ],
+    "ping":[{
+        "case1": [
+                {
+                    "data": {
+                        "token": ""
+                    }
+                }
+            ],
+        "case2": [
+                {
+                    "data": {
+                        "token": "!@#().."
+                    }
+                }
+            ],
+         "case3": [
+                {
+                    "data": {
+                        "token": "token123"
+                    }
+                }
+            ]
+    }],
     "logout": [
         {
             "case1": [

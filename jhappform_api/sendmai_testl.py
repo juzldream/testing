@@ -50,5 +50,5 @@ for x in range(0,2):
 msg += '</table>'
 
 s = sendmail(Subject,no,name,title,url,error,msg)
-print s
+print(s)
 
