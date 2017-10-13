@@ -20,10 +20,9 @@ class GetAccessToken(Singleton):
 	def __init_(self):
 		self.token = None
 
-	def getToken(self):
+	def getToken(self,datapath):
 		try:
 			tools = Tools()
-			datapath = os.path.join(os.path.abspath('..'), "test_data/data.json")
 			datas = tools.readi_test_data(datapath)
 			url = datas['other_param'][0]['baseUrl'] + "login?username=" + \
 				  datas['other_param'][0]['loginUser'][0]['username'] + \

@@ -23,7 +23,11 @@ class TestLogout(unittest.TestCase):
         pass
 
     def actions(self, arg1):
-        self.assertTrue(arg1, msg = "用户名或密码错误，没有获取到token值。登录appform失败！")
+        data_json = os.path.join(os.path.abspath('..'), "jhappform_api/test_data/data.json")
+        datas = Tools().readi_test_data(data_json)
+        url = datas['other_param'][0]['baseUrl'] + "logout?token=" + arg1 
+        s = Tools().access_web(url)    
+        self.assertEqual(s['result'],'success', msg = "token值不正确，注销appform失败！")
 
 
     @staticmethod
@@ -36,7 +40,16 @@ class TestLogout(unittest.TestCase):
         print("test end login...")
 
 def generateTestCases():
-    arglists = [('arg11',), ('arg21', ), ('arg31',)]
+    t = Tools()
+    data_json = os.path.join(os.path.abspath('..'), "jhappform_api/test_data/data.json")
+    data_case = Tools().readi_test_data(data_json)
+    arglists = []
+    lenth = len(data_case['logout'][0])
+    for i in range(lenth):
+        cse = "case" + str(i + 1)
+        tkn = data_case['logout'][0][cse][0]['data']['token']
+        arglists.append((tkn,))
+    arglists.append((t.read_token(),))
     for args in arglists:
         setattr(TestLogout, 'test_func_%s'%(args[0]), TestLogout.getTestFunc(*args) )
 

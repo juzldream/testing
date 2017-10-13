@@ -1,6 +1,8 @@
 {
     "other_param": [
         {
+            "appform_top":"/apps/jhappform/",
+            "jhscheduler_top":"/apps/unischeduler/",
             "baseUrl": "http://192.168.0.157:8080/appform/ws/",
             "loginUser": [
                 {
@@ -58,7 +60,7 @@
         "case1": [
                 {
                     "data": {
-                        "token": ""
+                        "token": "999"
                     }
                 }
             ],
@@ -77,6 +79,32 @@
                 }
             ]
     }],
+    "renamefile":[{
+        "case1": [
+                {
+                    "data": {
+                        "old_file_name": "logs/portal.log.bak",
+                        "new_file_name": "logs/portal.log.baktwo"
+                    }
+                }
+            ],
+        "case2": [
+                {
+                    "data": {
+                        "old_file_name": "ee",
+                        "new_file_name": "222"
+                    }
+                }
+            ],
+         "case3": [
+                {
+                    "data": {
+                        "old_file_name": "www",
+                        "new_file_name": "ddp09"
+                    }
+                }
+            ]
+    }],
     "logout": [
         {
             "case1": [
@@ -89,14 +117,14 @@
             "case2": [
                 {
                     "data": {
-                        "token": "jhadmin"
+                        "token": "TOKENNDDAIISLLLQQD24T"
                     }
                 }
             ],
             "case3": [
                 {
                     "data": {
-                        "token": "jhadmin"
+                        "token": ""
                     }
                 }
             ]

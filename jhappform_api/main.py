@@ -6,23 +6,45 @@
 
 
 
+
+import smtplib
+from email.mime.text import MIMEText
+from email.header import Header
+
 import unittest
 import HTMLTestRunner  
 import time
 import os
 
 
+from tools.get_access_token import * 
+from tools.tools import *
+
 test_dir = os.path.join(os.getcwd(), "test_case")
 
 report_dir = os.path.join(os.getcwd(), "report")
+
+data_case_dir = os.path.join(os.getcwd(), "test_data/data.json")
+
+
 
 
 def all_case():
 	discover = unittest.defaultTestLoader.discover(test_dir,pattern='test_*.py')
 	return discover
 
+def get_access_token(casefile):
+	l = Tools()
+	g = GetAccessToken()
+	str = g.getToken(casefile)
+	s = l.set_token(str)
+
+
 
 if __name__ == '__main__':
+	get_access_token(data_case_dir)
+
+
 	runner = unittest.TextTestRunner()
 
 	now = time.strftime("%Y-%m-%d_%H-%M-%S", time.localtime())
@@ -31,8 +53,18 @@ if __name__ == '__main__':
 
 	fp = open(report_file, "wb")
 
-	runner = HTMLTestRunner.HTMLTestRunner(stream = fp,title = 'JHAppform rest_api 自动化测试报告,测试结果如下：',description = '用例执行情况：')
+
+
+	runner = HTMLTestRunner.HTMLTestRunner(
+											stream = fp,
+											title = 'JHAppform rest_api 自动化测试报告,测试结果如下：',
+											description = '用例执行情况：')
 
 
 	runner.run(all_case())
 	fp.close()
+
+	# l = Tools()
+	# l.send_mail(report_file)
+
+

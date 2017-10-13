@@ -29,11 +29,11 @@ class TestLogin(unittest.TestCase):
         datas = Tools().readi_test_data(data_json)
         url = datas['other_param'][0]['baseUrl'] + "login?username=" + arg1 + "&password=" + arg2       
         s = Tools().access_web(url)
-        self.assertTrue(s["data"][0]["token"], msg = "用户名或密码错误，没有获取到token值。登录appform失败！")
+        self.assertEqual(s["result"],'success', msg = "用户名或密码错误，没有获取到token值。登录appform失败！")
 
 
     @staticmethod
-    def getTestFunc(arg1, arg2):
+    def getTestFunc(arg1, arg2, arg3):
         def func(self):
             self.actions(arg1, arg2)
         return func
@@ -48,12 +48,13 @@ def generateTestCases():
     arglists = []
     lenth = len(data_case['login'][0])
     for i in range(lenth):
+        no = i + 10
         cse = "case" + str(i + 1)
         unm = data_case['login'][0][cse][0]['data']['username']
         pwd = data_case['login'][0][cse][0]['data']['password']
-        arglists.append((unm,pwd))
+        arglists.append((unm,pwd,no))
     for args in arglists:
-        setattr(TestLogin, 'test_login_%s_%s'%(args[0], args[1]),TestLogin.getTestFunc(*args))
+        setattr(TestLogin, 'test_login_%s_%s_%s'%(args[0], args[1], args[2]),TestLogin.getTestFunc(*args))
 
 s = generateTestCases()
 

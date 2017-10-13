@@ -9,6 +9,10 @@ import time
 import requests
 import json
 
+import smtplib  
+from email.mime.text import MIMEText             
+from email.mime.multipart import MIMEMultipart  
+from email.header import Header
 
 
 class Tools():
@@ -52,3 +56,58 @@ class Tools():
         else:
             return s
 
+    def read_token(self):
+        try:
+            fo = open('token.txt','r')
+            tk = fo.read()
+
+            return tk
+            fo.close()
+        except FileNotFoundError:
+            return "没有找到文件或目录！"
+        
+
+    def set_token(self,str):
+        try:
+            fo = open('token.txt','w+')
+            fo.write(str) 
+
+            fo.close()
+        except TypeError:
+            return "没有获得token值！"
+   
+
+
+    def send_mail(self,Attachment):
+        try:
+
+
+            sender = "rzhou@jhinno.com"  
+              
+
+            receiver = "rzhou@jhinno.com;1576768715@qq.com"  
+
+            sendfile = open(Attachment,"r").read()  
+              
+            att = MIMEText(sendfile,"base64","utf-8")  
+            att["Content-Type"] = "application/octet-stream"  
+            att["Content-Disposition"] = "attachment;filename = 'api_test_report.html'"  
+              
+            msg = MIMEMultipart('related')  
+            msg['From'] = Header("API 自动化测试报告", 'utf-8')
+            msg['To'] =  Header("测试组", 'utf-8')
+            subject = 'JHAppform REST API 自动化测试报告'
+            msg['Subject'] = Header('测试报告附件', 'utf-8')
+
+            msg.attach(MIMEText(sendfile,'html','utf-8'))
+            msg.attach(att)  
+              
+
+
+            smtp = smtplib.SMTP()  
+            smtp.connect('mail.jhinno.com')  
+            smtp.login('rzhou@jhinno.com','Juzl150702')  
+            smtp.sendmail(sender,receiver.split(';'),msg.as_string())
+            return "邮件发送成功"
+        except smtplib.SMTPException:
+            return "Error: 无法发送邮件"
