@@ -16,28 +16,29 @@ class TestLogout(unittest.TestCase):
     """测试 appform 注销 case："""
 
     def setUp(self):
-        print("start test login ...")
+        print("开始测试登录【logout api】 ...")
      
-    def clear(self):
-        #some cleanup code
-        pass
 
     def actions(self, arg1):
         data_json = os.path.join(os.path.abspath('..'), "jhappform_api/test_data/data.json")
         datas = Tools().readi_test_data(data_json)
-        url = datas['other_param'][0]['baseUrl'] + "logout?token=" + arg1 
-        s = Tools().access_web(url)    
-        self.assertEqual(s['result'],'success', msg = "token值不正确，注销appform失败！")
+        self.url = datas['other_param'][0]['baseUrl'] + "logout?token=" + arg1 
+        self.result = Tools().access_web(self.url)    
+        self.assertNotEqual(self.result,'success', msg = "token值不正确，注销appform失败！")
 
 
     @staticmethod
-    def getTestFunc(arg1):
+    def getTestFunc(arg1, arg2):
         def func(self):
             self.actions(arg1)
         return func
 
     def tearDown(self):
-        print("test end login...")
+        print("【logout api】 访问的URL地址为：")
+        print(self.url)
+        print("【logout api】 测试返回值：")
+        print(self.result)
+        print("【logout api】 测试结束...")
 
 def generateTestCases():
     t = Tools()
@@ -46,12 +47,13 @@ def generateTestCases():
     arglists = []
     lenth = len(data_case['logout'][0])
     for i in range(lenth):
+        no  = i + 10 
         cse = "case" + str(i + 1)
         tkn = data_case['logout'][0][cse][0]['data']['token']
-        arglists.append((tkn,))
-    arglists.append((t.read_token(),))
+        arglists.append((tkn,no))
+    arglists.append((t.read_token(),999))
     for args in arglists:
-        setattr(TestLogout, 'test_func_%s'%(args[0]), TestLogout.getTestFunc(*args) )
+        setattr(TestLogout, 'test_logout_%s_%s'%(args[0] , args[1]), TestLogout.getTestFunc(*args) )
 
 
 s = generateTestCases()

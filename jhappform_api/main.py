@@ -12,7 +12,8 @@ from email.mime.text import MIMEText
 from email.header import Header
 
 import unittest
-import HTMLTestRunner  
+#import HTMLTestRunner  
+import HTMLTestReportCN
 import time
 import os
 
@@ -55,9 +56,9 @@ if __name__ == '__main__':
 
 
 
-	runner = HTMLTestRunner.HTMLTestRunner(
+	runner = HTMLTestReportCN.HTMLTestRunner(
 											stream = fp,
-											title = 'JHAppform rest_api 自动化测试报告,测试结果如下：',
+											title = 'JHAppform rest_api 自动化测试报告。',
 											description = '用例执行情况：')
 
 

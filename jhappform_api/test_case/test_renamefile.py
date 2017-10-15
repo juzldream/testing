@@ -17,7 +17,7 @@ class TestRenamefile(unittest.TestCase):
     """测试 appform 连接资源 case："""
 
     def setUp(self):
-        print("start test ping ...")
+        print("开始测试登录【renamefile api】 ...")
      
     def clear(self):
         #some cleanup code
@@ -31,11 +31,9 @@ class TestRenamefile(unittest.TestCase):
 
         access_token = t.read_token()
         appform_top = datas['other_param'][0]['appform_top'] 
-        # access_token = "62CF26204F88DFA5D810FBD1A53B2E7B47899E89CDF7DCC887883633D8A24D8E4A7F790CD928232D3D9A4254CF60554B869F04E4D1AE626D60B41552560DF7FD1D7D87FDA961649B126CAD224EB102C9"
-        url = datas['other_param'][0]['baseUrl'] + "renamefile?old_file_name=" + appform_top + arg1 + "&new_file_name=" + appform_top + arg2 + "&token=" + access_token
-        s = t.access_web(url)    
-        # self.assertEqual(s['result'],'success', msg = "token值不正确，appform 资源不可用！")
-        self.assertEqual(s['result'],'success', msg = "token值不正确，appform 资源不可用！")
+        self.url = datas['other_param'][0]['baseUrl'] + "renamefile?old_file_name=" + appform_top + arg1 + "&new_file_name=" + appform_top + arg2 + "&token=" + access_token
+        self.result = t.access_web(self.url)    
+        self.assertEqual(self.result['result'],'success', msg = "token值不正确，appform 资源不可用！")
 
 
     @staticmethod
@@ -45,13 +43,17 @@ class TestRenamefile(unittest.TestCase):
         return func
 
     def tearDown(self):
-        print("test end ping...")
+        print("【renamefile api】 访问的URL地址为：")
+        print(self.url)
+        print("【renamefile api】 测试返回值：")
+        print(self.result)
+        print("【renamefile api】 测试结束...")
+
 
 def generateTestCases():
     t = Tools()
     
     data_json = os.path.join(os.path.abspath('..'), "jhappform_api/test_data/data.json")
-    # data_json = "/scripts/testing/jhappform_api/test_data/data.json"
     data_case = Tools().readi_test_data(data_json)
     arglists = []
     lenth = len(data_case['renamefile'][0])

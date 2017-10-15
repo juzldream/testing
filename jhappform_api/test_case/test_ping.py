@@ -16,28 +16,30 @@ class TestPing(unittest.TestCase):
     """测试 appform 连接资源 case："""
 
     def setUp(self):
-        print("start test ping ...")
+        print("开始测试登录【ping api】 ...")
      
-    def clear(self):
-        #some cleanup code
-        pass
 
     def actions(self, arg1):
         data_json = os.path.join(os.path.abspath('..'), "jhappform_api/test_data/data.json")
         datas = Tools().readi_test_data(data_json)
-        url = datas['other_param'][0]['baseUrl'] + "ping?token=" + arg1 
-        s = Tools().access_web(url)    
-        self.assertEqual(s['result'],'success', msg = "token值不正确，appform 资源不可用！")
+        self.url = datas['other_param'][0]['baseUrl'] + "ping?token=631D44080F69227B2F653B8C6ABD945747899E89CDF7DCC887883633D8A24D8E4A7F790CD928232D3D9A4254CF60554B869F04E4D1AE626D60B41552560DF7FD770323DD0AB49C51A939B26423B0B475" 
+        self.result = Tools().access_web(self.url)    
+        self.assertEqual(self.result, self.url, msg = "token值不正确，appform 资源不可用！")
 
 
     @staticmethod
-    def getTestFunc(arg1, arg2):
+    def getTestFunc(arg1 , arg2):
         def func(self):
             self.actions(arg1)
         return func
 
     def tearDown(self):
-        print("test end ping...")
+        print("【ping api】 访问的URL地址为：")
+        print(self.url)
+        print("【ping api】 测试返回值：")
+        print(self.result)
+        print("【ping api】 测试结束...")
+
 
 def generateTestCases():
     t = Tools()
