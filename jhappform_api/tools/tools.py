@@ -81,7 +81,6 @@ class Tools():
     def send_mail(self,Attachment):
         try:
 
-
             sender = "rzhou@jhinno.com"  
               
 

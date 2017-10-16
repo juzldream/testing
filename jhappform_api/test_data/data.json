@@ -1,9 +1,9 @@
 {
     "other_param": [
         {
-            "appform_top":"/apps/jhappform/",
-            "jhscheduler_top":"/apps/unischeduler/",
-            "baseUrl": "http://192.168.5.128:8080/appform/ws/",
+            "appform_top": "/apps/jhappform/",
+            "jhscheduler_top": "/apps/unischeduler/",
+            "baseUrl": "http://192.168.0.157:8080/appform/ws/",
             "loginUser": [
                 {
                     "username": "jhadmin",
@@ -17,7 +17,7 @@
             "case1": [
                 {
                     "data": {
-                        "expect":"1",
+                        "expect": "1",
                         "username": "jhadmin",
                         "password": "jhadmin"
                     }
@@ -26,7 +26,7 @@
             "case2": [
                 {
                     "data": {
-                        "expect":"0",
+                        "expect": "0",
                         "username": "user1",
                         "password": "Letmein123"
                     }
@@ -35,7 +35,7 @@
             "case3": [
                 {
                     "data": {
-                        "expect":"0",
+                        "expect": "0",
                         "username": "user2",
                         "password": "Letmein123"
                     }
@@ -44,7 +44,7 @@
             "case4": [
                 {
                     "data": {
-                        "expect":"0",
+                        "expect": "0",
                         "username": "jhadmin",
                         "password": "Letmein123"
                     }
@@ -53,7 +53,7 @@
             "case5": [
                 {
                     "data": {
-                        "expect":"0",
+                        "expect": "0",
                         "username": "jhadmin",
                         "password": ""
                     }
@@ -61,32 +61,164 @@
             ]
         }
     ],
-    "ping":[{
-        "case1": [
+    "ping": [
+        {
+            "case1": [
                 {
                     "data": {
-                        "expect":"0",
+                        "expect": "0",
                         "token": "token123"
                     }
                 }
-            ]
-    }],
-    "renamefile":[{
-        "case1": [
+            ],
+            "case2": [
                 {
                     "data": {
-                        "old_file_name": "portal.log.bak",
-                        "new_file_name": "portal.log.baktwo"
+                        "expect": "0",
+                        "token": "token@{}dd..."
+                    }
+                }
+            ],
+            "case3": [
+                {
+                    "data": {
+                        "expect": "0",
+                        "token": ""
                     }
                 }
             ]
-    }],
+        }
+    ],
+    "spoolers": [
+        {
+            "case1": [
+                {
+                    "data": {
+                        "expect": "0",
+                        "token": "token123"
+                    }
+                }
+            ],
+            "case2": [
+                {
+                    "data": {
+                        "expect": "0",
+                        "token": "token@{}dd..."
+                    }
+                }
+            ],
+            "case3": [
+                {
+                    "data": {
+                        "expect": "0",
+                        "token": ""
+                    }
+                }
+            ]
+        }
+    ],
+    "desktops": [
+        {
+            "case1": [
+                {
+                    "data": {
+                        "expect": "0",
+                        "token": "token123"
+                    }
+                }
+            ],
+            "case2": [
+                {
+                    "data": {
+                        "expect": "0",
+                        "token": "token@{}dd..."
+                    }
+                }
+            ],
+            "case3": [
+                {
+                    "data": {
+                        "expect": "0",
+                        "token": ""
+                    }
+                }
+            ]
+        }
+    ],
+    "desktopStart": [
+        {
+            "case1": [
+                {
+                    "data": {
+                        "expect": "1",
+                        "OS": "linux",
+                        "appid": "gedit",
+                        "resource": "linux",
+                        "protocol": "vnc"
+                    }
+                }
+            ],
+            "case2": [
+                {
+                    "data": {
+                        "expect": "0",
+                        "OS": "linux",
+                        "appid": "gedit",
+                        "resource": "linux",
+                        "protocol": "vnc_u"
+                    }
+                }
+            ],
+            "case3": [
+                {
+                    "data": {
+                        "expect": "0",
+                        "OS": "unix",
+                        "appid": "gedit",
+                        "resource": "linux",
+                        "protocol": "vnc"
+                    }
+                }
+            ]
+        }
+    ],
+    "renamefile": [
+        {
+            "case1": [
+                {
+                    "data": {
+                        "expect": "0",
+                        "old_file_name": "case1",
+                        "new_file_name": "token123"
+                    }
+                }
+            ],
+            "case2": [
+                {
+                    "data": {
+                        "expect": "0",
+                        "old_file_name": "case2",
+                        "new_file_name": "token123"
+                    }
+                }
+            ],
+            "case3": [
+                {
+                    "data": {
+                        "expect": "0",
+                        "old_file_name": "case3",
+                        "new_file_name": "token123"
+                    }
+                }
+            ]
+        }
+    ],
     "logout": [
         {
             "case1": [
                 {
                     "data": {
-                        "expect":"0",
+                        "expect": "0",
                         "token": "jhadmin"
                     }
                 }
@@ -94,7 +226,7 @@
             "case2": [
                 {
                     "data": {
-                        "expect":"0",
+                        "expect": "0",
                         "token": ""
                     }
                 }

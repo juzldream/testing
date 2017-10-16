@@ -12,7 +12,6 @@ from email.mime.text import MIMEText
 from email.header import Header
 
 import unittest
-#import HTMLTestRunner  
 import HTMLTestReportCN
 import time
 import os
@@ -65,7 +64,7 @@ if __name__ == '__main__':
 	runner.run(all_case())
 	fp.close()
 
-	# l = Tools()
-	# l.send_mail(report_file)
+	#l = Tools()
+	#l.send_mail(report_file)
 
 

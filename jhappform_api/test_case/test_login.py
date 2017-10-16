@@ -62,14 +62,14 @@ def generateTestCases():
     arglists = []
     lenth = len(data_case['login'][0])
     for i in range(lenth):
-        no = i + 10
+        no = "_no_" + str(i)
         cse = "case" + str(i + 1)
         unm = data_case['login'][0][cse][0]['data']['username']
         pwd = data_case['login'][0][cse][0]['data']['password']
         ext = str(data_case['login'][0][cse][0]['data']['expect'])
         arglists.append((unm,pwd,ext,no))
     for args in arglists:
-        setattr(TestLogin, 'test_login_%s_%s_%s_%s'%(args[0], args[1], args[2] , args[3]),TestLogin.getTestFunc(*args))
+        setattr(TestLogin, 'test_login_{}_{}_{}{}'.format(args[0], args[1], args[2] , args[3]),TestLogin.getTestFunc(*args))
 
 s = generateTestCases()
 

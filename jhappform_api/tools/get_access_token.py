@@ -16,7 +16,7 @@ class Singleton(object):
         return cls._instance  
 
 class GetAccessToken(Singleton):
-	"""获取登录appformtoken值。"""
+	"""获取登录appform获取token值。"""
 	def __init_(self):
 		self.token = None
 
