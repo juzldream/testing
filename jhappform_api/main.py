@@ -17,34 +17,47 @@ import time
 import os
 
 
-from tools.get_access_token import * 
 from tools.tools import *
 
+
+
+#测试case文件存放位置
 test_dir = os.path.join(os.getcwd(), "test_case")
-
+#测试报告存放位置
 report_dir = os.path.join(os.getcwd(), "report")
-
+#测试数据文件位置
 data_case_dir = os.path.join(os.getcwd(), "test_data/data.json")
 
+#读取case数据
+CASES = Tools().readi_test_data(data_case_dir)
 
+
+url = CASES['other_param'][0]['baseUrl'] + "login?username=" + \
+	  CASES['other_param'][0]['loginUser'][0]['username'] + "&password=" + \
+	  CASES['other_param'][0]['loginUser'][0]['password']
+#获取访问appform资源的token
+ACCESS_TOKEN = Tools().access_web(url)['data'][0]['token']
+
+
+def get_test_data(type):
+	global CASES
+	global ACCESS_TOKEN
+
+	test_Data = CASES[type][0]['data']
+	base_Url = CASES['other_param'][0]['baseUrl']
+
+	return (test_Data,(base_Url,ACCESS_TOKEN))
 
 
 def all_case():
 	discover = unittest.defaultTestLoader.discover(test_dir,pattern='test_*.py')
 	return discover
 
-def get_access_token(casefile):
-	l = Tools()
-	g = GetAccessToken()
-	str = g.getToken(casefile)
-	s = l.set_token(str)
+
 
 
 
 if __name__ == '__main__':
-	get_access_token(data_case_dir)
-
-
 	runner = unittest.TextTestRunner()
 
 	now = time.strftime("%Y-%m-%d_%H-%M-%S", time.localtime())
@@ -64,7 +77,6 @@ if __name__ == '__main__':
 	runner.run(all_case())
 	fp.close()
 
-	#l = Tools()
-	#l.send_mail(report_file)
+	Tools().send_mail(report_file)
 
 

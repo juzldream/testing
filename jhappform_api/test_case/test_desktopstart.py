@@ -7,9 +7,9 @@
 
 import sys
 sys.path.append("..")
-from tools.get_access_token import * 
 from tools.tools import *
 import unittest
+import main
 
 
 
@@ -21,11 +21,9 @@ class TestDesktopStart(unittest.TestCase):
      
 
     def actions(self, arg1 , arg2, arg3, arg4 , arg5, arg6):
-        data_json = os.path.join(os.path.abspath('..'), "jhappform_api/test_data/data.json")
-        datas = Tools().readi_test_data(data_json) 
-        self.url = datas['other_param'][0]['baseUrl'] + "desktopStart?os=" + \
-                   arg1 + "&appid=" + arg2 + "&resource=" + arg3 + "&protocol=" + arg4 + "&token=" + arg5
-        self.arg5 = arg5
+
+        self.url = arg5[0] + "desktopStart?os=" + \
+                   arg1 + "&appid=" + arg2 + "&resource=" + arg3 + "&protocol=" + arg4 + "&token=" + arg5[1]
         self.result = Tools().access_web(self.url)
 
         if arg6 == "1":    
@@ -46,35 +44,28 @@ class TestDesktopStart(unittest.TestCase):
         print("【desktops api】 测试返回值：")
         print(self.result)
         print("【desktops api】 测试结束...")
-        print(self.arg5)
 
 
 
-def generateTestCases():
-    t = Tools()
-    
-    data_json = os.path.join(os.path.abspath('..'), "jhappform_api/test_data/data.json")
-    data_case = t.readi_test_data(data_json)
+
+def generateTestCases(cases):
     arglists = []
-    lenth = len(data_case['desktopStart'][0])
+    lenth = len(cases[0])
     for i in range(lenth):
-        cse = "case" + str(i + 1)
-
-        osm = data_case['desktopStart'][0][cse][0]['data']['OS']
-        apd = data_case['desktopStart'][0][cse][0]['data']['appid']
-        rce = data_case['desktopStart'][0][cse][0]['data']['resource']
-        ptl = data_case['desktopStart'][0][cse][0]['data']['protocol']
-        ext = data_case['desktopStart'][0][cse][0]['data']['expect']
-        no = "_no_" + str(i)
-
-        arglists.append((osm, apd, rce, ptl,  t.read_token(), str(ext), no))
+        cas = cases[0][i]['name'] 
+        ext = str(cases[0][i]['expect'])
+        osm = cases[0][i]['OS']
+        apd = cases[0][i]['appid']
+        rce = cases[0][i]['resource']
+        ptl = cases[0][i]['protocol']
+        arglists.append((osm, apd, rce, ptl,  cases[1], str(ext), cas))
 
     for args in arglists:
-        setattr(TestDesktopStart, 'test_desktopstart_{0}_{1}_{2}_{3}_{5}{6}{6}'.format(\
+        setattr(TestDesktopStart, 'test_desktopstart_{0}_{1}_{2}_{3}_{5}{5}{6}'.format(\
             args[0], args[1], args[2],args[3], args[4], args[5], args[6]), TestDesktopStart.getTestFunc(*args) )
 
 
-s = generateTestCases()
+generateTestCases(main.get_test_data(type='desktopStart'))
 
 
 

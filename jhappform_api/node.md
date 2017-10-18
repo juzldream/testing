@@ -191,7 +191,7 @@
 2. 申请桌面 desktopStart api
 
 	- URL:http://192.168.0.157:8080/appform/ws/desktopStart?os=linux&appid=gedit&resource=linux&protocol=vnc&token=
-	- 成功返回值：
+		- 成功返回值：
 		```
 		{
 		    "result": "success",
@@ -203,7 +203,7 @@
 		    ]
 		}
 		```	
-	- 失败返回值：
+		- 失败返回值：
 		```
 		{
 		    "result": "failed",

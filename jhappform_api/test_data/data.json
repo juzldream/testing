@@ -1,5 +1,5 @@
 {
-    "other_param": [
+     "other_param": [
         {
             "appform_top": "/apps/jhappform/",
             "jhscheduler_top": "/apps/unischeduler/",
@@ -14,221 +14,156 @@
     ],
     "login": [
         {
-            "case1": [
+            "data": [
                 {
-                    "data": {
-                        "expect": "1",
-                        "username": "jhadmin",
-                        "password": "jhadmin"
-                    }
-                }
-            ],
-            "case2": [
+                    "name": "case1",
+                    "expect": "1",
+                    "username": "jhadmin",
+                    "password": "jhadmin"
+                },
                 {
-                    "data": {
-                        "expect": "0",
-                        "username": "user1",
-                        "password": "Letmein123"
-                    }
-                }
-            ],
-            "case3": [
+                    "name": "case2",
+                    "expect": "0",
+                    "username": "user1",
+                    "password": "Letmein123"
+                },
                 {
-                    "data": {
-                        "expect": "0",
-                        "username": "user2",
-                        "password": "Letmein123"
-                    }
-                }
-            ],
-            "case4": [
+                    "name": "case3",
+                    "expect": "0",
+                    "username": "user1",
+                    "password": ""
+                },
                 {
-                    "data": {
-                        "expect": "0",
-                        "username": "jhadmin",
-                        "password": "Letmein123"
-                    }
-                }
-            ],
-            "case5": [
-                {
-                    "data": {
-                        "expect": "0",
-                        "username": "jhadmin",
-                        "password": ""
-                    }
-                }
-            ]
-        }
-    ],
-    "ping": [
-        {
-            "case1": [
-                {
-                    "data": {
-                        "expect": "0",
-                        "token": "token123"
-                    }
-                }
-            ],
-            "case2": [
-                {
-                    "data": {
-                        "expect": "0",
-                        "token": "token@{}dd..."
-                    }
-                }
-            ],
-            "case3": [
-                {
-                    "data": {
-                        "expect": "0",
-                        "token": ""
-                    }
-                }
-            ]
-        }
-    ],
-    "spoolers": [
-        {
-            "case1": [
-                {
-                    "data": {
-                        "expect": "0",
-                        "token": "token123"
-                    }
-                }
-            ],
-            "case2": [
-                {
-                    "data": {
-                        "expect": "0",
-                        "token": "token@{}dd..."
-                    }
-                }
-            ],
-            "case3": [
-                {
-                    "data": {
-                        "expect": "0",
-                        "token": ""
-                    }
-                }
-            ]
-        }
-    ],
-    "desktops": [
-        {
-            "case1": [
-                {
-                    "data": {
-                        "expect": "0",
-                        "token": "token123"
-                    }
-                }
-            ],
-            "case2": [
-                {
-                    "data": {
-                        "expect": "0",
-                        "token": "token@{}dd..."
-                    }
-                }
-            ],
-            "case3": [
-                {
-                    "data": {
-                        "expect": "0",
-                        "token": ""
-                    }
-                }
-            ]
-        }
-    ],
-    "desktopStart": [
-        {
-            "case1": [
-                {
-                    "data": {
-                        "expect": "1",
-                        "OS": "linux",
-                        "appid": "gedit",
-                        "resource": "linux",
-                        "protocol": "vnc"
-                    }
-                }
-            ],
-            "case2": [
-                {
-                    "data": {
-                        "expect": "0",
-                        "OS": "linux",
-                        "appid": "gedit",
-                        "resource": "linux",
-                        "protocol": "vnc_u"
-                    }
-                }
-            ],
-            "case3": [
-                {
-                    "data": {
-                        "expect": "0",
-                        "OS": "unix",
-                        "appid": "gedit",
-                        "resource": "linux",
-                        "protocol": "vnc"
-                    }
-                }
-            ]
-        }
-    ],
-    "renamefile": [
-        {
-            "case1": [
-                {
-                    "data": {
-                        "expect": "0",
-                        "old_file_name": "case1",
-                        "new_file_name": "token123"
-                    }
-                }
-            ],
-            "case2": [
-                {
-                    "data": {
-                        "expect": "0",
-                        "old_file_name": "case2",
-                        "new_file_name": "token123"
-                    }
-                }
-            ],
-            "case3": [
-                {
-                    "data": {
-                        "expect": "0",
-                        "old_file_name": "case3",
-                        "new_file_name": "token123"
-                    }
+                    "name": "case4",
+                    "expect": "0",
+                    "username": "",
+                    "password": "Letmein123"
                 }
             ]
         }
     ],
     "logout": [
         {
-            "case1": [
+            "data": [
                 {
-                    "data": {
-                        "expect": "0",
-                        "token": "jhadmin"
-                    }
+                    "name": "case1",
+                    "expect": "0",
+                    "token": "jhadmin"
+                },
+                {
+                    "name": "case2",
+                    "expect": "0",
+                    "token": "user1"
                 }
-            ],
-            "case2": [
+            ]
+        }
+    ],
+    "ping": [
+        {
+            "data": [
                 {
-                    "data": {
-                        "expect": "0",
-                        "token": ""
-                    }
+                    "name": "case1",
+                    "expect": "0",
+                    "token": "token1"
+                },
+                {
+                    "name": "case2",
+                    "expect": "0",
+                    "token": "token1"
+                }
+            ]
+        }
+    ],
+    "spoolers": [
+        {
+            "data": [
+                {
+                    "name": "case1",
+                    "expect": "0",
+                    "token": "token1"
+                },
+                {
+                    "name": "case2",
+                    "expect": "0",
+                    "token": "token1"
+                }
+            ]
+        }
+    ],
+    "desktops": [
+        {
+            "data": [
+                {
+                    "name": "case1",
+                    "expect": "0",
+                    "token": "token1"
+                },
+                {
+                    "name": "case2",
+                    "expect": "0",
+                    "token": "token2"
+                },
+                {
+                    "name": "case3",
+                    "expect": "0",
+                    "token": "token3"
+                }
+            ]
+        }
+    ],
+     "renamefile": [
+        {
+            "data": [
+                {
+                    "name": "case1",
+                    "expect": "0",
+                    "old_file_name": "case1",
+                    "new_file_name": "token123"
+
+                },
+                {
+                    "name": "case2",
+                    "expect": "0",
+                    "old_file_name": "case1",
+                    "new_file_name": "token123"
+                },
+                {
+                    "name": "case3",
+                    "expect": "0",
+                    "old_file_name": "case1",
+                    "new_file_name": "token123"
+                }
+            ]
+        }
+    ],
+    "desktopStart": [
+        {
+            "data": [
+                {
+                    "name": "case1",
+                    "expect": "1",
+                    "OS": "linux",
+                    "appid": "gedit",
+                    "resource": "linux",
+                    "protocol": "vnc"
+
+
+                },
+                {
+                    "name": "case2",
+                    "expect": "0",
+                    "OS": "unix",
+                    "appid": "gedit",
+                    "resource": "linux",
+                    "protocol": "vnc"
+                },
+                {
+                    "name": "case3",
+                    "expect": "0",
+                    "OS": "linux",
+                    "appid": "notepad",
+                    "resource": "linux",
+                    "protocol": "vnc"
                 }
             ]
         }

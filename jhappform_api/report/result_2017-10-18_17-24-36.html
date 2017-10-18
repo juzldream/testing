@@ -123,9 +123,9 @@ function html_escape(s) {
 <div class='heading'>
 <h1 style="font-family: Microsoft YaHei">JHAppform rest_api 自动化测试报告。</h1>
 <p class='attribute'><strong>测试人员 : </strong> jhinnoQA</p>
-<p class='attribute'><strong>开始时间 : </strong> 2017-10-16 18:05:04</p>
-<p class='attribute'><strong>合计耗时 : </strong> 0:00:01.319010</p>
-<p class='attribute'><strong>测试结果 : </strong> 共 26，通过 23，错误 3，通过率= 88.46%</p>
+<p class='attribute'><strong>开始时间 : </strong> 2017-10-18 17:24:36</p>
+<p class='attribute'><strong>合计耗时 : </strong> 0:00:01.241192</p>
+<p class='attribute'><strong>测试结果 : </strong> 共 23，通过 23，通过率= 100.00%</p>
 
 <p class='description'>用例执行情况：</p>
 </div>
@@ -133,10 +133,10 @@ function html_escape(s) {
 
 
 <p id='show_detail_line'>
-<a class="btn btn-primary" href='javascript:showCase(0)'>概要{ 88.46% }</a>
+<a class="btn btn-primary" href='javascript:showCase(0)'>概要{ 100.00% }</a>
 <a class="btn btn-danger" href='javascript:showCase(1)'>失败{ 0 }</a>
 <a class="btn btn-success" href='javascript:showCase(2)'>通过{ 23 }</a>
-<a class="btn btn-info" href='javascript:showCase(3)'>所有{ 26 }</a>
+<a class="btn btn-info" href='javascript:showCase(3)'>所有{ 23 }</a>
 </p>
 <table id='result_table' class="table table-condensed table-bordered table-hover">
 <colgroup>
@@ -156,17 +156,17 @@ function html_escape(s) {
     <td>详细</td>
 </tr>
 
-<tr class='errorClass warning'>
+<tr class='passClass warning'>
     <td>test_desktops.TestDesktops: 测试 appform 根据当前用户 scope 查询桌面列表 case：</td>
     <td class="text-center">4</td>
-    <td class="text-center">3</td>
+    <td class="text-center">4</td>
     <td class="text-center">0</td>
-    <td class="text-center">1</td>
+    <td class="text-center">0</td>
     <td class="text-center"><a href="javascript:showClassDetail('c1',4)" class="detail" id='c1'>详细</a></td>
 </tr>
 
 <tr id='pt1_1' class='hiddenRow'>
-    <td class='passCase'><div class='testcase'>test_desktops_0_no_0_no_0</div></td>
+    <td class='passCase'><div class='testcase'>test_desktops_000_case1</div></td>
     <td colspan='5' align='center'>
     <!--默认收起错误信息 -Findyou
     <button id='btn_pt1_1' type="button"  class="btn btn-danger btn-xs collapsed" data-toggle="collapse" data-target='#div_pt1_1'>通过</button>
@@ -179,12 +179,10 @@ function html_escape(s) {
     
 pt1_1: 开始测试appform根据当前用户 scope 查询桌面列表【desktops api】 ...
 【desktops api】 访问的URL地址为：
-http://192.168.0.157:8080/appform/ws/desktops?token=token123
+http://192.168.0.157:8080/appform/ws/desktops?token=token1
 【desktops api】 测试返回值：
 {'result': 'failed', 'message': '005：用户验证失败。', 'data': None}
 【desktops api】 测试结束...
------------------------------------
-desktops api 返回的json串不正确。
 
 
     </pre>
@@ -193,7 +191,7 @@ desktops api 返回的json串不正确。
 </tr>
 
 <tr id='pt1_2' class='hiddenRow'>
-    <td class='passCase'><div class='testcase'>test_desktops_0_no_1_no_1</div></td>
+    <td class='passCase'><div class='testcase'>test_desktops_000_case2</div></td>
     <td colspan='5' align='center'>
     <!--默认收起错误信息 -Findyou
     <button id='btn_pt1_2' type="button"  class="btn btn-danger btn-xs collapsed" data-toggle="collapse" data-target='#div_pt1_2'>通过</button>
@@ -206,12 +204,10 @@ desktops api 返回的json串不正确。
     
 pt1_2: 开始测试appform根据当前用户 scope 查询桌面列表【desktops api】 ...
 【desktops api】 访问的URL地址为：
-http://192.168.0.157:8080/appform/ws/desktops?token=token@{}dd...
+http://192.168.0.157:8080/appform/ws/desktops?token=token2
 【desktops api】 测试返回值：
 {'result': 'failed', 'message': '005：用户验证失败。', 'data': None}
 【desktops api】 测试结束...
------------------------------------
-desktops api 返回的json串不正确。
 
 
     </pre>
@@ -220,7 +216,7 @@ desktops api 返回的json串不正确。
 </tr>
 
 <tr id='pt1_3' class='hiddenRow'>
-    <td class='passCase'><div class='testcase'>test_desktops_0_no_2_no_2</div></td>
+    <td class='passCase'><div class='testcase'>test_desktops_000_case3</div></td>
     <td colspan='5' align='center'>
     <!--默认收起错误信息 -Findyou
     <button id='btn_pt1_3' type="button"  class="btn btn-danger btn-xs collapsed" data-toggle="collapse" data-target='#div_pt1_3'>通过</button>
@@ -233,12 +229,10 @@ desktops api 返回的json串不正确。
     
 pt1_3: 开始测试appform根据当前用户 scope 查询桌面列表【desktops api】 ...
 【desktops api】 访问的URL地址为：
-http://192.168.0.157:8080/appform/ws/desktops?token=
+http://192.168.0.157:8080/appform/ws/desktops?token=token3
 【desktops api】 测试返回值：
-{'result': 'failed', 'message': '005：安全令牌必须输入。', 'data': None}
+{'result': 'failed', 'message': '005：用户验证失败。', 'data': None}
 【desktops api】 测试结束...
------------------------------------
-desktops api 返回的json串不正确。
 
 
     </pre>
@@ -246,32 +240,24 @@ desktops api 返回的json串不正确。
     </td>
 </tr>
 
-<tr id='ft1_4' class='none'>
-    <td class='errorCase'><div class='testcase'>test_desktops_1_3_3</div></td>
+<tr id='pt1_4' class='hiddenRow'>
+    <td class='passCase'><div class='testcase'>test_desktops_111_case4</div></td>
     <td colspan='5' align='center'>
     <!--默认收起错误信息 -Findyou
-    <button id='btn_ft1_4' type="button"  class="btn btn-danger btn-xs collapsed" data-toggle="collapse" data-target='#div_ft1_4'>错误</button>
-    <div id='div_ft1_4' class="collapse">  -->
+    <button id='btn_pt1_4' type="button"  class="btn btn-danger btn-xs collapsed" data-toggle="collapse" data-target='#div_pt1_4'>通过</button>
+    <div id='div_pt1_4' class="collapse">  -->
 
     <!-- 默认展开错误信息 -Findyou -->
-    <button id='btn_ft1_4' type="button"  class="btn btn-danger btn-xs" data-toggle="collapse" data-target='#div_ft1_4'>错误</button>
-    <div id='div_ft1_4' class="collapse in">
+    <button id='btn_pt1_4' type="button"  class="btn btn-danger btn-xs" data-toggle="collapse" data-target='#div_pt1_4'>通过</button>
+    <div id='div_pt1_4' class="collapse in">
     <pre>
     
-ft1_4: 开始测试appform根据当前用户 scope 查询桌面列表【desktops api】 ...
+pt1_4: 开始测试appform根据当前用户 scope 查询桌面列表【desktops api】 ...
 【desktops api】 访问的URL地址为：
-http://192.168.0.157:8080/appform/ws/desktops?token=C69491EEB23DD82A35B64FD0BB6C0CC747899E89CDF7DCC887883633D8A24D8E4A7F790CD928232D3D9A4254CF60554B869F04E4D1AE626D60B41552560DF7FD99870537E4F90905D36286EFAA642184
+http://192.168.0.157:8080/appform/ws/desktops?token=FE63B672D74446B59DFC0910B0CF695447899E89CDF7DCC887883633D8A24D8E4A7F790CD928232D3D9A4254CF60554B869F04E4D1AE626D60B41552560DF7FD6A9DD8726DED78D537D1E9FCF506C8DA
 【desktops api】 测试返回值：
-unkown error.
+{'result': 'success', 'message': None, 'data': [{'os': 'linux', 'protocol': 'vnc', 'host': 'testplus', 'status': 'running', 'content': '[Connection] host=192.168.158.120 port=5901 password=b1203d6326dbec91 [Options] Shared=True ColorLevel=3 FullColor=True FullScreen=True UseAllMonitors=True EnableToolbar=True autoreconnect=false ', 'id': '17119141719934', 'shareMe': 'false', 'ownername': 'jhadmin(jhadmin)', 'name': 'gedit桌面', 'owner': 'jhadmin', 'app_id': 'gedit', 'createDate': '2017-09-29 14:49:11', 'isShare': 'false'}, {'os': 'linux', 'protocol': 'vnc', 'host': 'testplus', 'status': 'running', 'content': '[Connection] host=192.168.158.120 port=5901 password=a5a94983494672fa [Options] Shared=True ColorLevel=3 FullColor=True FullScreen=True UseAllMonitors=True EnableToolbar=True autoreconnect=false ', 'id': '20797450457261', 'shareMe': 'false', 'ownername': 'jhadmin(jhadmin)', 'name': 'gedit桌面', 'owner': 'jhadmin', 'app_id': 'gedit', 'createDate': '2017-10-16 15:50:57', 'isShare': 'false'}]}
 【desktops api】 测试结束...
------------------------------------
-desktops api 返回的json串不正确。
-Traceback (most recent call last):
-  File "/scripts/testing/jhappform_api/test_case/test_desktops.py", line 35, in func
-    self.actions(arg1, arg2)
-  File "/scripts/testing/jhappform_api/test_case/test_desktops.py", line 28, in actions
-    self.assertEqual(self.result['result'], "success", msg = self.result['message'])
-TypeError: string indices must be integers
 
 
     </pre>
@@ -279,40 +265,33 @@ TypeError: string indices must be integers
     </td>
 </tr>
 
-<tr class='errorClass warning'>
+<tr class='passClass warning'>
     <td>test_desktopstart.TestDesktopStart: 测试 appform 申请桌面 case：</td>
     <td class="text-center">3</td>
-    <td class="text-center">1</td>
+    <td class="text-center">3</td>
     <td class="text-center">0</td>
-    <td class="text-center">2</td>
+    <td class="text-center">0</td>
     <td class="text-center"><a href="javascript:showClassDetail('c2',3)" class="detail" id='c2'>详细</a></td>
 </tr>
 
-<tr id='ft2_1' class='none'>
-    <td class='errorCase'><div class='testcase'>test_desktopstart_linux_gedit_linux_vnc_1_no_0_no_0</div></td>
+<tr id='pt2_1' class='hiddenRow'>
+    <td class='passCase'><div class='testcase'>test_desktopstart_linux_gedit_linux_vnc_11case1</div></td>
     <td colspan='5' align='center'>
     <!--默认收起错误信息 -Findyou
-    <button id='btn_ft2_1' type="button"  class="btn btn-danger btn-xs collapsed" data-toggle="collapse" data-target='#div_ft2_1'>错误</button>
-    <div id='div_ft2_1' class="collapse">  -->
+    <button id='btn_pt2_1' type="button"  class="btn btn-danger btn-xs collapsed" data-toggle="collapse" data-target='#div_pt2_1'>通过</button>
+    <div id='div_pt2_1' class="collapse">  -->
 
     <!-- 默认展开错误信息 -Findyou -->
-    <button id='btn_ft2_1' type="button"  class="btn btn-danger btn-xs" data-toggle="collapse" data-target='#div_ft2_1'>错误</button>
-    <div id='div_ft2_1' class="collapse in">
+    <button id='btn_pt2_1' type="button"  class="btn btn-danger btn-xs" data-toggle="collapse" data-target='#div_pt2_1'>通过</button>
+    <div id='div_pt2_1' class="collapse in">
     <pre>
     
-ft2_1: 开始测试appform申请桌面【desktopStart api】 ...
+pt2_1: 开始测试appform申请桌面【desktopStart api】 ...
 【desktops api】 访问的URL地址为：
-http://192.168.0.157:8080/appform/ws/desktopStart?os=linux&amp;appid=gedit&amp;resource=linux&amp;protocol=vnc&amp;token=C69491EEB23DD82A35B64FD0BB6C0CC747899E89CDF7DCC887883633D8A24D8E4A7F790CD928232D3D9A4254CF60554B869F04E4D1AE626D60B41552560DF7FD99870537E4F90905D36286EFAA642184
+http://192.168.0.157:8080/appform/ws/desktopStart?os=linux&amp;appid=gedit&amp;resource=linux&amp;protocol=vnc&amp;token=FE63B672D74446B59DFC0910B0CF695447899E89CDF7DCC887883633D8A24D8E4A7F790CD928232D3D9A4254CF60554B869F04E4D1AE626D60B41552560DF7FD6A9DD8726DED78D537D1E9FCF506C8DA
 【desktops api】 测试返回值：
-unkown error.
+{'result': 'success', 'message': None, 'data': [{'content': '[Connection] host=192.168.158.120 port=5901 password=a5a94983494672fa [Options] Shared=True ColorLevel=3 FullColor=True FullScreen=True UseAllMonitors=True EnableToolbar=True autoreconnect=false '}]}
 【desktops api】 测试结束...
-C69491EEB23DD82A35B64FD0BB6C0CC747899E89CDF7DCC887883633D8A24D8E4A7F790CD928232D3D9A4254CF60554B869F04E4D1AE626D60B41552560DF7FD99870537E4F90905D36286EFAA642184
-Traceback (most recent call last):
-  File "/scripts/testing/jhappform_api/test_case/test_desktopstart.py", line 40, in func
-    self.actions(arg1 , arg2, arg3, arg4 , arg5, arg6)
-  File "/scripts/testing/jhappform_api/test_case/test_desktopstart.py", line 32, in actions
-    self.assertEqual(self.result['result'], "success", msg = "self.result['message']")
-TypeError: string indices must be integers
 
 
     </pre>
@@ -321,7 +300,7 @@ TypeError: string indices must be integers
 </tr>
 
 <tr id='pt2_2' class='hiddenRow'>
-    <td class='passCase'><div class='testcase'>test_desktopstart_linux_gedit_linux_vnc_u_0_no_1_no_1</div></td>
+    <td class='passCase'><div class='testcase'>test_desktopstart_linux_notepad_linux_vnc_00case3</div></td>
     <td colspan='5' align='center'>
     <!--默认收起错误信息 -Findyou
     <button id='btn_pt2_2' type="button"  class="btn btn-danger btn-xs collapsed" data-toggle="collapse" data-target='#div_pt2_2'>通过</button>
@@ -334,11 +313,10 @@ TypeError: string indices must be integers
     
 pt2_2: 开始测试appform申请桌面【desktopStart api】 ...
 【desktops api】 访问的URL地址为：
-http://192.168.0.157:8080/appform/ws/desktopStart?os=linux&amp;appid=gedit&amp;resource=linux&amp;protocol=vnc_u&amp;token=C69491EEB23DD82A35B64FD0BB6C0CC747899E89CDF7DCC887883633D8A24D8E4A7F790CD928232D3D9A4254CF60554B869F04E4D1AE626D60B41552560DF7FD99870537E4F90905D36286EFAA642184
+http://192.168.0.157:8080/appform/ws/desktopStart?os=linux&amp;appid=notepad&amp;resource=linux&amp;protocol=vnc&amp;token=FE63B672D74446B59DFC0910B0CF695447899E89CDF7DCC887883633D8A24D8E4A7F790CD928232D3D9A4254CF60554B869F04E4D1AE626D60B41552560DF7FD6A9DD8726DED78D537D1E9FCF506C8DA
 【desktops api】 测试返回值：
-{'result': 'failed', 'message': '029:创建会话失败。', 'data': None}
+{'result': 'failed', 'message': '029:找不到会话资源。', 'data': None}
 【desktops api】 测试结束...
-C69491EEB23DD82A35B64FD0BB6C0CC747899E89CDF7DCC887883633D8A24D8E4A7F790CD928232D3D9A4254CF60554B869F04E4D1AE626D60B41552560DF7FD99870537E4F90905D36286EFAA642184
 
 
     </pre>
@@ -346,31 +324,24 @@ C69491EEB23DD82A35B64FD0BB6C0CC747899E89CDF7DCC887883633D8A24D8E4A7F790CD928232D
     </td>
 </tr>
 
-<tr id='ft2_3' class='none'>
-    <td class='errorCase'><div class='testcase'>test_desktopstart_unix_gedit_linux_vnc_0_no_2_no_2</div></td>
+<tr id='pt2_3' class='hiddenRow'>
+    <td class='passCase'><div class='testcase'>test_desktopstart_unix_gedit_linux_vnc_00case2</div></td>
     <td colspan='5' align='center'>
     <!--默认收起错误信息 -Findyou
-    <button id='btn_ft2_3' type="button"  class="btn btn-danger btn-xs collapsed" data-toggle="collapse" data-target='#div_ft2_3'>错误</button>
-    <div id='div_ft2_3' class="collapse">  -->
+    <button id='btn_pt2_3' type="button"  class="btn btn-danger btn-xs collapsed" data-toggle="collapse" data-target='#div_pt2_3'>通过</button>
+    <div id='div_pt2_3' class="collapse">  -->
 
     <!-- 默认展开错误信息 -Findyou -->
-    <button id='btn_ft2_3' type="button"  class="btn btn-danger btn-xs" data-toggle="collapse" data-target='#div_ft2_3'>错误</button>
-    <div id='div_ft2_3' class="collapse in">
+    <button id='btn_pt2_3' type="button"  class="btn btn-danger btn-xs" data-toggle="collapse" data-target='#div_pt2_3'>通过</button>
+    <div id='div_pt2_3' class="collapse in">
     <pre>
     
-ft2_3: 开始测试appform申请桌面【desktopStart api】 ...
+pt2_3: 开始测试appform申请桌面【desktopStart api】 ...
 【desktops api】 访问的URL地址为：
-http://192.168.0.157:8080/appform/ws/desktopStart?os=unix&amp;appid=gedit&amp;resource=linux&amp;protocol=vnc&amp;token=C69491EEB23DD82A35B64FD0BB6C0CC747899E89CDF7DCC887883633D8A24D8E4A7F790CD928232D3D9A4254CF60554B869F04E4D1AE626D60B41552560DF7FD99870537E4F90905D36286EFAA642184
+http://192.168.0.157:8080/appform/ws/desktopStart?os=unix&amp;appid=gedit&amp;resource=linux&amp;protocol=vnc&amp;token=FE63B672D74446B59DFC0910B0CF695447899E89CDF7DCC887883633D8A24D8E4A7F790CD928232D3D9A4254CF60554B869F04E4D1AE626D60B41552560DF7FD6A9DD8726DED78D537D1E9FCF506C8DA
 【desktops api】 测试返回值：
-unkown error.
+{'result': 'failed', 'message': '095:创建会话错误。详细信息：已超过用户最大会话限制 () ', 'data': None}
 【desktops api】 测试结束...
-C69491EEB23DD82A35B64FD0BB6C0CC747899E89CDF7DCC887883633D8A24D8E4A7F790CD928232D3D9A4254CF60554B869F04E4D1AE626D60B41552560DF7FD99870537E4F90905D36286EFAA642184
-Traceback (most recent call last):
-  File "/scripts/testing/jhappform_api/test_case/test_desktopstart.py", line 40, in func
-    self.actions(arg1 , arg2, arg3, arg4 , arg5, arg6)
-  File "/scripts/testing/jhappform_api/test_case/test_desktopstart.py", line 34, in actions
-    self.assertNotEqual(self.result['result'], "success", msg = "self.result['message']")
-TypeError: string indices must be integers
 
 
     </pre>
@@ -380,15 +351,15 @@ TypeError: string indices must be integers
 
 <tr class='passClass warning'>
     <td>test_login.TestLogin: 测试 appform 登录 case:</td>
-    <td class="text-center">5</td>
-    <td class="text-center">5</td>
+    <td class="text-center">4</td>
+    <td class="text-center">4</td>
     <td class="text-center">0</td>
     <td class="text-center">0</td>
-    <td class="text-center"><a href="javascript:showClassDetail('c3',5)" class="detail" id='c3'>详细</a></td>
+    <td class="text-center"><a href="javascript:showClassDetail('c3',4)" class="detail" id='c3'>详细</a></td>
 </tr>
 
 <tr id='pt3_1' class='hiddenRow'>
-    <td class='passCase'><div class='testcase'>test_login_jhadmin_Letmein123_0_no_3</div></td>
+    <td class='passCase'><div class='testcase'>test_login__Letmein123_00_case4</div></td>
     <td colspan='5' align='center'>
     <!--默认收起错误信息 -Findyou
     <button id='btn_pt3_1' type="button"  class="btn btn-danger btn-xs collapsed" data-toggle="collapse" data-target='#div_pt3_1'>通过</button>
@@ -401,9 +372,9 @@ TypeError: string indices must be integers
     
 pt3_1: 开始测试登录【login api】 ...
 【login api】 访问的URL地址为：
-http://192.168.0.157:8080/appform/ws/login?username=jhadmin&amp;password=Letmein123
+http://192.168.0.157:8080/appform/ws/login?username=&amp;password=Letmein123
 【login api】 测试返回值：
-{'result': 'failed', 'message': '004：用户名或密码错误。', 'data': None}
+{'result': 'failed', 'message': '002：用户名或密码错误。', 'data': None}
 【login api】 测试结束...
 
 
@@ -413,7 +384,7 @@ http://192.168.0.157:8080/appform/ws/login?username=jhadmin&amp;password=Letmein
 </tr>
 
 <tr id='pt3_2' class='hiddenRow'>
-    <td class='passCase'><div class='testcase'>test_login_jhadmin__0_no_4</div></td>
+    <td class='passCase'><div class='testcase'>test_login_jhadmin_jhadmin_11_case1</div></td>
     <td colspan='5' align='center'>
     <!--默认收起错误信息 -Findyou
     <button id='btn_pt3_2' type="button"  class="btn btn-danger btn-xs collapsed" data-toggle="collapse" data-target='#div_pt3_2'>通过</button>
@@ -426,9 +397,9 @@ http://192.168.0.157:8080/appform/ws/login?username=jhadmin&amp;password=Letmein
     
 pt3_2: 开始测试登录【login api】 ...
 【login api】 访问的URL地址为：
-http://192.168.0.157:8080/appform/ws/login?username=jhadmin&amp;password=
+http://192.168.0.157:8080/appform/ws/login?username=jhadmin&amp;password=jhadmin
 【login api】 测试返回值：
-{'result': 'failed', 'message': '002：用户名或密码错误。', 'data': None}
+{'result': 'success', 'message': None, 'data': [{'token': 'D189C988A1A3D6AC308925A7A132737D47899E89CDF7DCC887883633D8A24D8E4A7F790CD928232D3D9A4254CF60554B869F04E4D1AE626D60B41552560DF7FD137310DD2CDA4B58A24961E05DC81A1D'}]}
 【login api】 测试结束...
 
 
@@ -438,7 +409,7 @@ http://192.168.0.157:8080/appform/ws/login?username=jhadmin&amp;password=
 </tr>
 
 <tr id='pt3_3' class='hiddenRow'>
-    <td class='passCase'><div class='testcase'>test_login_jhadmin_jhadmin_1_no_0</div></td>
+    <td class='passCase'><div class='testcase'>test_login_user1_Letmein123_00_case2</div></td>
     <td colspan='5' align='center'>
     <!--默认收起错误信息 -Findyou
     <button id='btn_pt3_3' type="button"  class="btn btn-danger btn-xs collapsed" data-toggle="collapse" data-target='#div_pt3_3'>通过</button>
@@ -451,9 +422,9 @@ http://192.168.0.157:8080/appform/ws/login?username=jhadmin&amp;password=
     
 pt3_3: 开始测试登录【login api】 ...
 【login api】 访问的URL地址为：
-http://192.168.0.157:8080/appform/ws/login?username=jhadmin&amp;password=jhadmin
+http://192.168.0.157:8080/appform/ws/login?username=user1&amp;password=Letmein123
 【login api】 测试返回值：
-{'result': 'success', 'message': None, 'data': [{'token': '275029D5FB7DBDF99CA95A20BBEDA80247899E89CDF7DCC887883633D8A24D8E4A7F790CD928232D3D9A4254CF60554B869F04E4D1AE626D60B41552560DF7FD276C349A4D13577CF115DB23FF529D40'}]}
+{'result': 'failed', 'message': '004：用户名或密码错误。', 'data': None}
 【login api】 测试结束...
 
 
@@ -463,7 +434,7 @@ http://192.168.0.157:8080/appform/ws/login?username=jhadmin&amp;password=jhadmin
 </tr>
 
 <tr id='pt3_4' class='hiddenRow'>
-    <td class='passCase'><div class='testcase'>test_login_user1_Letmein123_0_no_1</div></td>
+    <td class='passCase'><div class='testcase'>test_login_user1__00_case3</div></td>
     <td colspan='5' align='center'>
     <!--默认收起错误信息 -Findyou
     <button id='btn_pt3_4' type="button"  class="btn btn-danger btn-xs collapsed" data-toggle="collapse" data-target='#div_pt3_4'>通过</button>
@@ -476,34 +447,9 @@ http://192.168.0.157:8080/appform/ws/login?username=jhadmin&amp;password=jhadmin
     
 pt3_4: 开始测试登录【login api】 ...
 【login api】 访问的URL地址为：
-http://192.168.0.157:8080/appform/ws/login?username=user1&amp;password=Letmein123
+http://192.168.0.157:8080/appform/ws/login?username=user1&amp;password=
 【login api】 测试返回值：
-{'result': 'failed', 'message': '004：用户名或密码错误。', 'data': None}
-【login api】 测试结束...
-
-
-    </pre>
-    </div>
-    </td>
-</tr>
-
-<tr id='pt3_5' class='hiddenRow'>
-    <td class='passCase'><div class='testcase'>test_login_user2_Letmein123_0_no_2</div></td>
-    <td colspan='5' align='center'>
-    <!--默认收起错误信息 -Findyou
-    <button id='btn_pt3_5' type="button"  class="btn btn-danger btn-xs collapsed" data-toggle="collapse" data-target='#div_pt3_5'>通过</button>
-    <div id='div_pt3_5' class="collapse">  -->
-
-    <!-- 默认展开错误信息 -Findyou -->
-    <button id='btn_pt3_5' type="button"  class="btn btn-danger btn-xs" data-toggle="collapse" data-target='#div_pt3_5'>通过</button>
-    <div id='div_pt3_5' class="collapse in">
-    <pre>
-    
-pt3_5: 开始测试登录【login api】 ...
-【login api】 访问的URL地址为：
-http://192.168.0.157:8080/appform/ws/login?username=user2&amp;password=Letmein123
-【login api】 测试返回值：
-{'result': 'failed', 'message': '001：用户名不存在。', 'data': None}
+{'result': 'failed', 'message': '002：用户名或密码错误。', 'data': None}
 【login api】 测试结束...
 
 
@@ -514,15 +460,15 @@ http://192.168.0.157:8080/appform/ws/login?username=user2&amp;password=Letmein12
 
 <tr class='passClass warning'>
     <td>test_ping.TestPing: 测试 appform 连接资源 case：</td>
-    <td class="text-center">4</td>
-    <td class="text-center">4</td>
+    <td class="text-center">3</td>
+    <td class="text-center">3</td>
     <td class="text-center">0</td>
     <td class="text-center">0</td>
-    <td class="text-center"><a href="javascript:showClassDetail('c4',4)" class="detail" id='c4'>详细</a></td>
+    <td class="text-center"><a href="javascript:showClassDetail('c4',3)" class="detail" id='c4'>详细</a></td>
 </tr>
 
 <tr id='pt4_1' class='hiddenRow'>
-    <td class='passCase'><div class='testcase'>test_ping_0_no_0_no_0</div></td>
+    <td class='passCase'><div class='testcase'>test_ping_000_case1</div></td>
     <td colspan='5' align='center'>
     <!--默认收起错误信息 -Findyou
     <button id='btn_pt4_1' type="button"  class="btn btn-danger btn-xs collapsed" data-toggle="collapse" data-target='#div_pt4_1'>通过</button>
@@ -535,7 +481,7 @@ http://192.168.0.157:8080/appform/ws/login?username=user2&amp;password=Letmein12
     
 pt4_1: 开始测试appform资源是否可用【ping api】 ...
 【ping api】 访问的URL地址为：
-http://192.168.0.157:8080/appform/ws/ping?token=token123
+http://192.168.0.157:8080/appform/ws/ping?token=token1
 【ping api】 测试返回值：
 {'result': 'failed', 'message': '005：用户验证失败。', 'data': None}
 【ping api】 测试结束...
@@ -547,7 +493,7 @@ http://192.168.0.157:8080/appform/ws/ping?token=token123
 </tr>
 
 <tr id='pt4_2' class='hiddenRow'>
-    <td class='passCase'><div class='testcase'>test_ping_0_no_1_no_1</div></td>
+    <td class='passCase'><div class='testcase'>test_ping_000_case2</div></td>
     <td colspan='5' align='center'>
     <!--默认收起错误信息 -Findyou
     <button id='btn_pt4_2' type="button"  class="btn btn-danger btn-xs collapsed" data-toggle="collapse" data-target='#div_pt4_2'>通过</button>
@@ -560,7 +506,7 @@ http://192.168.0.157:8080/appform/ws/ping?token=token123
     
 pt4_2: 开始测试appform资源是否可用【ping api】 ...
 【ping api】 访问的URL地址为：
-http://192.168.0.157:8080/appform/ws/ping?token=token@{}dd...
+http://192.168.0.157:8080/appform/ws/ping?token=token1
 【ping api】 测试返回值：
 {'result': 'failed', 'message': '005：用户验证失败。', 'data': None}
 【ping api】 测试结束...
@@ -572,7 +518,7 @@ http://192.168.0.157:8080/appform/ws/ping?token=token@{}dd...
 </tr>
 
 <tr id='pt4_3' class='hiddenRow'>
-    <td class='passCase'><div class='testcase'>test_ping_0_no_2_no_2</div></td>
+    <td class='passCase'><div class='testcase'>test_ping_111_case3</div></td>
     <td colspan='5' align='center'>
     <!--默认收起错误信息 -Findyou
     <button id='btn_pt4_3' type="button"  class="btn btn-danger btn-xs collapsed" data-toggle="collapse" data-target='#div_pt4_3'>通过</button>
@@ -585,32 +531,7 @@ http://192.168.0.157:8080/appform/ws/ping?token=token@{}dd...
     
 pt4_3: 开始测试appform资源是否可用【ping api】 ...
 【ping api】 访问的URL地址为：
-http://192.168.0.157:8080/appform/ws/ping?token=
-【ping api】 测试返回值：
-{'result': 'failed', 'message': '005：安全令牌必须输入。', 'data': None}
-【ping api】 测试结束...
-
-
-    </pre>
-    </div>
-    </td>
-</tr>
-
-<tr id='pt4_4' class='hiddenRow'>
-    <td class='passCase'><div class='testcase'>test_ping_1_3_3</div></td>
-    <td colspan='5' align='center'>
-    <!--默认收起错误信息 -Findyou
-    <button id='btn_pt4_4' type="button"  class="btn btn-danger btn-xs collapsed" data-toggle="collapse" data-target='#div_pt4_4'>通过</button>
-    <div id='div_pt4_4' class="collapse">  -->
-
-    <!-- 默认展开错误信息 -Findyou -->
-    <button id='btn_pt4_4' type="button"  class="btn btn-danger btn-xs" data-toggle="collapse" data-target='#div_pt4_4'>通过</button>
-    <div id='div_pt4_4' class="collapse in">
-    <pre>
-    
-pt4_4: 开始测试appform资源是否可用【ping api】 ...
-【ping api】 访问的URL地址为：
-http://192.168.0.157:8080/appform/ws/ping?token=C69491EEB23DD82A35B64FD0BB6C0CC747899E89CDF7DCC887883633D8A24D8E4A7F790CD928232D3D9A4254CF60554B869F04E4D1AE626D60B41552560DF7FD99870537E4F90905D36286EFAA642184
+http://192.168.0.157:8080/appform/ws/ping?token=FE63B672D74446B59DFC0910B0CF695447899E89CDF7DCC887883633D8A24D8E4A7F790CD928232D3D9A4254CF60554B869F04E4D1AE626D60B41552560DF7FD6A9DD8726DED78D537D1E9FCF506C8DA
 【ping api】 测试返回值：
 {'result': 'success', 'message': 'success', 'data': None}
 【ping api】 测试结束...
@@ -631,7 +552,7 @@ http://192.168.0.157:8080/appform/ws/ping?token=C69491EEB23DD82A35B64FD0BB6C0CC7
 </tr>
 
 <tr id='pt5_1' class='hiddenRow'>
-    <td class='passCase'><div class='testcase'>test_renamefile_case1_token123_0_0__no_0</div></td>
+    <td class='passCase'><div class='testcase'>test_renamefile_case1_token123_00_case1</div></td>
     <td colspan='5' align='center'>
     <!--默认收起错误信息 -Findyou
     <button id='btn_pt5_1' type="button"  class="btn btn-danger btn-xs collapsed" data-toggle="collapse" data-target='#div_pt5_1'>通过</button>
@@ -644,7 +565,7 @@ http://192.168.0.157:8080/appform/ws/ping?token=C69491EEB23DD82A35B64FD0BB6C0CC7
     
 pt5_1: 开始测试文件重命名【renamefile api】 ...
 【renamefile api】 访问的URL地址为：
-http://192.168.0.157:8080/appform/ws/renamefile?old_file_name=case1&amp;new_file_name=token123&amp;token=C69491EEB23DD82A35B64FD0BB6C0CC747899E89CDF7DCC887883633D8A24D8E4A7F790CD928232D3D9A4254CF60554B869F04E4D1AE626D60B41552560DF7FD99870537E4F90905D36286EFAA642184
+http://192.168.0.157:8080/appform/ws/renamefile?old_file_name=case1&amp;new_file_name=token123&amp;token=FE63B672D74446B59DFC0910B0CF695447899E89CDF7DCC887883633D8A24D8E4A7F790CD928232D3D9A4254CF60554B869F04E4D1AE626D60B41552560DF7FD6A9DD8726DED78D537D1E9FCF506C8DA
 【renamefile api】 测试返回值：
 {'result': 'failed', 'message': 'case1不存在', 'data': None}
 【renamefile api】 测试结束...
@@ -656,7 +577,7 @@ http://192.168.0.157:8080/appform/ws/renamefile?old_file_name=case1&amp;new_file
 </tr>
 
 <tr id='pt5_2' class='hiddenRow'>
-    <td class='passCase'><div class='testcase'>test_renamefile_case2_token123_0_0__no_1</div></td>
+    <td class='passCase'><div class='testcase'>test_renamefile_case1_token123_00_case2</div></td>
     <td colspan='5' align='center'>
     <!--默认收起错误信息 -Findyou
     <button id='btn_pt5_2' type="button"  class="btn btn-danger btn-xs collapsed" data-toggle="collapse" data-target='#div_pt5_2'>通过</button>
@@ -669,9 +590,9 @@ http://192.168.0.157:8080/appform/ws/renamefile?old_file_name=case1&amp;new_file
     
 pt5_2: 开始测试文件重命名【renamefile api】 ...
 【renamefile api】 访问的URL地址为：
-http://192.168.0.157:8080/appform/ws/renamefile?old_file_name=case2&amp;new_file_name=token123&amp;token=C69491EEB23DD82A35B64FD0BB6C0CC747899E89CDF7DCC887883633D8A24D8E4A7F790CD928232D3D9A4254CF60554B869F04E4D1AE626D60B41552560DF7FD99870537E4F90905D36286EFAA642184
+http://192.168.0.157:8080/appform/ws/renamefile?old_file_name=case1&amp;new_file_name=token123&amp;token=FE63B672D74446B59DFC0910B0CF695447899E89CDF7DCC887883633D8A24D8E4A7F790CD928232D3D9A4254CF60554B869F04E4D1AE626D60B41552560DF7FD6A9DD8726DED78D537D1E9FCF506C8DA
 【renamefile api】 测试返回值：
-{'result': 'failed', 'message': 'case2不存在', 'data': None}
+{'result': 'failed', 'message': 'case1不存在', 'data': None}
 【renamefile api】 测试结束...
 
 
@@ -681,7 +602,7 @@ http://192.168.0.157:8080/appform/ws/renamefile?old_file_name=case2&amp;new_file
 </tr>
 
 <tr id='pt5_3' class='hiddenRow'>
-    <td class='passCase'><div class='testcase'>test_renamefile_case3_token123_0_0__no_2</div></td>
+    <td class='passCase'><div class='testcase'>test_renamefile_case1_token123_00_case3</div></td>
     <td colspan='5' align='center'>
     <!--默认收起错误信息 -Findyou
     <button id='btn_pt5_3' type="button"  class="btn btn-danger btn-xs collapsed" data-toggle="collapse" data-target='#div_pt5_3'>通过</button>
@@ -694,9 +615,9 @@ http://192.168.0.157:8080/appform/ws/renamefile?old_file_name=case2&amp;new_file
     
 pt5_3: 开始测试文件重命名【renamefile api】 ...
 【renamefile api】 访问的URL地址为：
-http://192.168.0.157:8080/appform/ws/renamefile?old_file_name=case3&amp;new_file_name=token123&amp;token=C69491EEB23DD82A35B64FD0BB6C0CC747899E89CDF7DCC887883633D8A24D8E4A7F790CD928232D3D9A4254CF60554B869F04E4D1AE626D60B41552560DF7FD99870537E4F90905D36286EFAA642184
+http://192.168.0.157:8080/appform/ws/renamefile?old_file_name=case1&amp;new_file_name=token123&amp;token=FE63B672D74446B59DFC0910B0CF695447899E89CDF7DCC887883633D8A24D8E4A7F790CD928232D3D9A4254CF60554B869F04E4D1AE626D60B41552560DF7FD6A9DD8726DED78D537D1E9FCF506C8DA
 【renamefile api】 测试返回值：
-{'result': 'failed', 'message': 'case3不存在', 'data': None}
+{'result': 'failed', 'message': 'case1不存在', 'data': None}
 【renamefile api】 测试结束...
 
 
@@ -707,15 +628,15 @@ http://192.168.0.157:8080/appform/ws/renamefile?old_file_name=case3&amp;new_file
 
 <tr class='passClass warning'>
     <td>test_spoolers.TestSpoolers: 测试 appform 根据scope查询数据目录列表 case：</td>
-    <td class="text-center">4</td>
-    <td class="text-center">4</td>
+    <td class="text-center">3</td>
+    <td class="text-center">3</td>
     <td class="text-center">0</td>
     <td class="text-center">0</td>
-    <td class="text-center"><a href="javascript:showClassDetail('c6',4)" class="detail" id='c6'>详细</a></td>
+    <td class="text-center"><a href="javascript:showClassDetail('c6',3)" class="detail" id='c6'>详细</a></td>
 </tr>
 
 <tr id='pt6_1' class='hiddenRow'>
-    <td class='passCase'><div class='testcase'>test_spoolers_0_no_0_no_0</div></td>
+    <td class='passCase'><div class='testcase'>test_spoolers_000_case1</div></td>
     <td colspan='5' align='center'>
     <!--默认收起错误信息 -Findyou
     <button id='btn_pt6_1' type="button"  class="btn btn-danger btn-xs collapsed" data-toggle="collapse" data-target='#div_pt6_1'>通过</button>
@@ -728,7 +649,7 @@ http://192.168.0.157:8080/appform/ws/renamefile?old_file_name=case3&amp;new_file
     
 pt6_1: 开始测试appform根据scope查询数据目录列表【spoolers api】 ...
 【spoolers api】 访问的URL地址为：
-http://192.168.0.157:8080/appform/ws/spoolers?token=token123
+http://192.168.0.157:8080/appform/ws/spoolers?token=token1
 【spoolers api】 测试返回值：
 {'result': 'failed', 'message': '005：用户验证失败。', 'data': None}
 【spoolers api】 测试结束...
@@ -740,7 +661,7 @@ http://192.168.0.157:8080/appform/ws/spoolers?token=token123
 </tr>
 
 <tr id='pt6_2' class='hiddenRow'>
-    <td class='passCase'><div class='testcase'>test_spoolers_0_no_1_no_1</div></td>
+    <td class='passCase'><div class='testcase'>test_spoolers_000_case2</div></td>
     <td colspan='5' align='center'>
     <!--默认收起错误信息 -Findyou
     <button id='btn_pt6_2' type="button"  class="btn btn-danger btn-xs collapsed" data-toggle="collapse" data-target='#div_pt6_2'>通过</button>
@@ -753,7 +674,7 @@ http://192.168.0.157:8080/appform/ws/spoolers?token=token123
     
 pt6_2: 开始测试appform根据scope查询数据目录列表【spoolers api】 ...
 【spoolers api】 访问的URL地址为：
-http://192.168.0.157:8080/appform/ws/spoolers?token=token@{}dd...
+http://192.168.0.157:8080/appform/ws/spoolers?token=token1
 【spoolers api】 测试返回值：
 {'result': 'failed', 'message': '005：用户验证失败。', 'data': None}
 【spoolers api】 测试结束...
@@ -765,7 +686,7 @@ http://192.168.0.157:8080/appform/ws/spoolers?token=token@{}dd...
 </tr>
 
 <tr id='pt6_3' class='hiddenRow'>
-    <td class='passCase'><div class='testcase'>test_spoolers_0_no_2_no_2</div></td>
+    <td class='passCase'><div class='testcase'>test_spoolers_111_case3</div></td>
     <td colspan='5' align='center'>
     <!--默认收起错误信息 -Findyou
     <button id='btn_pt6_3' type="button"  class="btn btn-danger btn-xs collapsed" data-toggle="collapse" data-target='#div_pt6_3'>通过</button>
@@ -778,32 +699,7 @@ http://192.168.0.157:8080/appform/ws/spoolers?token=token@{}dd...
     
 pt6_3: 开始测试appform根据scope查询数据目录列表【spoolers api】 ...
 【spoolers api】 访问的URL地址为：
-http://192.168.0.157:8080/appform/ws/spoolers?token=
-【spoolers api】 测试返回值：
-{'result': 'failed', 'message': '005：安全令牌必须输入。', 'data': None}
-【spoolers api】 测试结束...
-
-
-    </pre>
-    </div>
-    </td>
-</tr>
-
-<tr id='pt6_4' class='hiddenRow'>
-    <td class='passCase'><div class='testcase'>test_spoolers_1_3_3</div></td>
-    <td colspan='5' align='center'>
-    <!--默认收起错误信息 -Findyou
-    <button id='btn_pt6_4' type="button"  class="btn btn-danger btn-xs collapsed" data-toggle="collapse" data-target='#div_pt6_4'>通过</button>
-    <div id='div_pt6_4' class="collapse">  -->
-
-    <!-- 默认展开错误信息 -Findyou -->
-    <button id='btn_pt6_4' type="button"  class="btn btn-danger btn-xs" data-toggle="collapse" data-target='#div_pt6_4'>通过</button>
-    <div id='div_pt6_4' class="collapse in">
-    <pre>
-    
-pt6_4: 开始测试appform根据scope查询数据目录列表【spoolers api】 ...
-【spoolers api】 访问的URL地址为：
-http://192.168.0.157:8080/appform/ws/spoolers?token=C69491EEB23DD82A35B64FD0BB6C0CC747899E89CDF7DCC887883633D8A24D8E4A7F790CD928232D3D9A4254CF60554B869F04E4D1AE626D60B41552560DF7FD99870537E4F90905D36286EFAA642184
+http://192.168.0.157:8080/appform/ws/spoolers?token=FE63B672D74446B59DFC0910B0CF695447899E89CDF7DCC887883633D8A24D8E4A7F790CD928232D3D9A4254CF60554B869F04E4D1AE626D60B41552560DF7FD6A9DD8726DED78D537D1E9FCF506C8DA
 【spoolers api】 测试返回值：
 {'result': 'success', 'message': None, 'data': [{'createTime': '2017-09-18 17:38:51', 'jobProject': 'workf', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170918173851', 'jobId': '844', 'jobUser': 'jhadmin', 'jobName': 'job3', 'deleteTime': '2017-12-18 01:00:00', 'dataName': 'tmp_20170918173851'}, {'createTime': '2017-09-26 15:52:50', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170926155250', 'jobId': '1061', 'jobUser': 'jhadmin', 'jobName': 'job3', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170926155250'}, {'createTime': '2017-09-27 11:25:11', 'jobProject': 'jhworkflow', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170927112510', 'jobId': '1174', 'jobUser': 'jhadmin', 'jobName': 'rzato', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170927112510'}, {'createTime': '2017-09-27 11:26:45', 'jobProject': 'jhworkflow', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170927112645', 'jobId': '1175', 'jobUser': 'jhadmin', 'jobName': 'rzato', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170927112645'}, {'createTime': '2017-09-27 11:26:50', 'jobProject': 'jhworkflow', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170927112650', 'jobId': '1176', 'jobUser': 'jhadmin', 'jobName': 'rzato', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170927112650'}, {'createTime': '2017-09-27 14:27:47', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170927142747', 'jobId': '1184', 'jobUser': 'jhadmin', 'jobName': '', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170927142747'}, {'createTime': '2017-09-27 14:45:19', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170927144519', 'jobId': '1185', 'jobUser': 'jhadmin', 'jobName': 'str', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170927144519'}, {'createTime': '2017-09-27 14:45:31', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170927144531', 'jobId': '1187', 'jobUser': 'jhadmin', 'jobName': 'str', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170927144531'}, {'createTime': '2017-09-27 15:01:54', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170927150154', 'jobId': '1195', 'jobUser': 'jhadmin', 'jobName': 'str', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170927150154'}, {'createTime': '2017-09-27 15:10:06', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170927151006', 'jobId': '1199', 'jobUser': 'jhadmin', 'jobName': 'str', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170927151006'}, {'createTime': '2017-09-27 15:21:00', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170927152100', 'jobId': '1200', 'jobUser': 'jhadmin', 'jobName': 'str', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170927152100'}, {'createTime': '2017-09-27 15:21:06', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170927152106', 'jobId': '1201', 'jobUser': 'jhadmin', 'jobName': 'str', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170927152106'}, {'createTime': '2017-09-27 15:23:30', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170927152330', 'jobId': '1202', 'jobUser': 'jhadmin', 'jobName': 'job3', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170927152330'}, {'createTime': '2017-09-27 15:23:30', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170927152330-1', 'jobId': '1203', 'jobUser': 'jhadmin', 'jobName': 'job2', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170927152330-1'}, {'createTime': '2017-09-27 15:24:49', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170927152449', 'jobId': '1205', 'jobUser': 'jhadmin', 'jobName': 'job3', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170927152449'}, {'createTime': '2017-09-27 15:24:49', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170927152449-1', 'jobId': '1206', 'jobUser': 'jhadmin', 'jobName': 'job2', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170927152449-1'}, {'createTime': '2017-09-27 15:27:46', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170927152746', 'jobId': '1208', 'jobUser': 'jhadmin', 'jobName': 'job2', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170927152746'}, {'createTime': '2017-09-27 15:27:46', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170927152746-1', 'jobId': '1209', 'jobUser': 'jhadmin', 'jobName': 'job3', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170927152746-1'}, {'createTime': '2017-09-27 16:26:55', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170927162655', 'jobId': '1210', 'jobUser': 'jhadmin', 'jobName': 'job2', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170927162655'}, {'createTime': '2017-09-27 16:29:19', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170927162919', 'jobId': '1212', 'jobUser': 'jhadmin', 'jobName': 'job2', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170927162919'}, {'createTime': '2017-09-27 16:30:05', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170927163005', 'jobId': '1213', 'jobUser': 'jhadmin', 'jobName': 'job3', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170927163005'}, {'createTime': '2017-09-27 16:30:06', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170927163005-1', 'jobId': '1214', 'jobUser': 'jhadmin', 'jobName': 'job3', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170927163005-1'}, {'createTime': '2017-09-27 16:30:06', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170927163006', 'jobId': '1215', 'jobUser': 'jhadmin', 'jobName': 'job3', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170927163006'}, {'createTime': '2017-09-27 16:30:06', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170927163006-1', 'jobId': '1216', 'jobUser': 'jhadmin', 'jobName': 'job3', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170927163006-1'}, {'createTime': '2017-09-27 16:30:06', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170927163006-2', 'jobId': '1217', 'jobUser': 'jhadmin', 'jobName': 'job3', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170927163006-2'}, {'createTime': '2017-09-27 16:30:11', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170927163011', 'jobId': '1218', 'jobUser': 'jhadmin', 'jobName': 'job3', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170927163011'}, {'createTime': '2017-09-27 16:30:17', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170927163017', 'jobId': '1219', 'jobUser': 'jhadmin', 'jobName': 'job3', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170927163017'}, {'createTime': '2017-09-27 16:30:22', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170927163022', 'jobId': '1221', 'jobUser': 'jhadmin', 'jobName': 'job2', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170927163022'}, {'createTime': '2017-09-27 17:00:05', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170927170004', 'jobId': '1222', 'jobUser': 'jhadmin', 'jobName': 'job4', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170927170004'}, {'createTime': '2017-09-27 17:00:05', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170927170005', 'jobId': '1223', 'jobUser': 'jhadmin', 'jobName': 'job4', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170927170005'}, {'createTime': '2017-09-27 17:00:05', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170927170005-1', 'jobId': '1224', 'jobUser': 'jhadmin', 'jobName': 'job4', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170927170005-1'}, {'createTime': '2017-09-27 17:00:05', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170927170005-2', 'jobId': '1225', 'jobUser': 'jhadmin', 'jobName': 'job4', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170927170005-2'}, {'createTime': '2017-09-27 17:00:05', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170927170005-3', 'jobId': '1226', 'jobUser': 'jhadmin', 'jobName': 'job4', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170927170005-3'}, {'createTime': '2017-09-27 17:00:15', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170927170015', 'jobId': '1227', 'jobUser': 'jhadmin', 'jobName': 'job4', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170927170015'}, {'createTime': '2017-09-27 17:00:15', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170927170015-1', 'jobId': '1228', 'jobUser': 'jhadmin', 'jobName': 'job4', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170927170015-1'}, {'createTime': '2017-09-27 17:00:16', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170927170016', 'jobId': '1229', 'jobUser': 'jhadmin', 'jobName': 'job4', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170927170016'}, {'createTime': '2017-09-27 17:12:18', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170927171218', 'jobId': '1230', 'jobUser': 'jhadmin', 'jobName': 'job4', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170927171218'}, {'createTime': '2017-09-27 17:12:28', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170927171228', 'jobId': '1231', 'jobUser': 'jhadmin', 'jobName': 'job4', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170927171228'}, {'createTime': '2017-09-27 17:34:04', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170927173404', 'jobId': '1249', 'jobUser': 'jhadmin', 'jobName': 'job4', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170927173404'}, {'createTime': '2017-09-28 10:47:20', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170928104720', 'jobId': '1350', 'jobUser': 'jhadmin', 'jobName': 'job4', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170928104720'}, {'createTime': '2017-09-28 10:47:25', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170928104725', 'jobId': '1351', 'jobUser': 'jhadmin', 'jobName': 'job4', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170928104725'}, {'createTime': '2017-09-28 10:54:56', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170928105456', 'jobId': '1352', 'jobUser': 'jhadmin', 'jobName': 'job4', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170928105456'}, {'createTime': '2017-09-28 15:44:48', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170928154448', 'jobId': '1356', 'jobUser': 'jhadmin', 'jobName': 'workf', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170928154448'}, {'createTime': '2017-09-28 15:44:48', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170928154448-1', 'jobId': '1357', 'jobUser': 'jhadmin', 'jobName': 'job1', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170928154448-1'}, {'createTime': '2017-09-28 15:44:48', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//user1/tmp_20170928154448-1', 'jobId': '1358', 'jobUser': 'user1', 'jobName': 'jobs1', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170928154448-1'}, {'createTime': '2017-09-28 15:44:48', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170928154448-2', 'jobId': '1359', 'jobUser': 'jhadmin', 'jobName': 'workf', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170928154448-2'}, {'createTime': '2017-09-28 15:44:48', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170928154448-4', 'jobId': '1361', 'jobUser': 'jhadmin', 'jobName': 'job4', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170928154448-4'}, {'createTime': '2017-09-28 15:44:49', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170928154449', 'jobId': '1362', 'jobUser': 'jhadmin', 'jobName': 'job3', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170928154449'}, {'createTime': '2017-09-28 15:44:49', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170928154449-1', 'jobId': '1363', 'jobUser': 'jhadmin', 'jobName': 'job3', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170928154449-1'}, {'createTime': '2017-09-28 15:44:49', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170928154449-2', 'jobId': '1364', 'jobUser': 'jhadmin', 'jobName': 'job4', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170928154449-2'}, {'createTime': '2017-09-28 15:44:54', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//user1/tmp_20170928154453', 'jobId': '1365', 'jobUser': 'user1', 'jobName': 'job2', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170928154453'}, {'createTime': '2017-09-28 15:47:49', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//user1/tmp_20170928154749', 'jobId': '1366', 'jobUser': 'user1', 'jobName': 'jobs2', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170928154749'}, {'createTime': '2017-09-28 15:55:27', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//user1/tmp_20170928155527', 'jobId': '1367', 'jobUser': 'user1', 'jobName': 'job1', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170928155527'}, {'createTime': '2017-09-28 15:55:27', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//user1/tmp_20170928155527-1', 'jobId': '1368', 'jobUser': 'user1', 'jobName': 'job2', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170928155527-1'}, {'createTime': '2017-09-28 15:59:51', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//user1/tmp_20170928155951', 'jobId': '1369', 'jobUser': 'user1', 'jobName': 'jobs2', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170928155951'}, {'createTime': '2017-09-28 16:00:01', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//user1/tmp_20170928160001', 'jobId': '1370', 'jobUser': 'user1', 'jobName': 'jobs1', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170928160001'}, {'createTime': '2017-09-28 16:00:07', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//user1/tmp_20170928160007', 'jobId': '1371', 'jobUser': 'user1', 'jobName': 'jobs2', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170928160007'}, {'createTime': '2017-09-28 16:06:39', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170928160639', 'jobId': '1373', 'jobUser': 'jhadmin', 'jobName': 'jobs1', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170928160639'}, {'createTime': '2017-09-28 16:06:39', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170928160639-1', 'jobId': '1374', 'jobUser': 'jhadmin', 'jobName': 'jobs2', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170928160639-1'}, {'createTime': '2017-09-28 16:06:45', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//user1/tmp_20170928160645', 'jobId': '1375', 'jobUser': 'user1', 'jobName': 'jobs1', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170928160645'}, {'createTime': '2017-09-28 16:06:50', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//user1/tmp_20170928160650', 'jobId': '1376', 'jobUser': 'user1', 'jobName': 'jobs2', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170928160650'}, {'createTime': '2017-09-28 16:47:42', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//user1/tmp_20170928164742-1', 'jobId': '1478', 'jobUser': 'user1', 'jobName': 'jobs2', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170928164742-1'}, {'createTime': '2017-09-28 16:51:54', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//user1/tmp_20170928165154', 'jobId': '1479', 'jobUser': 'user1', 'jobName': 'job3', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170928165154'}, {'createTime': '2017-09-28 17:23:32', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//user1/tmp_20170928172332', 'jobId': '1480', 'jobUser': 'user1', 'jobName': 'jobs1', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170928172332'}, {'createTime': '2017-09-28 17:23:32', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//user1/tmp_20170928172332-1', 'jobId': '1481', 'jobUser': 'user1', 'jobName': 'jobs2', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170928172332-1'}, {'createTime': '2017-09-28 17:27:06', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//user1/tmp_20170928172706', 'jobId': '1483', 'jobUser': 'user1', 'jobName': 'jobs1', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170928172706'}, {'createTime': '2017-09-28 17:27:06', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//user1/tmp_20170928172706-1', 'jobId': '1484', 'jobUser': 'user1', 'jobName': 'jobs2', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170928172706-1'}, {'createTime': '2017-09-28 17:28:09', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//user1/tmp_20170928172809', 'jobId': '1485', 'jobUser': 'user1', 'jobName': 'job3', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170928172809'}, {'createTime': '2017-09-28 17:30:05', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//user1/tmp_20170928173005', 'jobId': '1486', 'jobUser': 'user1', 'jobName': 'jobs2', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170928173005'}, {'createTime': '2017-09-28 17:30:05', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//user1/tmp_20170928173005-1', 'jobId': '1487', 'jobUser': 'user1', 'jobName': 'jobs1', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170928173005-1'}, {'createTime': '2017-09-28 17:32:47', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//user1/tmp_20170928173247', 'jobId': '1488', 'jobUser': 'user1', 'jobName': 'job3', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170928173247'}, {'createTime': '2017-09-29 11:00:04', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//user1/tmp_20170929110004', 'jobId': '1589', 'jobUser': 'user1', 'jobName': 'job4', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170929110004'}, {'createTime': '2017-09-29 11:00:04', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//user1/tmp_20170929110004', 'jobId': '1590', 'jobUser': 'user1', 'jobName': 'job3', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170929110004'}, {'createTime': '2017-09-29 11:13:05', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170929111305', 'jobId': '1592', 'jobUser': 'jhadmin', 'jobName': 'job3', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170929111305'}, {'createTime': '2017-09-29 11:14:35', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//user1/tmp_20170929111435-1', 'jobId': '1596', 'jobUser': 'user1', 'jobName': 'job5', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170929111435-1'}, {'createTime': '2017-09-29 11:20:41', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//user1/tmp_20170929112041', 'jobId': '1597', 'jobUser': 'user1', 'jobName': 'jobs1', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170929112041'}, {'createTime': '2017-09-29 11:21:02', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//user1/tmp_20170929112102', 'jobId': '1599', 'jobUser': 'user1', 'jobName': 'str', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170929112102'}, {'createTime': '2017-09-29 11:23:18', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//user1/tmp_20170929112318', 'jobId': '1600', 'jobUser': 'user1', 'jobName': 'jobs1', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170929112318'}, {'createTime': '2017-09-29 11:23:39', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//user1/tmp_20170929112339', 'jobId': '1602', 'jobUser': 'user1', 'jobName': 'str', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170929112339'}, {'createTime': '2017-09-29 11:28:33', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//user1/tmp_20170929112833', 'jobId': '1603', 'jobUser': 'user1', 'jobName': 'ps', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170929112833'}, {'createTime': '2017-09-29 11:29:57', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//user1/tmp_20170929112957', 'jobId': '1604', 'jobUser': 'user1', 'jobName': 'ps', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170929112957'}, {'createTime': '2017-09-29 11:30:24', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//user1/tmp_20170929113024', 'jobId': '1605', 'jobUser': 'user1', 'jobName': 'ps', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170929113024'}, {'createTime': '2017-09-29 11:32:20', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//user1/tmp_20170929113220-1', 'jobId': '1607', 'jobUser': 'user1', 'jobName': 'ps', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170929113220-1'}, {'createTime': '2017-09-29 11:43:12', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//user1/tmp_20170929114312-1', 'jobId': '1612', 'jobUser': 'user1', 'jobName': 'ps', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170929114312-1'}, {'createTime': '2017-09-29 11:44:57', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//user1/tmp_20170929114457', 'jobId': '1615', 'jobUser': 'user1', 'jobName': 'ps', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170929114457'}, {'createTime': '2017-09-29 15:12:49', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170929151249', 'jobId': '1648', 'jobUser': 'jhadmin', 'jobName': 'job3', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170929151249'}, {'createTime': '2017-09-29 15:26:06', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//user1/tmp_20170929152606', 'jobId': '1650', 'jobUser': 'user1', 'jobName': 'job1', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170929152606'}, {'createTime': '2017-09-29 15:26:08', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//user1/tmp_20170929152608', 'jobId': '1652', 'jobUser': 'user1', 'jobName': 'ps', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170929152608'}, {'createTime': '2017-09-29 15:53:43', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//user1/tmp_20170929155343', 'jobId': '1653', 'jobUser': 'user1', 'jobName': 'jobs1', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170929155343'}, {'createTime': '2017-09-29 15:54:03', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//user1/tmp_20170929155403', 'jobId': '1655', 'jobUser': 'user1', 'jobName': 'str', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170929155403'}, {'createTime': '2017-09-29 16:01:42', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//user1/tmp_20170929160142-1', 'jobId': '1658', 'jobUser': 'user1', 'jobName': 'ps', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170929160142-1'}, {'createTime': '2017-09-29 16:34:39', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//user1/tmp_20170929163439-1', 'jobId': '1661', 'jobUser': 'user1', 'jobName': 'ps', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170929163439-1'}, {'createTime': '2017-09-29 16:39:54', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//user1/tmp_20170929163954', 'jobId': '1662', 'jobUser': 'user1', 'jobName': 'job1', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170929163954'}, {'createTime': '2017-09-29 16:46:13', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//user1/tmp_20170929164613', 'jobId': '1664', 'jobUser': 'user1', 'jobName': 'job1', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170929164613'}, {'createTime': '2017-09-29 16:46:23', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//user1/tmp_20170929164623', 'jobId': '1665', 'jobUser': 'user1', 'jobName': 'job2', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170929164623'}, {'createTime': '2017-09-29 16:46:34', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//user1/tmp_20170929164633', 'jobId': '1666', 'jobUser': 'user1', 'jobName': 'job3', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170929164633'}, {'createTime': '2017-09-29 16:46:44', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//user1/tmp_20170929164644', 'jobId': '1667', 'jobUser': 'user1', 'jobName': 'job4', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170929164644'}, {'createTime': '2017-09-29 16:46:50', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//user1/tmp_20170929164650', 'jobId': '1668', 'jobUser': 'user1', 'jobName': 'job5', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170929164650'}, {'createTime': '2017-09-29 16:47:00', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//user1/tmp_20170929164700', 'jobId': '1669', 'jobUser': 'user1', 'jobName': 'job6', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170929164700'}, {'createTime': '2017-09-29 16:54:41', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//user1/tmp_20170929165441', 'jobId': '1670', 'jobUser': 'user1', 'jobName': 'job5', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170929165441'}, {'createTime': '2017-09-29 16:54:41', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//user1/tmp_20170929165441-1', 'jobId': '1671', 'jobUser': 'user1', 'jobName': 'job6', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170929165441-1'}, {'createTime': '2017-09-29 16:54:41', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//user1/tmp_20170929165441-2', 'jobId': '1672', 'jobUser': 'user1', 'jobName': 'job1', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170929165441-2'}, {'createTime': '2017-09-29 16:54:52', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//user1/tmp_20170929165452-1', 'jobId': '1674', 'jobUser': 'user1', 'jobName': 'job3', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170929165452-1'}, {'createTime': '2017-09-29 16:54:52', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//user1/tmp_20170929165452-2', 'jobId': '1675', 'jobUser': 'user1', 'jobName': 'job2', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170929165452-2'}, {'createTime': '2017-09-30 11:31:53', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170930113152', 'jobId': '1773', 'jobUser': 'jhadmin', 'jobName': 'job4', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170930113152'}, {'createTime': '2017-09-30 11:36:43', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170930113643', 'jobId': '1776', 'jobUser': 'jhadmin', 'jobName': 'ps', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170930113643'}, {'createTime': '2017-09-30 11:51:48', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170930115148', 'jobId': '1781', 'jobUser': 'jhadmin', 'jobName': 'ps', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170930115148'}, {'createTime': '2017-09-30 13:31:45', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170930133143', 'jobId': '1784', 'jobUser': 'jhadmin', 'jobName': 'ps', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170930133143'}, {'createTime': '2017-09-30 13:37:21', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170930133721', 'jobId': '1786', 'jobUser': 'jhadmin', 'jobName': 'ps', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170930133721'}, {'createTime': '2017-09-30 13:38:44', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170930133844', 'jobId': '1788', 'jobUser': 'jhadmin', 'jobName': 'ps', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170930133844'}, {'createTime': '2017-09-30 13:40:32', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170930134032', 'jobId': '1790', 'jobUser': 'jhadmin', 'jobName': 'ps', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170930134032'}, {'createTime': '2017-09-30 13:45:48', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170930134548', 'jobId': '1793', 'jobUser': 'jhadmin', 'jobName': 'hist', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170930134548'}, {'createTime': '2017-09-30 13:52:32', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170930135231', 'jobId': '1794', 'jobUser': 'jhadmin', 'jobName': 'hist', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170930135231'}, {'createTime': '2017-09-30 13:52:43', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170930135243', 'jobId': '1795', 'jobUser': 'jhadmin', 'jobName': 'job1', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170930135243'}, {'createTime': '2017-09-30 13:58:42', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170930135842', 'jobId': '1796', 'jobUser': 'jhadmin', 'jobName': 'job1', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170930135842'}, {'createTime': '2017-09-30 13:59:06', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170930135906', 'jobId': '1797', 'jobUser': 'jhadmin', 'jobName': 'hist', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170930135906'}, {'createTime': '2017-09-30 14:03:29', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170930140329', 'jobId': '1798', 'jobUser': 'jhadmin', 'jobName': 'job1', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170930140329'}, {'createTime': '2017-09-30 14:03:42', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170930140342', 'jobId': '1799', 'jobUser': 'jhadmin', 'jobName': 'hist', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170930140342'}, {'createTime': '2017-09-30 14:06:31', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170930140631', 'jobId': '1800', 'jobUser': 'jhadmin', 'jobName': 'job2', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170930140631'}, {'createTime': '2017-09-30 14:06:33', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170930140632', 'jobId': '1801', 'jobUser': 'jhadmin', 'jobName': 'job1', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170930140632'}, {'createTime': '2017-09-30 16:13:09', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170930161259', 'jobId': '1902', 'jobUser': 'jhadmin', 'jobName': 'hist', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170930161259'}, {'createTime': '2017-09-30 16:47:50', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170930164750', 'jobId': '1907', 'jobUser': 'jhadmin', 'jobName': 'hist', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170930164750'}, {'createTime': '2017-09-30 16:49:48', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170930164948', 'jobId': '1908', 'jobUser': 'jhadmin', 'jobName': 'hist', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170930164948'}, {'createTime': '2017-09-27 15:08:55', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170927150855', 'jobId': '1197', 'jobUser': 'jhadmin', 'jobName': 'str', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170927150855'}, {'createTime': '2017-09-27 16:28:12', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170927162812', 'jobId': '1211', 'jobUser': 'jhadmin', 'jobName': 'job2', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170927162812'}, {'createTime': '2017-09-27 16:30:17', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170927163017-1', 'jobId': '1220', 'jobUser': 'jhadmin', 'jobName': 'job3', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170927163017-1'}, {'createTime': '2017-09-27 17:26:54', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170927172654', 'jobId': '1232', 'jobUser': 'jhadmin', 'jobName': 'job4', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170927172654'}, {'createTime': '2017-09-28 15:44:48', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170928154448-3', 'jobId': '1360', 'jobUser': 'jhadmin', 'jobName': 'job3', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170928154448-3'}, {'createTime': '2017-09-28 16:00:12', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//user1/tmp_20170928160012', 'jobId': '1372', 'jobUser': 'user1', 'jobName': 'jobs1', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170928160012'}, {'createTime': '2017-09-28 16:47:42', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//user1/tmp_20170928164742', 'jobId': '1477', 'jobUser': 'user1', 'jobName': 'jobs1', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170928164742'}, {'createTime': '2017-09-28 17:24:45', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//user1/tmp_20170928172444', 'jobId': '1482', 'jobUser': 'user1', 'jobName': 'job3', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170928172444'}, {'createTime': '2017-09-29 11:13:36', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//user1/tmp_20170929111336', 'jobId': '1593', 'jobUser': 'user1', 'jobName': 'job3', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170929111336'}, {'createTime': '2017-09-29 11:41:01', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//user1/tmp_20170929114100-1', 'jobId': '1609', 'jobUser': 'user1', 'jobName': 'ps', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170929114100-1'}, {'createTime': '2017-09-29 16:39:59', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//user1/tmp_20170929163959', 'jobId': '1663', 'jobUser': 'user1', 'jobName': 'job2', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170929163959'}, {'createTime': '2017-09-29 16:54:52', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//user1/tmp_20170929165452', 'jobId': '1673', 'jobUser': 'user1', 'jobName': 'job4', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170929165452'}, {'createTime': '2017-09-30 13:41:25', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170930134125', 'jobId': '1792', 'jobUser': 'jhadmin', 'jobName': 'ps', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170930134125'}, {'createTime': '2017-09-30 16:47:47', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170930164747', 'jobId': '1906', 'jobUser': 'jhadmin', 'jobName': 'hist', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170930164747'}, {'createTime': '2017-09-30 16:57:13', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170930165712', 'jobId': '1909', 'jobUser': 'jhadmin', 'jobName': 'hist', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170930165712'}, {'createTime': '2017-09-30 16:57:30', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170930165730', 'jobId': '1910', 'jobUser': 'jhadmin', 'jobName': 'hist', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170930165730'}, {'createTime': '2017-09-30 16:59:40', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170930165940', 'jobId': '1911', 'jobUser': 'jhadmin', 'jobName': 'hist', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170930165940'}, {'createTime': '2017-09-30 17:02:06', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170930170206', 'jobId': '1912', 'jobUser': 'jhadmin', 'jobName': 'hist', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170930170206'}, {'createTime': '2017-09-30 17:05:43', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170930170543', 'jobId': '1914', 'jobUser': 'jhadmin', 'jobName': 'hist', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170930170543'}, {'createTime': '2017-09-30 17:10:35', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170930171035', 'jobId': '1915', 'jobUser': 'jhadmin', 'jobName': 'hist', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170930171035'}, {'createTime': '2017-09-30 17:11:23', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170930171123', 'jobId': '1916', 'jobUser': 'jhadmin', 'jobName': 'hist', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170930171123'}, {'createTime': '2017-09-30 17:14:00', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170930171359', 'jobId': '1917', 'jobUser': 'jhadmin', 'jobName': 'hist', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170930171359'}, {'createTime': '2017-09-30 17:15:57', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170930171557', 'jobId': '1918', 'jobUser': 'jhadmin', 'jobName': 'hist', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170930171557'}, {'createTime': '2017-09-30 17:16:40', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170930171640', 'jobId': '1919', 'jobUser': 'jhadmin', 'jobName': 'hist', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170930171640'}, {'createTime': '2017-09-30 17:17:48', 'jobProject': 'default', 'dataPath': '/apps/jhappform/spoolers//jhadmin/tmp_20170930171748', 'jobId': '1920', 'jobUser': 'jhadmin', 'jobName': 'hist', 'deleteTime': '2018-01-11 01:00:00', 'dataName': 'tmp_20170930171748'}]}
 【spoolers api】 测试结束...
@@ -824,7 +720,7 @@ http://192.168.0.157:8080/appform/ws/spoolers?token=C69491EEB23DD82A35B64FD0BB6C
 </tr>
 
 <tr id='pt7_1' class='hiddenRow'>
-    <td class='passCase'><div class='testcase'>test_logout_0_0_no_0</div></td>
+    <td class='passCase'><div class='testcase'>test_logout_000_case1</div></td>
     <td colspan='5' align='center'>
     <!--默认收起错误信息 -Findyou
     <button id='btn_pt7_1' type="button"  class="btn btn-danger btn-xs collapsed" data-toggle="collapse" data-target='#div_pt7_1'>通过</button>
@@ -849,7 +745,7 @@ http://192.168.0.157:8080/appform/ws/logout?token=jhadmin
 </tr>
 
 <tr id='pt7_2' class='hiddenRow'>
-    <td class='passCase'><div class='testcase'>test_logout_0_0_no_1</div></td>
+    <td class='passCase'><div class='testcase'>test_logout_000_case2</div></td>
     <td colspan='5' align='center'>
     <!--默认收起错误信息 -Findyou
     <button id='btn_pt7_2' type="button"  class="btn btn-danger btn-xs collapsed" data-toggle="collapse" data-target='#div_pt7_2'>通过</button>
@@ -862,9 +758,9 @@ http://192.168.0.157:8080/appform/ws/logout?token=jhadmin
     
 pt7_2: 开始测试注销【logout api】 ...
 【logout api】 访问的URL地址为：
-http://192.168.0.157:8080/appform/ws/logout?token=
+http://192.168.0.157:8080/appform/ws/logout?token=user1
 【logout api】 测试返回值：
-{'result': 'failed', 'message': '005：安全令牌必须输入。', 'data': None}
+{'result': 'failed', 'message': '005：用户验证失败。', 'data': None}
 【logout api】 测试结束...
 
 
@@ -874,7 +770,7 @@ http://192.168.0.157:8080/appform/ws/logout?token=
 </tr>
 
 <tr id='pt7_3' class='hiddenRow'>
-    <td class='passCase'><div class='testcase'>test_logout_1_1_2</div></td>
+    <td class='passCase'><div class='testcase'>test_logout_111_case3</div></td>
     <td colspan='5' align='center'>
     <!--默认收起错误信息 -Findyou
     <button id='btn_pt7_3' type="button"  class="btn btn-danger btn-xs collapsed" data-toggle="collapse" data-target='#div_pt7_3'>通过</button>
@@ -887,7 +783,7 @@ http://192.168.0.157:8080/appform/ws/logout?token=
     
 pt7_3: 开始测试注销【logout api】 ...
 【logout api】 访问的URL地址为：
-http://192.168.0.157:8080/appform/ws/logout?token=C69491EEB23DD82A35B64FD0BB6C0CC747899E89CDF7DCC887883633D8A24D8E4A7F790CD928232D3D9A4254CF60554B869F04E4D1AE626D60B41552560DF7FD99870537E4F90905D36286EFAA642184
+http://192.168.0.157:8080/appform/ws/logout?token=FE63B672D74446B59DFC0910B0CF695447899E89CDF7DCC887883633D8A24D8E4A7F790CD928232D3D9A4254CF60554B869F04E4D1AE626D60B41552560DF7FD6A9DD8726DED78D537D1E9FCF506C8DA
 【logout api】 测试返回值：
 {'result': 'success', 'message': 'logout success.', 'data': None}
 【logout api】 测试结束...
@@ -900,11 +796,11 @@ http://192.168.0.157:8080/appform/ws/logout?token=C69491EEB23DD82A35B64FD0BB6C0C
 
 <tr id='total_row' class="text-center active">
     <td>总计</td>
-    <td>26</td>
+    <td>23</td>
     <td>23</td>
     <td>0</td>
-    <td>3</td>
-    <td>通过率：88.46%</td>
+    <td>0</td>
+    <td>通过率：100.00%</td>
 </tr>
 </table>
 

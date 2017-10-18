@@ -6,9 +6,9 @@
 
 import sys
 sys.path.append("..")
-from tools.get_access_token import * 
 from tools.tools import *
 import unittest
+import main
 
 
 
@@ -19,20 +19,18 @@ class TestPing(unittest.TestCase):
         print("开始测试appform资源是否可用【ping api】 ...")
      
 
-    def actions(self, arg1, arg2):
-        data_json = os.path.join(os.path.abspath('..'), "jhappform_api/test_data/data.json")
-        datas = Tools().readi_test_data(data_json)
-        self.url = datas['other_param'][0]['baseUrl'] + "ping?token=" + arg1 
-        self.result = Tools().access_web(self.url)
+    def actions(self, arg1, arg2, arg3):
+        self.url = arg3[0] + "ping?token=" + arg1 
+        self.result = Tools().access_web(self.url) 
         if arg2 == "1":    
             self.assertEqual(self.result['result'], "success", msg = "token值不正确，appform 资源不可用！")
         else:
             self.assertNotEqual(self.result['result'], "success", msg = "token值不正确，appform 资源不可用！")
 
     @staticmethod
-    def getTestFunc(arg1 , arg2, arg3):
+    def getTestFunc(arg1 , arg2, arg3, arg4):
         def func(self):
-            self.actions(arg1, arg2)
+            self.actions(arg1, arg2, arg3)
         return func
 
     def tearDown(self):
@@ -43,25 +41,21 @@ class TestPing(unittest.TestCase):
         print("【ping api】 测试结束...")
 
 
-def generateTestCases():
-    t = Tools()
-    
-    data_json = os.path.join(os.path.abspath('..'), "jhappform_api/test_data/data.json")
-    data_case = Tools().readi_test_data(data_json)
+def generateTestCases(cases):
     arglists = []
-    lenth = len(data_case['ping'][0])
+    lenth = len(cases[0])
     for i in range(lenth):
-        no = "_no_" + str(i)
-        cse = "case" + str(i + 1)
-        png = data_case['ping'][0][cse][0]['data']['token']
-        ext = data_case['ping'][0][cse][0]['data']['expect']
-        arglists.append((png, ext, no))
-    arglists.append((t.read_token(), str(1) ,"_" + str(lenth)))
+        cas = cases[0][i]['name'] 
+        tkn = cases[0][i]['token']
+        ext = str(cases[0][i]['expect'])
+        arglists.append((tkn,ext,cases[1], cas))
+    arglists.append((cases[1][1], str(1), cases[1],"case" + str(lenth + 1)))
     for args in arglists:
-        setattr(TestPing, 'test_ping_{1}{2}{2}'.format(args[0], args[1], args[2]), TestPing.getTestFunc(*args) )
+        setattr(TestPing, 'test_ping_{1}{1}{1}_{3}'.format(args[0] , args[1], args[2], args[3]), TestPing.getTestFunc(*args) )
 
 
-s = generateTestCases()
+
+generateTestCases(main.get_test_data(type='ping'))
 
 
 

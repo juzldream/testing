@@ -11,6 +11,7 @@ sys.path.append("..")
 from tools.tools import *
 import unittest
 import os
+import main
 
 
 class TestLogin(unittest.TestCase):
@@ -19,10 +20,6 @@ class TestLogin(unittest.TestCase):
 
     def setUp(self):
         print("开始测试登录【login api】 ...")
-     
-    # def clear(self):
-    #     #some cleanup code
-    #     pass
 
 
     def tearDown(self):
@@ -33,14 +30,10 @@ class TestLogin(unittest.TestCase):
         print("【login api】 测试结束...")
        
 
-    def actions(self, arg1, arg2 ,arg3):
-        data_json = os.path.join(os.path.abspath('..'), "jhappform_api/test_data/data.json")
-        datas = Tools().readi_test_data(data_json)
-        self.url = datas['other_param'][0]['baseUrl'] + "login?username=" + arg1 + "&password=" + arg2
-  
+    def actions(self, arg1, arg2 ,arg3, arg4):
+        self.url = arg4[0] + "login?username=" + arg1 + "&password=" + arg2
         self.result = Tools().access_web(self.url)  
         if arg3 == "0":
-        
             self.assertNotEqual(self.result['result'],"success", msg = "用户:" + arg1 + "登录appform失败！用户名或密码错误，没有获取到token值。")
         else:
             self.assertEqual(self.result['result'],"success", msg = "用户：" + arg1 + "登录appform失败！")
@@ -49,29 +42,26 @@ class TestLogin(unittest.TestCase):
 
 
     @staticmethod
-    def getTestFunc(arg1, arg2, arg3 ,arg4):
+    def getTestFunc(arg1, arg2, arg3 ,arg4, arg5):
         def func(self):
-            self.actions(arg1, arg2 , arg3)
+            self.actions(arg1, arg2 , arg3, arg4)
         return func
 
 
-def generateTestCases():
-    data_json = os.path.join(os.path.abspath('..'), "jhappform_api/test_data/data.json")
-    data_case = Tools().readi_test_data(data_json)
-    print(type(data_case))
+def generateTestCases(cases):
     arglists = []
-    lenth = len(data_case['login'][0])
+    lenth = len(cases[0])
     for i in range(lenth):
-        no = "_no_" + str(i)
-        cse = "case" + str(i + 1)
-        unm = data_case['login'][0][cse][0]['data']['username']
-        pwd = data_case['login'][0][cse][0]['data']['password']
-        ext = str(data_case['login'][0][cse][0]['data']['expect'])
-        arglists.append((unm,pwd,ext,no))
+        cas = cases[0][i]['name'] 
+        unm = cases[0][i]['username']
+        pwd = cases[0][i]['password']
+        ext = str(cases[0][i]['expect'])
+        arglists.append((unm,pwd,ext,cases[1],cas))
     for args in arglists:
-        setattr(TestLogin, 'test_login_{}_{}_{}{}'.format(args[0], args[1], args[2] , args[3]),TestLogin.getTestFunc(*args))
+        setattr(TestLogin, 'test_login_{0}_{1}_{2}{2}_{4}'.format(args[0], args[1], args[2], args[3], args[4]),TestLogin.getTestFunc(*args))
 
-s = generateTestCases()
+
+generateTestCases(main.get_test_data(type='login'))
 
 
 

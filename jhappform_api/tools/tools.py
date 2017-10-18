@@ -31,7 +31,8 @@ class Tools():
         '''
         try:
             req = requests.get(url=url)
-            s = req.json() 
+            #s = req.json()
+            s = json.loads(req.text.replace('\n',' ')) 
             return s      
         except requests.exceptions.ConnectTimeout:
             return "appform 请求超时！"

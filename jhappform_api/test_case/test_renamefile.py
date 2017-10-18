@@ -7,9 +7,9 @@
 
 import sys
 sys.path.append("..")
-from tools.get_access_token import * 
 from tools.tools import *
 import unittest
+import main
 
 
 
@@ -24,11 +24,9 @@ class TestRenamefile(unittest.TestCase):
         pass
 
     def actions(self, arg1,arg2,arg3,arg4):
-        data_json = os.path.join(os.path.abspath('..'), "jhappform_api/test_data/data.json")
-        datas = Tools().readi_test_data(data_json)
-        self.url = datas['other_param'][0]['baseUrl'] + "renamefile?old_file_name=" + arg1 + "&new_file_name=" + arg2 + "&token=" + arg3
+        self.url = arg4[0] + "renamefile?old_file_name=" + arg1 + "&new_file_name=" + arg2 + "&token=" + arg4[1]
         self.result = Tools().access_web(self.url)
-        if arg4 == "1":    
+        if arg3 == "1":    
             self.assertEqual(self.result['result'], 'success', msg = "重命名文件失败！")
         else:
             self.assertNotEqual(self.result['result'], 'success', msg = "重命名文件失败！")
@@ -51,24 +49,22 @@ class TestRenamefile(unittest.TestCase):
 
 
 
-def generateTestCases():
-    t = Tools()
-    
-    data_json = os.path.join(os.path.abspath('..'), "jhappform_api/test_data/data.json")
-    data_case = t.readi_test_data(data_json)
+def generateTestCases(cases):
     arglists = []
-    lenth = len(data_case['renamefile'][0])
+    lenth = len(cases[0])
     for i in range(lenth):
-        no = "_no_" + str(i)
-        cse = "case" + str(i + 1)
-        ext = data_case['renamefile'][0][cse][0]['data']['expect']
-        ofa = data_case['renamefile'][0][cse][0]['data']['old_file_name']
-        nfa = data_case['renamefile'][0][cse][0]['data']['new_file_name']
-        arglists.append((ofa, nfa, t.read_token(), ext, no ))
-    for args in arglists:
-        setattr(TestRenamefile, 'test_renamefile_{0}_{1}_{3}_{3}_{4}'.format(args[0], args[1], args[2], args[3], args[4]), TestRenamefile.getTestFunc(*args) )
 
-s = generateTestCases()
+
+        cas = cases[0][i]['name'] 
+        ext = str(cases[0][i]['expect'])
+        ofa = cases[0][i]['old_file_name']
+        nfa = cases[0][i]['new_file_name']
+        arglists.append((ofa, nfa, ext, cases[1], cas))
+
+    for args in arglists:
+        setattr(TestRenamefile, 'test_renamefile_{0}_{1}_{2}{2}_{4}'.format(args[0], args[1], args[2], args[3], args[4]), TestRenamefile.getTestFunc(*args) )
+
+generateTestCases(main.get_test_data(type='renamefile'))
 
 
 
