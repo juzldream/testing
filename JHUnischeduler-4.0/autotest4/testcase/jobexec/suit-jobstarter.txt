@@ -1,0 +1,203 @@
+*** Settings ***
+Suite Setup       preSuiteBack
+Suite Teardown    postSuite
+Library           /apps/autotest4/lib/clusterKeyword.py
+Library           /apps/autotest4/lib/clusterLib.py
+Library           /apps/autotest4/lib/common.py
+Library           /apps/autotest4/lib/hostKeyword.py
+Library           /apps/autotest4/lib/hostLib.py
+Library           /apps/autotest4/lib/hostsConfLib.py
+Library           /apps/autotest4/lib/jobKeyword.py
+Library           /apps/autotest4/lib/jobLib.py
+Library           /apps/autotest4/lib/myUtils.py
+Library           /apps/autotest4/lib/OperatingSystem.py
+Library           /apps/autotest4/lib/queueKeyword.py
+Library           /apps/autotest4/lib/queueLib.py
+Library           /apps/autotest4/lib/paramsConfLib.py
+Library           /apps/autotest4/lib/queuesConfLib.py
+Library           /apps/autotest4/lib/retry.py
+Library           /apps/autotest4/lib/schedulerConfLib.py
+Library           /apps/autotest4/lib/userGroupKeyword.py
+Library           /apps/autotest4/lib/userGroupLib.py
+Library           /apps/autotest4/lib/userKeyword.py
+Library           /apps/autotest4/lib/usersConfLib.py
+Library           /apps/autotest4/lib/userLib.py
+Library           /apps/autotest4/lib/jhistKeyword.py
+
+*** Test Cases ***
+case1.jobstarter执行成功（正确的路径，退出码为零）
+    [Tags]    p1    long-time
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${inputdir}    Set Variable    ${filedir}/spooler/input/jobstarter.sh
+    ${outputdir}    Set Variable    ${filedir}/spooler/output/jobstarter-out.txt
+    Remove files    ${filedir}/spooler/output/*.txt
+    checkClusterStatus
+    ${qinfo}    getString    PRIORITY=20\nJOB_STARTER=${inputdir}\n
+    addOrModifyQueue    jobstarter1    ${qinfo}
+    runCommand    jadmin schedreconfig
+    checkClusterStatus
+    ${job1}    QuerySubmitInfo    su user1 -c "jsub -q jobstarter1 sleep 5"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    sleep    12
+    checkJobStatus    ${jobid1}    DONE
+    ${result}    Get File    ${outputdir}
+    log    ${result}
+    Should Contain    ${result}    user1
+    ${runtime}    getJobRunTimeHist    ${jobid1}
+    shouldAlmostEqual    ${runtime}    10    4
+    Remove files    ${filedir}/spooler/output/*.txt
+    [Teardown]    delQueue    jobstarter1
+
+case2.jobstarter执行成功（错误的路径）
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${inputdir}    Set Variable    ${filedir}/spooler/input/jobstarterno.sh
+    Remove files    ${filedir}/spooler/output/*.txt
+    checkClusterStatus
+    ${qinfo}    getString    PRIORITY=20\nJOB_STARTER=${inputdir}\n
+    addOrModifyQueue    jobstarter2    ${qinfo}
+    runCommand    jadmin schedreconfig
+    checkClusterStatus
+    ${job1}    QuerySubmitInfo    su user1 -c "jsub -q jobstarter2 sleep 5"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    EXIT
+    ${exitcode}    getJobExitCodeHist    ${jobid1}
+    Should Be equal    ${exitcode}    127
+    Remove files    ${filedir}/spooler/output/*.txt
+    [Teardown]    delQueue    jobstarter2
+
+case3.jobstarter中有文件重定向。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${inputdir}    Set Variable    ${filedir}/spooler/input/jobstarter3.sh
+    ${outputdir}    Set Variable    ${filedir}/spooler/output/jobstarter-out-3.txt
+    ${queoutputdir}    Set Variable    ${filedir}/spooler/output/jobstarter-que-3.txt
+    Remove files    ${filedir}/spooler/output/*.txt
+    checkClusterStatus
+    ${qinfo}    getString    PRIORITY=20\nJOB_STARTER=${inputdir}>${queoutputdir}\n
+    addOrModifyQueue    jobstarter3    ${qinfo}
+    runCommand    jadmin schedreconfig
+    checkClusterStatus
+    ${job1}    QuerySubmitInfo    su user1 -c "jsub -q jobstarter3 hostname"
+    ${jobid1}    getJobId    ${job1}
+    sleep    2
+    checkJobStatus    ${jobid1}    DONE
+    ${host1}    getAndCheckJobExecHost    ${jobid1}
+    ${result}    Get File    ${outputdir}
+    log    ${result}
+    Should Contain    ${result}    user1
+    ${result1}    Get File    ${queoutputdir}
+    log    ${result1}
+    Should Contain    ${result1}    ${host1}
+    Remove files    ${filedir}/spooler/output/*.txt
+    [Teardown]    delQueue    jobstarter3
+
+case4.jobstarter与数组作业
+    [Tags]    p1    long-time
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${inputdir}    Set Variable    ${filedir}/spooler/input/jobstarter4.sh
+    ${outputdir}    Set Variable    ${filedir}/spooler/output/jobstarter-out-4.txt
+    Remove files    ${filedir}/spooler/output/*.txt
+    checkClusterStatus
+    ${qinfo}    getString    PRIORITY=20\nJOB_STARTER=${inputdir}\n
+    addOrModifyQueue    jobstarter4    ${qinfo}
+    runCommand    jadmin schedreconfig
+    checkClusterStatus
+    ${job1}    QuerySubmitInfo    su user1 -c "jsub -q jobstarter4 -J arr[1-2] hostname"
+    ${jobid1}    getJobId    ${job1}
+    sleep    3
+    checkJobStatus    ${jobid1}[1]    DONE
+    checkJobStatus    ${jobid1}[2]    DONE
+    ${result}    Get File    ${outputdir}
+    log    ${result}
+    Should Match Regexp    ${result}    user1\\n\\s*user1
+    Remove files    ${filedir}/spooler/output/*.txt
+    [Teardown]    delQueue    jobstarter4
+
+case5.jctrl start
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${inputdir}    Set Variable    ${filedir}/spooler/input/jobstarter5.sh
+    ${outputdir}    Set Variable    ${filedir}/spooler/output/jobstarter-out-5.txt
+    Remove files    ${filedir}/spooler/output/*.txt
+    checkClusterStatus
+    ${qinfo}    getString    PRIORITY=20\nJOB_STARTER=${inputdir}\n
+    addOrModifyQueue    jobstarter5    ${qinfo}
+    runCommand    jadmin schedreconfig
+    checkClusterStatus
+    ${job1}    QuerySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    QuerySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    ${job3}    QuerySubmitInfo    su user1 -c "jsub -q jobstarter5 hostname"
+    ${jobid3}    getJobId    ${job3}
+    sleep    2
+    checkJobStatus    ${jobid3}    PEND
+    runCommand    su jhadmin -c "jctrl start -m rhela1 ${jobid3}"
+    sleep    2
+    checkJobStatus    ${jobid3}    DONE
+    ${result}    Get File    ${outputdir}
+    log    ${result}
+    Should Contain    ${result}    user1
+    Remove files    ${filedir}/spooler/output/*.txt
+    [Teardown]    delQueue    jobstarter5
+
+case6.jctrl requeue
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${inputdir}    Set Variable    ${filedir}/spooler/input/jobstarter6.sh
+    ${outputdir}    Set Variable    ${filedir}/spooler/output/jobstarter-out-6.txt
+    Remove files    ${filedir}/spooler/output/*.txt
+    checkClusterStatus
+    ${qinfo}    getString    PRIORITY=10\nJOB_STARTER=${inputdir}\n
+    addOrModifyQueue    jobstarter6    ${qinfo}
+    jadminSched
+    checkClusterStatus
+    ${job1}    QuerySubmitInfo    su user1 -c "jsub -q jobstarter6 hostname"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    QuerySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    ${job3}    QuerySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    QuerySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    sleep    2
+    ${result}    Get File    ${outputdir}
+    log    ${result}
+    Should Contain    ${result}    begin
+    ${requeueinfo}    runCommand    su jhadmin -c "jctrl requeue ${jobid1}"
+    log    ${requeueinfo}
+    checkJobStatus    ${jobid1}    PEND
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    PEND
+    runCommand    su jhadmin -c "jctrl kill ${jobid2}"
+    checkJobStatus    ${jobid1}    PEND
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    RUN
+    runCommand    su jhadmin -c "jctrl kill ${jobid3}"
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    EXIT
+    checkJobStatus    ${jobid4}    RUN
+    checkJobStatus    ${jobid1}    DONE
+    ${result}    Get File    ${outputdir}
+    log    ${result}
+    ${host1}    getAndCheckJobExecHost    ${jobid3}
+    Should Contain    ${result}    user1
+    Should Contain    ${result}    end
+    Should Contain X Times    ${result}    begin    2
+    Remove files    ${filedir}/spooler/output/*.txt
+    [Teardown]    delQueue    jobstarter6

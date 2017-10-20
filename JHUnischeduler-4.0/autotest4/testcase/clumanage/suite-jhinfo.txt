@@ -1,0 +1,63 @@
+*** Settings ***
+Suite Setup       preSuite    spooler/conf/conf-jhosts
+Suite Teardown    postSuite
+Library           /apps/autotest4/lib/clusterKeyword.py
+Library           /apps/autotest4/lib/clusterLib.py
+Library           /apps/autotest4/lib/common.py
+Library           /apps/autotest4/lib/hostKeyword.py
+Library           /apps/autotest4/lib/hostLib.py
+Library           /apps/autotest4/lib/hostsConfLib.py
+Library           /apps/autotest4/lib/jobKeyword.py
+Library           /apps/autotest4/lib/jobLib.py
+Library           /apps/autotest4/lib/myUtils.py
+Library           /apps/autotest4/lib/OperatingSystem.py
+Library           /apps/autotest4/lib/queueKeyword.py
+Library           /apps/autotest4/lib/queueLib.py
+Library           /apps/autotest4/lib/paramsConfLib.py
+Library           /apps/autotest4/lib/queuesConfLib.py
+Library           /apps/autotest4/lib/retry.py
+Library           /apps/autotest4/lib/schedulerConfLib.py
+Library           /apps/autotest4/lib/userGroupKeyword.py
+Library           /apps/autotest4/lib/userGroupLib.py
+Library           /apps/autotest4/lib/userKeyword.py
+Library           /apps/autotest4/lib/usersConfLib.py
+Library           /apps/autotest4/lib/userLib.py
+
+*** Test Cases ***
+case1.jhinfo -h
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file}    Set Variable    ${filedir}/spooler/input/jhinfo-help.txt
+    log    ${file}
+    ${jhinfohelp}    runCommand    jhinfo -h
+    log    ${jhinfohelp}
+    ${helpfile}    Get File    ${file}
+    log    ${helpfile}
+    Should Be Equal    ${jhinfohelp}    ${helpfile}
+
+case2.bug12147jhinfo -V
+    [Tags]    p2
+    [Setup]    readyTest
+    ${version}    checkjhdsVersion    jhinfo -V
+
+case3.bug11050jhinfo
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file}    Set Variable    ${filedir}/spooler/input/jhinfo.txt
+    log    ${file}
+    ${jhinfo}    runCommand    jhinfo
+    log    ${jhinfo}
+    ${jhinfofile}    Get File    ${file}
+    log    ${jhinfofile}
+    Should Contain    ${jhinfo}    ${jhinfofile}
+    [Teardown]    killJob
+
+case4.bug12160jhinfo mem
+    [Tags]    p1
+    [Setup]    readyTest
+    ${jhinfo}    runCommand    jhinfo mem
+    log    ${jhinfo}
+    Should Be Equal    ${jhinfo}    ERROR
+    [Teardown]    killJob

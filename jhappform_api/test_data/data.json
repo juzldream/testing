@@ -1,6 +1,7 @@
 {
-     "other_param": [
+    "other_param": [
         {
+            "email_receiver":"rzhou@jhinno.com;XXX@jhinno.com",
             "appform_top": "/apps/jhappform/",
             "jhscheduler_top": "/apps/unischeduler/",
             "baseUrl": "http://192.168.0.157:8080/appform/ws/",
@@ -30,14 +31,38 @@
                 {
                     "name": "case3",
                     "expect": "0",
-                    "username": "user1",
-                    "password": ""
+                    "username": "none",
+                    "password": "Jhadmin123"
                 },
                 {
                     "name": "case4",
                     "expect": "0",
+                    "username": "@",
+                    "password": "$"
+                },
+                {
+                    "name": "case5",
+                    "expect": "0",
+                    "username": "",
+                    "password": ""
+                },
+                {
+                    "name": "case6",
+                    "expect": "0",
+                    "username": "用户1",
+                    "password": "免密码"
+                },
+                {
+                    "name": "case7",
+                    "expect": "0",
                     "username": "",
                     "password": "Letmein123"
+                },
+                {
+                    "name": "case8",
+                    "expect": "0",
+                    "username": "a",
+                    "password": "b"
                 }
             ]
         }
@@ -48,12 +73,48 @@
                 {
                     "name": "case1",
                     "expect": "0",
-                    "token": "jhadmin"
+                    "token": "access_tokne"
                 },
                 {
                     "name": "case2",
                     "expect": "0",
-                    "token": "user1"
+                    "token": ""
+                },
+                {
+                    "name": "case3",
+                    "expect": "0",
+                    "token": "#"
+                },
+                {
+                    "name": "case4",
+                    "expect": "0",
+                    "token": "访问值"
+                }
+            ]
+        }
+    ],
+    "applist": [
+        {
+            "data": [
+                {
+                    "name": "case1",
+                    "expect": "0",
+                    "token": "access_tokne"
+                },
+                {
+                    "name": "case2",
+                    "expect": "0",
+                    "token": ""
+                },
+                {
+                    "name": "case3",
+                    "expect": "0",
+                    "token": "#"
+                },
+                {
+                    "name": "case4",
+                    "expect": "0",
+                    "token": "访问值"
                 }
             ]
         }
@@ -64,12 +125,22 @@
                 {
                     "name": "case1",
                     "expect": "0",
-                    "token": "token1"
+                    "token": "access_tokne"
                 },
                 {
                     "name": "case2",
                     "expect": "0",
-                    "token": "token1"
+                    "token": ""
+                },
+                {
+                    "name": "case3",
+                    "expect": "0",
+                    "token": "#"
+                },
+                {
+                    "name": "case4",
+                    "expect": "0",
+                    "token": "访问值"
                 }
             ]
         }
@@ -80,12 +151,22 @@
                 {
                     "name": "case1",
                     "expect": "0",
-                    "token": "token1"
+                    "token": "access_tokne"
                 },
                 {
                     "name": "case2",
                     "expect": "0",
-                    "token": "token1"
+                    "token": ""
+                },
+                {
+                    "name": "case3",
+                    "expect": "0",
+                    "token": "#"
+                },
+                {
+                    "name": "case4",
+                    "expect": "0",
+                    "token": "访问值"
                 }
             ]
         }
@@ -96,42 +177,778 @@
                 {
                     "name": "case1",
                     "expect": "0",
-                    "token": "token1"
+                    "token": "access_tokne"
                 },
                 {
                     "name": "case2",
                     "expect": "0",
-                    "token": "token2"
+                    "token": ""
                 },
                 {
                     "name": "case3",
                     "expect": "0",
-                    "token": "token3"
+                    "token": "#"
+                },
+                {
+                    "name": "case4",
+                    "expect": "0",
+                    "token": "访问值"
                 }
             ]
         }
     ],
-     "renamefile": [
+    "jobs": [
         {
             "data": [
                 {
                     "name": "case1",
                     "expect": "0",
-                    "old_file_name": "case1",
-                    "new_file_name": "token123"
-
+                    "token": "access_tokne"
                 },
                 {
                     "name": "case2",
                     "expect": "0",
-                    "old_file_name": "case1",
-                    "new_file_name": "token123"
+                    "token": ""
                 },
                 {
                     "name": "case3",
                     "expect": "0",
-                    "old_file_name": "case1",
-                    "new_file_name": "token123"
+                    "token": "#"
+                },
+                {
+                    "name": "case4",
+                    "expect": "0",
+                    "token": "访问值"
+                }
+            ]
+        }
+    ],
+    "renamefile": [
+        {
+            "data": [
+                {
+                    "name": "case1",
+                    "expect": "0",
+                    "old_file_name": "",
+                    "new_file_name": "file_name1"
+                },
+                {
+                    "name": "case2",
+                    "expect": "0",
+                    "old_file_name": "file_name1",
+                    "new_file_name": ""
+                },
+                {
+                    "name": "case3",
+                    "expect": "0",
+                    "old_file_name": "",
+                    "new_file_name": ""
+                },
+                {
+                    "name": "case4",
+                    "expect": "0",
+                    "old_file_name": "file_name1",
+                    "new_file_name": "file_name2"
+                },
+                {
+                    "name": "case5",
+                    "expect": "0",
+                    "old_file_name": "/apps/jhappform/logs/portal.log.bak_1019",
+                    "new_file_name": "portal.log19"
+                }
+            ]
+        }
+    ],
+    "deletefile": [
+        {
+            "data": [
+                {
+                    "name": "case1",
+                    "expect": "0",
+                    "file_name": "file_name1"
+                },
+                {
+                    "name": "case2",
+                    "expect": "0",
+                    "file_name": ""
+                },
+                {
+                    "name": "case3",
+                    "expect": "0",
+                    "file_name": "*",
+                    "new_file_name": ""
+                },
+                {
+                    "name": "case4",
+                    "expect": "0",
+                    "file_name": "中文"
+                },
+                {
+                    "name": "case5",
+                    "expect": "0",
+                    "file_name": "/apps/jhappform/logs/portal.log.bak"
+                }
+            ]
+        }
+    ],
+    "url": [
+        {
+            "data": [
+                {
+                    "name": "case1",
+                    "expect": "0",
+                    "appname": "file_name1"
+                },
+                {
+                    "name": "case2",
+                    "expect": "0",
+                    "appname": ""
+                },
+                {
+                    "name": "case3",
+                    "expect": "0",
+                    "appname": "*"
+                },
+                {
+                    "name": "case4",
+                    "expect": "0",
+                    "appname": "中文"
+                },
+                {
+                    "name": "case5",
+                    "expect": "0",
+                    "appname": "portal.log.bak"
+                },
+                {
+                    "name": "case6",
+                    "expect": "1",
+                    "appname": "jobmana"
+                },
+                {
+                    "name": "case7",
+                    "expect": "1",
+                    "appname": "desktopmana"
+                },
+                {
+                    "name": "case8",
+                    "expect": "1",
+                    "appname": "spoolermana"
+                },
+                {
+                    "name": "case9",
+                    "expect": "0",
+                    "appname": "sharegroup_manager"
+                },
+                {
+                    "name": "case10",
+                    "expect": "1",
+                    "appname": "CFX"
+                },
+                {
+                    "name": "case11",
+                    "expect": "1",
+                    "appname": "作业管理"
+                },
+                {
+                    "name": "case12",
+                    "expect": "1",
+                    "appname": "分享组管理"
+                },
+                {
+                    "name": "case13",
+                    "expect": "1",
+                    "appname": "会话管理"
+                },
+                {
+                    "name": "case14",
+                    "expect": "1",
+                    "appname": "统计分析"
+                },
+                {
+                    "name": "case15",
+                    "expect": "1",
+                    "appname": "集群监控"
+                },
+                {
+                    "name": "case16",
+                    "expect": "1",
+                    "appname": "数据管理"
+                },
+                {
+                    "name": "case17",
+                    "expect": "1",
+                    "appname": "虚拟化管理"
+                },
+                {
+                    "name": "case18",
+                    "expect": "1",
+                    "appname": "统计分析"
+                },
+                {
+                    "name": "case19",
+                    "expect": "1",
+                    "appname": "CFX交互模式"
+                },
+                {
+                    "name": "case20",
+                    "expect": "1",
+                    "appname": "Fluent"
+                },
+                {
+                    "name": "case21",
+                    "expect": "1",
+                    "appname": "Catia"
+                },
+                {
+                    "name": "case22",
+                    "expect": "1",
+                    "appname": "Fluent"
+                },
+                {
+                    "name": "case23",
+                    "expect": "1",
+                    "appname": "Linux"
+                },
+                {
+                    "name": "case24",
+                    "expect": "1",
+                    "appname": "Windows"
+                },
+                {
+                    "name": "case25",
+                    "expect": "1",
+                    "appname": "R"
+                },
+                {
+                    "name": "case26",
+                    "expect": "1",
+                    "appname": "通用作业提交"
+                },
+                {
+                    "name": "case27",
+                    "expect": "1",
+                    "appname": "Matlab并行"
+                },
+                {
+                    "name": "case28",
+                    "expect": "1",
+                    "appname": "NAMD"
+                },
+                {
+                    "name": "case29",
+                    "expect": "1",
+                    "appname": "Vasp"
+                },
+                {
+                    "name": "case30",
+                    "expect": "1",
+                    "appname": "AUTODYN"
+                }
+            ]
+        }
+    ],
+    "filelist": [
+        {
+            "data": [
+                {
+                    "name": "case1",
+                    "expect": "0",
+                    "dir": "file_name1"
+                },
+                {
+                    "name": "case2",
+                    "expect": "0",
+                    "dir": ""
+                },
+                {
+                    "name": "case3",
+                    "expect": "0",
+                    "dir": "*"
+                },
+                {
+                    "name": "case4",
+                    "expect": "0",
+                    "dir": "中文"
+                },
+                {
+                    "name": "case5",
+                    "expect": "1",
+                    "dir": "/apps/jhappform/logs/"
+                }
+            ]
+        }
+    ],
+    "mkdir": [
+        {
+            "data": [
+                {
+                    "name": "case1",
+                    "expect": "0",
+                    "isforce": "false",
+                    "dirpath": "file_name1"
+                },
+                {
+                    "name": "case2",
+                    "expect": "0",
+                    "isforce": "false",
+                    "dirpath": ""
+                },
+                {
+                    "name": "case3",
+                    "expect": "0",
+                    "isforce": "false",
+                    "dirpath": "*"
+                },
+                {
+                    "name": "case4",
+                    "expect": "0",
+                    "isforce": "false",
+                    "dirpath": "中文"
+                },
+                {
+                    "name": "case5",
+                    "expect": "1",
+                    "isforce": "false",
+                    "dirpath": "/apps/jhappform/tts/"
+                },
+                {
+                    "name": "case6",
+                    "expect": "1",
+                    "isforce": "true",
+                    "dirpath": "/apps/jhappform/ms/ts"
+                },
+                {
+                    "name": "case7",
+                    "expect": "0",
+                    "isforce": "true",
+                    "dirpath": "*"
+                },
+                {
+                    "name": "case8",
+                    "expect": "0",
+                    "isforce": "true",
+                    "dirpath": "../apps"
+                },
+                {
+                    "name": "case9",
+                    "expect": "0",
+                    "isforce": "false",
+                    "dirpath": "/apps/jhinno/ms/ts"
+                },
+                {
+                    "name": "case10",
+                    "expect": "0",
+                    "isforce": "",
+                    "dirpath": "/apps/jhinno/ms/ts"
+                }
+            ]
+        }
+    ],
+    "copyfile": [
+        {
+            "data": [
+                {
+                    "name": "case1",
+                    "expect": "0",
+                    "source_file_name": "",
+                    "target_file_name": "file_name1"
+                },
+                {
+                    "name": "case2",
+                    "expect": "0",
+                    "source_file_name": "file_name1",
+                    "target_file_name": ""
+                },
+                {
+                    "name": "case3",
+                    "expect": "0",
+                    "source_file_name": "",
+                    "target_file_name": ""
+                },
+                {
+                    "name": "case4",
+                    "expect": "0",
+                    "source_file_name": "file_name1",
+                    "target_file_name": "file_name2"
+                },
+                {
+                    "name": "case5",
+                    "expect": "1",
+                    "source_file_name": "/apps/jhappform/logs/portal.log",
+                    "target_file_name": "portal.log.bak_1019"
+                }
+            ]
+        }
+    ],
+    "jobid": [
+        {
+            "data": [
+                {
+                    "name": "case1",
+                    "expect": "0",
+                    "id": "_"
+                },
+                {
+                    "name": "case2",
+                    "expect": "0",
+                    "id": "file_name1"
+                },
+                {
+                    "name": "case3",
+                    "expect": "0",
+                    "id": "@"
+                },
+                {
+                    "name": "case4",
+                    "expect": "0",
+                    "id": "中文"
+                },
+                {
+                    "name": "case5",
+                    "expect": "1",
+                    "id": "2126"
+                }
+            ]
+        }
+    ],
+     "desktopid": [
+        {
+            "data": [
+                {
+                    "name": "case1",
+                    "expect": "0",
+                    "id": "_"
+                },
+                {
+                    "name": "case2",
+                    "expect": "0",
+                    "id": "file_name1"
+                },
+                {
+                    "name": "case3",
+                    "expect": "0",
+                    "id": "@"
+                },
+                {
+                    "name": "case4",
+                    "expect": "0",
+                    "id": "中文"
+                },
+                {
+                    "name": "case5",
+                    "expect": "0",
+                    "id": "2126"
+                }
+            ]
+        }
+    ],
+    "jobflist": [
+        {
+            "data": [
+                {
+                    "name": "case1",
+                    "expect": "0",
+                    "id": "_"
+                },
+                {
+                    "name": "case2",
+                    "expect": "0",
+                    "id": "file_name1"
+                },
+                {
+                    "name": "case3",
+                    "expect": "0",
+                    "id": "@"
+                },
+                {
+                    "name": "case4",
+                    "expect": "0",
+                    "id": "中文"
+                },
+                {
+                    "name": "case5",
+                    "expect": "1",
+                    "id": "2127"
+                }
+            ]
+        }
+    ],
+    "jobids": [
+        {
+            "data": [
+                {
+                    "name": "case1",
+                    "expect": "1",
+                    "ids": "2126,2126"
+                },
+                {
+                    "name": "case2",
+                    "expect": "0",
+                    "ids": "file_name1"
+                },
+                {
+                    "name": "case3",
+                    "expect": "0",
+                    "ids": "@"
+                },
+                {
+                    "name": "case4",
+                    "expect": "0",
+                    "ids": "中文"
+                },
+                {
+                    "name": "case5",
+                    "expect": "1",
+                    "ids": "2126"
+                },
+                {
+                    "name": "case6",
+                    "expect": "0",
+                    "ids": ","
+                },
+                {
+                    "name": "case7",
+                    "expect": "0",
+                    "ids": ",,"
+                },
+                 {
+                    "name": "case8",
+                    "expect": "0",
+                    "ids": "*"
+                },
+                {
+                    "name": "case9",
+                    "expect": "0",
+                    "ids": "999,999"
+                },
+                {
+                    "name": "case10",
+                    "expect": "0",
+                    "ids": "2126,999"
+                }
+            ]
+        }
+    ],
+    "desktopids": [
+        {
+            "data": [
+                {
+                    "name": "case1",
+                    "expect": "0",
+                    "ids": "2126,2126"
+                },
+                {
+                    "name": "case2",
+                    "expect": "0",
+                    "ids": "file_name1"
+                },
+                {
+                    "name": "case3",
+                    "expect": "0",
+                    "ids": "@"
+                },
+                {
+                    "name": "case4",
+                    "expect": "0",
+                    "ids": "中文"
+                },
+                {
+                    "name": "case5",
+                    "expect": "0",
+                    "ids": "2126"
+                },
+                {
+                    "name": "case6",
+                    "expect": "0",
+                    "ids": ","
+                },
+                {
+                    "name": "case7",
+                    "expect": "0",
+                    "ids": ",,"
+                },
+                 {
+                    "name": "case8",
+                    "expect": "0",
+                    "ids": "*"
+                },
+                {
+                    "name": "case9",
+                    "expect": "0",
+                    "ids": "999,999"
+                },
+                {
+                    "name": "case10",
+                    "expect": "0",
+                    "ids": "2126,999"
+                }
+            ]
+        }
+    ],
+    "jobname": [
+        {
+            "data": [
+                {
+                    "name": "case1",
+                    "expect": "0",
+                    "jobname": "2126,2126"
+                },
+                {
+                    "name": "case2",
+                    "expect": "0",
+                    "jobname": "file_name1"
+                },
+                {
+                    "name": "case3",
+                    "expect": "0",
+                    "jobname": "@"
+                },
+                {
+                    "name": "case4",
+                    "expect": "0",
+                    "jobname": "中文"
+                },
+                {
+                    "name": "case5",
+                    "expect": "1",
+                    "jobname": "apitest"
+                },
+                {
+                    "name": "case6",
+                    "expect": "0",
+                    "jobname": ","
+                },
+                {
+                    "name": "case7",
+                    "expect": "0",
+                    "jobname": ",,"
+                },
+                 {
+                    "name": "case8",
+                    "expect": "0",
+                    "jobname": "*"
+                },
+                {
+                    "name": "case9",
+                    "expect": "0",
+                    "jobname": "999,999"
+                },
+                {
+                    "name": "case10",
+                    "expect": "0",
+                    "jobname": "2126,999"
+                }
+            ]
+        }
+    ],
+    "desktopname": [
+        {
+            "data": [
+                {
+                    "name": "case1",
+                    "expect": "0",
+                    "desktopname": "2126,2126"
+                },
+                {
+                    "name": "case2",
+                    "expect": "0",
+                    "desktopname": "file_name1"
+                },
+                {
+                    "name": "case3",
+                    "expect": "0",
+                    "desktopname": "@"
+                },
+                {
+                    "name": "case4",
+                    "expect": "0",
+                    "desktopname": "中文"
+                },
+                {
+                    "name": "case5",
+                    "expect": "0",
+                    "desktopname": "apitest"
+                },
+                {
+                    "name": "case6",
+                    "expect": "0",
+                    "desktopname": ","
+                },
+                {
+                    "name": "case7",
+                    "expect": "0",
+                    "desktopname": ",,"
+                },
+                 {
+                    "name": "case8",
+                    "expect": "0",
+                    "desktopname": "*"
+                },
+                {
+                    "name": "case9",
+                    "expect": "0",
+                    "desktopname": "999,999"
+                },
+                {
+                    "name": "case10",
+                    "expect": "0",
+                    "desktopname": "2126,999"
+                }
+            ]
+        }
+    ],
+     "jobstatus": [
+        {
+            "data": [
+                {
+                    "name": "case1",
+                    "expect": "1",
+                    "status": "done"
+                },
+                {
+                    "name": "case2",
+                    "expect": "1",
+                    "status": "exit"
+                },
+                {
+                    "name": "case3",
+                    "expect": "0",
+                    "status": "pend"
+                },
+                {
+                    "name": "case4",
+                    "expect": "0",
+                    "status": "run"
+                },
+                {
+                    "name": "case5",
+                    "expect": "0",
+                    "status": "ususp"
+                },
+                {
+                    "name": "case6",
+                    "expect": "0",
+                    "status": "psusp"
+                },
+                {
+                    "name": "case7",
+                    "expect": "0",
+                    "status": ",,"
+                },
+                 {
+                    "name": "case8",
+                    "expect": "0",
+                    "status": "*"
+                },
+                {
+                    "name": "case9",
+                    "expect": "0",
+                    "status": "中文"
+                },
+                {
+                    "name": "case10",
+                    "expect": "0",
+                    "status": "——"
                 }
             ]
         }
@@ -145,9 +962,9 @@
                     "OS": "linux",
                     "appid": "gedit",
                     "resource": "linux",
-                    "protocol": "vnc"
-
-
+                    "protocol": "vnc",
+                    "metircs_width": "1024",
+                    "metircs_height": "1024"
                 },
                 {
                     "name": "case2",
@@ -155,7 +972,9 @@
                     "OS": "unix",
                     "appid": "gedit",
                     "resource": "linux",
-                    "protocol": "vnc"
+                    "protocol": "vnc",
+                    "metircs_width": "1024",
+                    "metircs_height": "1024"
                 },
                 {
                     "name": "case3",
@@ -163,7 +982,19 @@
                     "OS": "linux",
                     "appid": "notepad",
                     "resource": "linux",
-                    "protocol": "vnc"
+                    "protocol": "vnc",
+                    "metircs_width": "1024",
+                    "metircs_height": "1024"
+                },
+                {
+                    "name": "case4",
+                    "expect": "0",
+                    "OS": "linux",
+                    "appid": "notepad",
+                    "resource": "linux",
+                    "protocol": "jhapp",
+                    "metircs_width": "1024",
+                    "metircs_height": "1024"
                 }
             ]
         }

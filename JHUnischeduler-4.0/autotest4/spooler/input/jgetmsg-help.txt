@@ -1,0 +1,11 @@
+usage: jgetmsg [-h] [-V] [-i index] jobId | jobId[index]
+
+description: reads messages from a job
+
+positional arguments:
+  jobId | jobId[index]  operates on the specified job
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -V                    print JH UniScheduler release version and exit
+  -i index              operates on the specified message index

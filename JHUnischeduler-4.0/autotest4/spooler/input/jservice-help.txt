@@ -1,0 +1,20 @@
+Usage: jservice <command> [options]... 
+Service related command line
+
+Available subcommands:
+  list                                print full list of managed services
+  start <service>                     start specified service
+  startgroup <group>                  start specified service group
+  stop <service>                      stop specified service
+  stopgroup <group>                   stop specified service group
+  restart <service>                   restart specified service
+  restartgroup <group>                restart specified service group
+  remove <service>                    remove status of specified service
+  reschedule <service> <instance>     reschedule specified instance of service
+
+  -l, --log-level             specifies logging level
+                              optional levels are: DEBUG, INFO, WARN, ERROR
+
+  -h, --help                  display this help and exit
+
+  -V, --version               display version information and exit

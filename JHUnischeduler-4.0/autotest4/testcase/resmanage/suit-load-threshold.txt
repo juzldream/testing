@@ -1,0 +1,124 @@
+*** Settings ***
+Suite Setup       preSuite    spooler/conf/conf-load-threshold
+Suite Teardown    postSuite
+Library           /apps/autotest4/lib/clusterKeyword.py
+Library           /apps/autotest4/lib/clusterLib.py
+Library           /apps/autotest4/lib/common.py
+Library           /apps/autotest4/lib/hostKeyword.py
+Library           /apps/autotest4/lib/hostLib.py
+Library           /apps/autotest4/lib/hostsConfLib.py
+Library           /apps/autotest4/lib/jobKeyword.py
+Library           /apps/autotest4/lib/jobLib.py
+Library           /apps/autotest4/lib/myUtils.py
+Library           /apps/autotest4/lib/OperatingSystem.py
+Library           /apps/autotest4/lib/queueKeyword.py
+Library           /apps/autotest4/lib/queueLib.py
+Library           /apps/autotest4/lib/paramsConfLib.py
+Library           /apps/autotest4/lib/queuesConfLib.py
+Library           /apps/autotest4/lib/retry.py
+Library           /apps/autotest4/lib/schedulerConfLib.py
+Library           /apps/autotest4/lib/userGroupKeyword.py
+Library           /apps/autotest4/lib/userGroupLib.py
+Library           /apps/autotest4/lib/userKeyword.py
+Library           /apps/autotest4/lib/usersConfLib.py
+Library           /apps/autotest4/lib/userLib.py
+
+*** Test Cases ***
+case1.当节点上只有一个run作业，负载阈值到达时，作业不被挂起。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file0}    Set Variable    ${filedir}/spooler/input/pi.sh
+    ${file}    normalPath    ${file0}
+    addOrModifyHost    rhela1    3 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -m rhela1 \ -q stop_sched1 ${file}"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    usedUt    rhela1    ${file}    70%
+    ${infoxx}    runCommand    su jhadmin -c "jjobs -u all"
+    log    ${infoxx}
+    ${infoaaa}    runCommand    su jhadmin -c "jhosts stat"
+    log    ${infoaaa}
+    checkJobStatus    ${jobid1}    RUN
+    killDefault
+    [Teardown]    modHostInfo    rhela1=1 ()
+
+case2.bug10730当负载阈值到达时，队列中的作业挂起个数，作业会留一个，当被留的作业执行完后，
+    [Tags]    p1    bug    docker-not-run
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file0}    Set Variable    ${filedir}/spooler/input/pi.sh
+    ${file}    normalPath    ${file0}
+    addOrModifyHost    rhela1    3 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -m rhela1 -q stop_sched1 ${file}"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -m rhela1 -q stop_sched1 ${file}"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub -m rhela1 -q stop_sched1 ${file}"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    usedUt    rhela1    ${file}    70%
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    SSUSP
+    checkJobStatus    ${jobid3}    SSUSP
+    sleep    3
+    runCommand    su user1 -c "jctrl kill ${jobid1}"
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    SSUSP
+    sleep    3
+    runCommand    su user1 -c "jctrl kill ${jobid2}"
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    RUN
+    killDefault
+    [Teardown]    modHostInfo    rhela1=1 ()
+
+case3.当负载阈值达到调度阈值时，队列中的作业时否恢复run状态。
+    [Tags]    p1    docker-not-run
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file0}    Set Variable    ${filedir}/spooler/input/pi.sh
+    ${file}    normalPath    ${file0}
+    addOrModifyHost    rhela1    3 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -m rhela1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -m rhela1 \ ${file}"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub -m rhela1 -q stop_sched1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${infoaa}    runCommand    su jhadmin -c "jjobs -u all"
+    log    ${infoaa}
+    ${infoaaa}    runCommand    su jhadmin -c "jhosts stat"
+    log    ${infoaaa}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    usedUt    rhela1    ${file}    70%
+    ${infobb}    runCommand    su jhadmin -c "jjobs -u all"
+    log    ${infobb}
+    ${infobbb}    runCommand    su jhadmin -c "jhosts stat"
+    log    ${infobbb}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    SSUSP
+    sleep    3
+    runCommand    su user1 -c "jctrl kill ${jobid2}"
+    killDefault
+    checkUtValue    rhela1    40%
+    ${infocc}    runCommand    su jhadmin -c "jjobs -u all"
+    log    ${infocc}
+    ${infoccc}    runCommand    su jhadmin -c "jhosts stat"
+    log    ${infoccc}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    RUN
+    [Teardown]    modHostInfo    rhela1=1 ()

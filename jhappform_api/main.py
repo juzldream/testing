@@ -12,12 +12,12 @@ from email.mime.text import MIMEText
 from email.header import Header
 
 import unittest
-import HTMLTestReportCN
 import time
 import os
 
 
 from tools.tools import *
+from tools.HTMLTestReportCN import *
 
 
 
@@ -68,15 +68,15 @@ if __name__ == '__main__':
 
 
 
-	runner = HTMLTestReportCN.HTMLTestRunner(
-											stream = fp,
-											title = 'JHAppform rest_api 自动化测试报告。',
-											description = '用例执行情况：')
+	runner = HTMLTestRunner(
+							stream = fp,
+							title = 'JHAppform rest_api 自动化测试报告。',
+							description = '用例执行情况：')
 
 
 	runner.run(all_case())
 	fp.close()
 
-	Tools().send_mail(report_file)
+	Tools().send_mail(report_file,CASES['other_param'][0]['email_receiver'])
 
 

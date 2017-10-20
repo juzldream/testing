@@ -1,0 +1,329 @@
+*** Settings ***
+Suite Setup       preSuiteBack
+Suite Teardown    postSuite
+Library           /apps/autotest4/lib/clusterKeyword.py
+Library           /apps/autotest4/lib/clusterLib.py
+Library           /apps/autotest4/lib/common.py
+Library           /apps/autotest4/lib/hostKeyword.py
+Library           /apps/autotest4/lib/hostLib.py
+Library           /apps/autotest4/lib/hostsConfLib.py
+Library           /apps/autotest4/lib/jobKeyword.py
+Library           /apps/autotest4/lib/jobLib.py
+Library           /apps/autotest4/lib/myUtils.py
+Library           /apps/autotest4/lib/OperatingSystem.py
+Library           /apps/autotest4/lib/queueKeyword.py
+Library           /apps/autotest4/lib/queueLib.py
+Library           /apps/autotest4/lib/paramsConfLib.py
+Library           /apps/autotest4/lib/queuesConfLib.py
+Library           /apps/autotest4/lib/retry.py
+Library           /apps/autotest4/lib/schedulerConfLib.py
+Library           /apps/autotest4/lib/userGroupKeyword.py
+Library           /apps/autotest4/lib/userGroupLib.py
+Library           /apps/autotest4/lib/userKeyword.py
+Library           /apps/autotest4/lib/usersConfLib.py
+Library           /apps/autotest4/lib/userLib.py
+
+*** Test Cases ***
+case1.作业执行成功，命令级post_exec是否执行成功。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${inputdir}    Set Variable    ${filedir}/spooler/input/post-exec-cmd.sh
+    ${outputdir}    Set Variable    ${filedir}/spooler/output/post-exec-1.txt
+    Remove files    ${filedir}/spooler/output/*.txt
+    checkClusterStatus
+    ${job1}    QuerySubmitInfo    su user1 -c "jsub -Ep ${inputdir} hostname"
+    ${jobid1}    getJobId    ${job1}
+    sleep    2
+    checkJobStatus    ${jobid1}    DONE
+    sleep    2
+    ${result}    Get File    ${outputdir}
+    log    ${result}
+    Should Contain    ${result}    user1
+    ${histinfo}    RUN    jhist -l ${jobid1}
+    log    ${histinfo}
+    Should Contain    ${histinfo}    Post job process done successfully;
+    Remove files    ${filedir}/spooler/output/*.txt
+    [Teardown]    delOutputFile
+
+case2.作业执行失败，命令级post_exec是否执行成功。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${inputdir}    Set Variable    ${filedir}/spooler/input/post-exec-cmd.sh
+    ${outputdir}    Set Variable    ${filedir}/spooler/output/post-exec-1.txt
+    Remove files    ${filedir}/spooler/output/*.txt
+    checkClusterStatus
+    ${job1}    QuerySubmitInfo    su user1 -c "jsub -Ep ${inputdir} sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    sleep    1
+    runCommand    su user1 -c "jctrl kill ${jobid1}"
+    checkJobStatus    ${jobid1}    EXIT
+    sleep    2
+    ${result}    Get File    ${outputdir}
+    log    ${result}
+    Should Contain    ${result}    user1
+    ${histinfo}    RUN    jhist -l ${jobid1}
+    log    ${histinfo}
+    Should Contain    ${histinfo}    Post job process done successfully;
+    Remove files    ${filedir}/spooler/output/*.txt
+    [Teardown]    delOutputFile
+
+case3.向配置了post-exec的队列提交作业，作业执行成功，post-exec执行成功。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${queinputdir}    Set Variable    ${filedir}/spooler/input/post-exec-que.sh
+    ${queoutputdir}    Set Variable    ${filedir}/spooler/output/post-exec-3.txt
+    Remove files    ${filedir}/spooler/output/*.txt
+    checkClusterStatus
+    ${qinfo}    getString    PRIORITY=20\nPOST_EXEC=${queinputdir}>${queoutputdir}\n
+    addOrModifyQueue    post3    ${qinfo}
+    jadminSched
+    checkClusterStatus
+    ${job1}    QuerySubmitInfo    su user1 -c "jsub -q post3 hostname"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    DONE
+    sleep    2
+    ${result1}    Get File    ${queoutputdir}
+    log    ${result1}
+    Should Contain    ${result1}    user1
+    ${histinfo}    RUN    su user1 -c "jhist -l ${jobid1}"
+    log    ${histinfo}
+    Should Contain    ${histinfo}    Post job process done successfully;
+    Remove files    ${filedir}/spooler/output/*.txt
+    [Teardown]    delQueue    post3
+
+case4.向配置了post-exec的队列提交作业，队列级post-exec执行成功，作业是否有影响。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${queinputdir}    Set Variable    ${filedir}/spooler/input/post-exec-que-err.sh
+    ${queoutputdir}    Set Variable    ${filedir}/spooler/output/post-exec-4.txt
+    Remove files    ${filedir}/spooler/output/*.txt
+    checkClusterStatus
+    ${qinfo}    getString    PRIORITY=20\nPOST_EXEC=${queinputdir}>${queoutputdir}\n
+    addOrModifyQueue    post4    ${qinfo}
+    jadminSched
+    checkClusterStatus
+    ${job1}    QuerySubmitInfo    su user1 -c "jsub -q post4 hostname"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    DONE
+    sleep    2
+    File Should Be Empty    ${queoutputdir}
+    ${histinfo}    RUN    su user1 -c "jhist -l ${jobid1}"
+    log    ${histinfo}
+    Should Contain    ${histinfo}    Post job process failed;
+    Remove files    ${filedir}/spooler/output/*.txt
+    [Teardown]    delQueue    post4
+
+case5.向配置了post-exec的队列提交作业-Ep，作业执行成功，作业级和队列级post-exec执行成功。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${inputdir}    Set Variable    ${filedir}/spooler/input/post-exec-cmd.sh
+    ${queinputdir}    Set Variable    ${filedir}/spooler/input/post-exec-que.sh
+    ${outputdir}    Set Variable    ${filedir}/spooler/output/post-exec-1.txt
+    ${queoutputdir}    Set Variable    ${filedir}/spooler/output/post-exec-5.txt
+    Remove files    ${filedir}/spooler/output/*.txt
+    checkClusterStatus
+    ${qinfo}    getString    PRIORITY=20\nPOST_EXEC=${queinputdir}>${queoutputdir}\n
+    addOrModifyQueue    post5    ${qinfo}
+    jadminSched
+    checkClusterStatus
+    ${job1}    QuerySubmitInfo    su user1 -c "jsub -Ep ${inputdir} \ -q post5 hostname"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    DONE
+    sleep    2
+    ${result}    Get File    ${outputdir}
+    log    ${result}
+    Should Contain    ${result}    user1
+    ${result1}    Get File    ${queoutputdir}
+    log    ${result1}
+    Should Contain    ${result1}    user1
+    ${histinfo}    RUN    su user1 -c "jhist -l ${jobid1}"
+    log    ${histinfo}
+    Should Contain    ${histinfo}    Post job process done successfully;
+    Remove files    ${filedir}/spooler/output/*.txt
+    [Teardown]    delQueue    post5
+
+case6.向配置了post-exec的队列提交-Ep作业，队列级post执行失败，查看作业级post执行是否成功。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${inputdir}    Set Variable    ${filedir}/spooler/input/post-exec-cmd.sh
+    ${queinputdir}    Set Variable    ${filedir}/spooler/input/post-exec-que-err.sh
+    ${outputdir}    Set Variable    ${filedir}/spooler/output/post-exec-1.txt
+    ${queoutputdir}    Set Variable    ${filedir}/spooler/output/post-exec-6.txt
+    Remove files    ${filedir}/spooler/output/*.txt
+    checkClusterStatus
+    ${qinfo}    getString    PRIORITY=20\nPOST_EXEC=${queinputdir}>${queoutputdir}\n
+    addOrModifyQueue    post6    ${qinfo}
+    jadminSched
+    checkClusterStatus
+    ${job1}    QuerySubmitInfo    su user1 -c "jsub -Ep ${inputdir} \ -q post6 hostname"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    DONE
+    sleep    2
+    ${result}    Get File    ${outputdir}
+    log    ${result}
+    Should Contain    ${result}    user1
+    File Should Be Empty    ${queoutputdir}
+    ${histinfo}    RUN    su user1 -c "jhist -l ${jobid1}"
+    log    ${histinfo}
+    Should Contain    ${histinfo}    Post job process failed;
+    Remove files    ${filedir}/spooler/output/*.txt
+    [Teardown]    delQueue    post6
+
+case7.执行jctrl stop/requeue命令停止和恢复-Ep选项的作业。
+    [Tags]    p1    long-time
+    ${filedir}    getFileDir
+    ${inputdir}    Set Variable    ${filedir}/spooler/input/post-exec-cmd.sh
+    ${queinputdir}    Set Variable    ${filedir}/spooler/input/post-exec-que.sh
+    ${outputdir}    Set Variable    ${filedir}/spooler/output/post-exec-1.txt
+    ${queoutputdir}    Set Variable    ${filedir}/spooler/output/post-exec-7.txt
+    Remove files    ${filedir}/spooler/output/*.txt
+    checkClusterStatus
+    ${qinfo}    getString    PRIORITY=20\nPOST_EXEC=${queinputdir}>${queoutputdir}\n
+    addOrModifyQueue    post7    ${qinfo}
+    jadminSched
+    checkClusterStatus
+    ${jctrl}    Set Variable    ${filedir}/spooler/input/posta.sh
+    ${job1}    querySubmitInfo    su user1 -c "jsub -Ep ${inputdir} \ -q post7 ${jctrl}"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    sleep    3
+    runCommand    su user1 -c "jctrl stop ${jobid1}"
+    checkJobStatus    ${jobid1}    USUSP
+    ${job1}    queryjobinfo    ${jobid1}
+    ${reason1}    getjobspndrsn    ${job1}
+    log    ${reason1}
+    should contain    ${reason1}    The job was suspended by user;
+    ${outputdir1}    Set Variable    ${filedir}/spooler/output/jobout${jobid1}.txt
+    ${result1}    Get File    ${outputdir1}
+    log    ${result1}
+    ${size1}    Get File Size    ${outputdir1}
+    log    ${size1}
+    sleep    3
+    ${result2}    Get File    ${outputdir1}
+    log    ${result2}
+    ${size2}    Get File Size    ${outputdir1}
+    log    ${size2}
+    Should Be Equal As Integers    ${size1}    ${size2}
+    runCommand    su user1 -c "jctrl resume ${jobid1}"
+    checkJobStatus    ${jobid1}    RUN
+    ${outputdir3}    Set Variable    ${filedir}/spooler/output/jobout${jobid1}.txt
+    ${result5}    Get File    ${outputdir3}
+    log    ${result5}
+    ${size5}    Get File Size    ${outputdir3}
+    log    ${size5}
+    sleep    3
+    ${result6}    Get File    ${outputdir3}
+    log    ${result6}
+    ${size6}    Get File Size    ${outputdir3}
+    log    ${size6}
+    Should Not Be Equal As Integers    ${size5}    ${size6}
+    sleep    5
+    checkJobStatus    ${jobid1}    DONE
+    sleep    2
+    ${result}    Get File    ${outputdir}
+    log    ${result}
+    Should Contain    ${result}    user1
+    ${result1}    Get File    ${queoutputdir}
+    log    ${result1}
+    Should Contain    ${result1}    user1
+    Remove files    ${filedir}/spooler/output/*.txt
+    ${histinfo}    RUN    su user1 -c "jhist -l ${jobid1}"
+    log    ${histinfo}
+    Should Contain    ${histinfo}    Post job process done successfully;
+    [Teardown]    delQueue    post7
+
+case8. jctrl requeue 命令让-个带-Ep选型的作业重排队（Ep执行成功）。
+    [Tags]    p1    long-time
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${inputdir}    Set Variable    ${filedir}/spooler/input/post-exec-cmd.sh
+    ${queinputdir}    Set Variable    ${filedir}/spooler/input/post-exec-que.sh
+    ${outputdir}    Set Variable    ${filedir}/spooler/output/post-exec-1.txt
+    ${queoutputdir}    Set Variable    ${filedir}/spooler/output/post-exec-8.txt
+    Remove files    ${filedir}/spooler/output/*.txt
+    checkClusterStatus
+    ${qinfo}    getString    PRIORITY=10\nPOST_EXEC=${queinputdir}>${queoutputdir}\n
+    addOrModifyQueue    post8    ${qinfo}
+    jadminSched
+    checkClusterStatus
+    ${job1}    QuerySubmitInfo    su user1 -c "jsub -Ep ${inputdir} \ -q post8 sleep 15"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    QuerySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    ${job3}    QuerySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    QuerySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    sleep    1
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    ${hostinfo}    runCommand    jhosts -l
+    log    ${hostinfo}
+    ${requeueinfo}    runCommand    su jhadmin -c "jctrl requeue ${jobid1}"
+    log    ${requeueinfo}
+    checkJobStatus    ${jobid1}    PEND
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    PEND
+    runCommand    su jhadmin -c "jctrl kill ${jobid2}"
+    checkJobStatus    ${jobid1}    PEND
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    RUN
+    ${requeueinfo}    runCommand    su jhadmin -c "jctrl kill ${jobid3}"
+    log    ${requeueinfo}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    EXIT
+    checkJobStatus    ${jobid4}    RUN
+    checkJobStatus    ${jobid1}    DONE
+    sleep    2
+    ${result}    Get File    ${outputdir}
+    log    ${result}
+    Should Contain    ${result}    user1
+    ${result1}    Get File    ${queoutputdir}
+    log    ${result1}
+    Should Contain    ${result1}    user1
+    ${histinfo}    RUN    su user1 -c "jhist -l ${jobid1}"
+    log    ${histinfo}
+    Should Contain    ${histinfo}    Post job process done successfully;
+    Remove files    ${filedir}/spooler/output/*.txt
+    [Teardown]    delQueue    post8
+
+case9.当post_exec正在执行时，重启集群。
+    [Tags]    p1    long-time
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${inputdir}    Set Variable    ${filedir}/spooler/input/post-exec-cmd-long.sh
+    ${outputdir}    Set Variable    ${filedir}/spooler/output/post-exec-long.txt
+    Remove files    ${filedir}/spooler/output/*.txt
+    checkClusterStatus
+    ${job1}    QuerySubmitInfo    su user1 -c "jsub -Ep ${inputdir} hostname"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    DONE
+    sleep    1
+    ${result}    Get File    ${outputdir}
+    log    ${result}
+    Should Contain    ${result}    begin
+    jserviceRestartAll
+    checkClusterStatus
+    sleep    15
+    ${result}    Get File    ${outputdir}
+    log    ${result}
+    Should Contain    ${result}    user1
+    Should Contain    ${result}    end
+    Should Contain X Times    ${result}    begin    1
+    ${histinfo}    RUN    jhist -l ${jobid1}
+    log    ${histinfo}
+    Should Contain    ${histinfo}    Post job process done successfully;
+    Remove files    ${filedir}/spooler/output/*.txt
+    [Teardown]    delOutputFile

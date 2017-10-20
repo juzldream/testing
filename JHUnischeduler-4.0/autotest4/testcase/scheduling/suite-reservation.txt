@@ -1,0 +1,805 @@
+*** Settings ***
+Suite Setup       preSuite    spooler/conf/conf-reservation
+Suite Teardown    postSuite
+Library           /apps/autotest4/lib/clusterKeyword.py
+Library           /apps/autotest4/lib/clusterLib.py
+Library           /apps/autotest4/lib/common.py
+Library           /apps/autotest4/lib/hostKeyword.py
+Library           /apps/autotest4/lib/hostLib.py
+Library           /apps/autotest4/lib/hostsConfLib.py
+Library           /apps/autotest4/lib/jobKeyword.py
+Library           /apps/autotest4/lib/jobLib.py
+Library           /apps/autotest4/lib/myUtils.py
+Library           /apps/autotest4/lib/OperatingSystem.py
+Library           /apps/autotest4/lib/queueKeyword.py
+Library           /apps/autotest4/lib/queueLib.py
+Library           /apps/autotest4/lib/paramsConfLib.py
+Library           /apps/autotest4/lib/queuesConfLib.py
+Library           /apps/autotest4/lib/retry.py
+Library           /apps/autotest4/lib/schedulerConfLib.py
+Library           /apps/autotest4/lib/userGroupKeyword.py
+Library           /apps/autotest4/lib/userGroupLib.py
+Library           /apps/autotest4/lib/userKeyword.py
+Library           /apps/autotest4/lib/usersConfLib.py
+Library           /apps/autotest4/lib/userLib.py
+
+*** Test Cases ***
+case1.测试不配置MAX_RESERVE_TIME=5.
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    ${joba}    queryJobInfo    ${jobid2}
+    ${pendreason}    getJobPndRsn    ${joba}
+    log    ${pendreason}
+    Should Contain    ${pendreason}    Not enough job slot(s): 1 host;
+    Should Contain    ${pendreason}    Job slot limit reached: 1 host;
+    [Teardown]    killJob
+
+case2.测试配置MAX_RESERVE_TIME=60,jqueues显示该参数，默认单位为秒。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${queinfo}    runCommand    su jhadmin -c "jqueues -l reservx"
+    log    ${queinfo}
+    Should Contain    ${queinfo}    Maximum slot 60 seconds
+    [Teardown]    killJob
+
+case3.测试配置MAX_RESERVE_TIME=100,测试该队列的作业在slots不够时会reserv空余的slots。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub -m rhela1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 2 -q reserv1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    sleep    5
+    checkJobStatus    ${jobid2}    PEND
+    ${queinfo}    runCommand    su user1 -c "jjobs -l ${jobid2}"
+    log    ${queinfo}
+    ${joba}    queryJobInfo    ${jobid2}
+    ${resvslots}    getJobReservedSlots    ${joba}
+    Should Be Equal As Integers    ${resvslots}    1
+    ${hostinfo}    runCommand    su jhadmin -c "jhosts rhela1 rhelb"
+    log    ${hostinfo}
+    Should Match Regexp    ${hostinfo}    rhelb\\s+closed\\s+-\\s+1\\s+1\\s+0\\s+0\\s+0\\s+1
+    Should Match Regexp    ${hostinfo}    rhela1\\s+closed\\s+-\\s+1\\s+1\\s+1\\s+0\\s+0\\s+0
+    ${queinfo}    runCommand    su jhadmin -c "jqueues reserv1"
+    log    ${queinfo}
+    Should Contain    ${queinfo}    reserv1 \ \ \ \ \ \ \ \ \ 10 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 2 \ \ \ \ 1 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 1
+    [Teardown]    killJob
+
+case4.配置MAX_RESERVE_TIME=100后，当有作业reserv slots后，删除队列的MAX_RESERVE_TIME，然后重启。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${qinfo}    getString    PRIORITY=10\nMAX_RESERVE_TIME=100\n
+    addOrModifyQueue    reservtest    ${qinfo}
+    jadminSched
+    checkClusterStatus
+    ${queinfo1}    runCommand    su jhadmin -c "jqueues -l reservtest"
+    log    ${queinfo1}
+    Should Contain    ${queinfo1}    Maximum slot 100 seconds
+    ${job1}    QuerySubmitInfo    su user1 -c "jsub -m rhela1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 2 -q reservtest sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    ${queinfo}    runCommand    su user1 -c "jjobs -l ${jobid2}"
+    log    ${queinfo}
+    ${joba}    queryJobInfo    ${jobid2}
+    ${resvslots}    getJobReservedSlots    ${joba}
+    Should Be Equal As Integers    ${resvslots}    1
+    ${hostinfo}    runCommand    su jhadmin -c "jhosts rhela1 rhelb"
+    log    ${hostinfo}
+    Should Match Regexp    ${hostinfo}    rhelb\\s+closed\\s+-\\s+1\\s+1\\s+0\\s+0\\s+0\\s+1
+    Should Match Regexp    ${hostinfo}    rhela1\\s+closed\\s+-\\s+1\\s+1\\s+1\\s+0\\s+0\\s+0
+    ${queinfo}    runCommand    su jhadmin -c "jqueues reserv1"
+    log    ${queinfo}
+    ${qinfo}    getString    PRIORITY=10\n
+    addOrModifyQueue    reservtest    ${qinfo}
+    jadminSched
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    checkHostStatus    rhela1    closed_Full
+    checkHostStatus    rhelb    ok
+    ${queinfo2}    runCommand    su jhadmin -c "jqueues -l reservtest"
+    log    ${queinfo2}
+    Should Not Contain    ${queinfo2}    Maximum slot 100 seconds
+    ${queinfo2}    runCommand    su user1 -c "jjobs -l ${jobid2}"
+    log    ${queinfo2}
+    ${jobb}    queryJobInfo    ${jobid2}
+    ${resvslots1}    getJobReservedSlots    ${jobb}
+    Should Be Empty    ${resvslots1}
+    ${resvHosts}    getJobReservedHosts    ${jobb}
+    Should Be Empty    ${resvHosts}
+    ${hostinfo1}    runCommand    su jhadmin -c "jhosts rhela1 rhelb"
+    log    ${hostinfo1}
+    Should Match Regexp    ${hostinfo1}    rhelb\\s+ok\\s+-\\s+1\\s+0\\s+0\\s+0\\s+0\\s+0
+    Should Match Regexp    ${hostinfo}    rhela1\\s+closed\\s+-\\s+1\\s+1\\s+1\\s+0\\s+0\\s+0
+    ${queinfo1}    runCommand    su jhadmin -c "jqueues reserv1"
+    log    ${queinfo1}
+    Should Contain    ${queinfo1}    reserv1 \ \ \ \ \ \ \ \ \ 10 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    [Teardown]    delQueue    reservtest
+
+case5.提交一个大作业，预留slots后，提交一个剩余的slots能够满足的高优先级小作业，待预留时间到，作业可以正常运行。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub -m rhela1 -q reserv2 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 2 -q reserv2 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    sleep    5
+    ${queinfo}    runCommand    su user1 -c "jjobs -l ${jobid2}"
+    log    ${queinfo}
+    ${joba}    queryJobInfo    ${jobid2}
+    ${resvslots}    getJobReservedSlots    ${joba}
+    Should Be Equal As Integers    ${resvslots}    1
+    ${hostinfo}    runCommand    su jhadmin -c "jhosts rhela1 rhelb"
+    log    ${hostinfo}
+    Should Match Regexp    ${hostinfo}    rhelb\\s+closed\\s+-\\s+1\\s+1\\s+0\\s+0\\s+0\\s+1
+    Should Match Regexp    ${hostinfo}    rhela1\\s+closed\\s+-\\s+1\\s+1\\s+1\\s+0\\s+0\\s+0
+    ${queinfo}    runCommand    su jhadmin -c "jqueues reserv2"
+    log    ${queinfo}
+    Should Contain    ${queinfo}    reserv2 \ \ \ \ \ \ \ \ \ 10 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 3 \ \ \ \ 1 \ \ \ \ 1 \ \ \ \ 0 \ \ \ 1
+    ${job3}    querySubmitInfo    su user1 -c "jsub -q reserv3 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    RUN
+    ${queinfo2}    runCommand    su user1 -c "jjobs -l ${jobid2}"
+    log    ${queinfo2}
+    ${jobb}    queryJobInfo    ${jobid2}
+    ${resvslots1}    getJobReservedSlots    ${jobb}
+    Should Be Empty    ${resvslots1}
+    ${resvHosts}    getJobReservedHosts    ${jobb}
+    Should Be Empty    ${resvHosts}
+    ${hostinfo1}    runCommand    su jhadmin -c "jhosts rhela1 rhelb"
+    log    ${hostinfo1}
+    Should Match Regexp    ${hostinfo1}    rhela1\\s+closed\\s+-\\s+1\\s+1\\s+1\\s+0\\s+0\\s+0
+    Should Match Regexp    ${hostinfo1}    rhelb\\s+closed\\s+-\\s+1\\s+1\\s+1\\s+0\\s+0\\s+0
+    ${queinfo1}    runCommand    su jhadmin -c "jqueues reserv2 reserv3"
+    log    ${queinfo1}
+    Should Match Regexp    ${queinfo1}    reserv2\\s+10\\s+Open:Active\\s+-\\s+-\\s+-\\s+-\\s+3\\s+2\\s+1\\s+0\\s+0
+    Should Match Regexp    ${queinfo1}    reserv3\\s+20\\s+Open:Active\\s+-\\s+-\\s+-\\s+-\\s+1\\s+0\\s+1\\s+0\\s+0
+    [Teardown]    killJob
+
+case6.bug11817提交待rusage的作业，值预留满足rusage请求的slots个数。
+    [Tags]    p1    bug
+    [Setup]    readyTest
+    addOrModifyHost    rhelb    4 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -m rhela1 -q reserv2 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 4 -R "rusage[res2=5]" -q reserv1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    sleep    5
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    ${queinfo}    runCommand    su user1 -c "jjobs -l ${jobid2}"
+    log    ${queinfo}
+    ${joba}    queryJobInfo    ${jobid2}
+    ${resvslots}    getJobReservedSlots    ${joba}
+    Should Be Equal As Integers    ${resvslots}    2
+    ${hostinfo}    runCommand    su jhadmin -c "jhosts rhela1 rhelb"
+    log    ${hostinfo}
+    Should Match Regexp    ${hostinfo}    rhela1\\s+closed\\s+-\\s+1\\s+1\\s+1\\s+0\\s+0\\s+0
+    Should Match Regexp    ${hostinfo}    rhelb\\s+ok\\s+-\\s+4\\s+2\\s+0\\s+0\\s+0\\s+2
+    ${queinfo}    runCommand    su jhadmin -c "jqueues reserv1"
+    log    ${queinfo}
+    Should Contain    ${queinfo}    reserv1 \ \ \ \ \ \ \ \ \ 10 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 4 \ \ \ \ 2 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 2
+    [Teardown]    modHostInfo    rhelb=1 ()
+
+case7.bug11817提交待rusage的作业,只预留满足rusage请求的slots个数，其它剩余的slots可以被其它作业预留。
+    [Tags]    p1    bug
+    [Setup]    readyTest
+    addOrModifyHost    rhelb    4 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 -R 'span[ptile=1]' sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 3 -R "rusage[res2=5]" -q reserv1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    sleep    5
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    ${queinfo}    runCommand    su user1 -c "jjobs -l ${jobid2}"
+    log    ${queinfo}
+    ${joba}    queryJobInfo    ${jobid2}
+    ${resvslots}    getJobReservedSlots    ${joba}
+    Should Be Equal As Integers    ${resvslots}    2
+    ${hostinfo}    runCommand    su jhadmin -c "jhosts rhela1 rhelb"
+    log    ${hostinfo}
+    Should Match Regexp    ${hostinfo}    rhela1\\s+closed\\s+-\\s+1\\s+1\\s+1\\s+0\\s+0\\s+0
+    Should Match Regexp    ${hostinfo}    rhelb\\s+ok\\s+-\\s+4\\s+3\\s+1\\s+0\\s+0\\s+2
+    ${queinfo}    runCommand    su jhadmin -c "jqueues reserv1"
+    log    ${queinfo}
+    Should Contain    ${queinfo}    reserv1 \ \ \ \ \ \ \ \ \ 10 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 3 \ \ \ \ 1 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 2
+    ${job3}    querySubmitInfo    su jhadmin -c "jsub -n 4 -q reserv1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    sleep    5
+    checkJobStatus    ${jobid3}    PEND
+    ${queinfo1}    runCommand    su user1 -c "jjobs -l ${jobid2}"
+    log    ${queinfo1}
+    ${jobb}    queryJobInfo    ${jobid3}
+    ${resvslot2}    getJobReservedSlots    ${jobb}
+    Should Be Equal As Integers    ${resvslot2}    1
+    ${hostinfo2}    runCommand    su jhadmin -c "jhosts rhela1 rhelb"
+    log    ${hostinfo2}
+    Should Match Regexp    ${hostinfo2}    rhela1\\s+closed\\s+-\\s+1\\s+1\\s+1\\s+0\\s+0\\s+0
+    Should Match Regexp    ${hostinfo2}    rhelb\\s+closed\\s+-\\s+4\\s+4\\s+1\\s+0\\s+0\\s+3
+    ${queinfo2}    runCommand    su jhadmin -c "jqueues reserv1"
+    log    ${queinfo2}
+    Should Contain    ${queinfo2}    reserv1 \ \ \ \ \ \ \ \ \ 10 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 7 \ \ \ \ 4 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 3
+    [Teardown]    modHostInfo    rhelb=1 ()
+
+case8.提交-m,只预留-m指定的节点上剩余的slots。
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHost    rhelb    3 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -m rhelb sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 3 -m rhelb -q reserv1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    sleep    5
+    checkJobStatus    ${jobid2}    PEND
+    ${queinfo}    runCommand    su user1 -c "jjobs -l ${jobid2}"
+    log    ${queinfo}
+    ${joba}    queryJobInfo    ${jobid2}
+    ${resvslots}    getJobReservedSlots    ${joba}
+    Should Be Equal As Integers    ${resvslots}    2
+    ${hostinfo}    runCommand    su jhadmin -c "jhosts rhela1 rhelb"
+    log    ${hostinfo}
+    Should Match Regexp    ${hostinfo}    rhela1\\s+ok\\s+-\\s+1\\s+0\\s+0\\s+0\\s+0\\s+0
+    Should Match Regexp    ${hostinfo}    rhelb\\s+closed\\s+-\\s+3\\s+3\\s+1\\s+0\\s+0\\s+2
+    ${queinfo}    runCommand    su jhadmin -c "jqueues reserv1"
+    log    ${queinfo}
+    Should Contain    ${queinfo}    reserv1 \ \ \ \ \ \ \ \ \ 10 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 3 \ \ \ \ 1 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 2
+    [Teardown]    modHostInfo    rhelb=1 ()
+
+case9.跨节点预留，jhosts和jjobs，jqueues显示。
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHost    rhelb    3 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -m rhelb sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 4 -m 'rhela1 rhelb' -q reserv1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    sleep    5
+    checkJobStatus    ${jobid2}    PEND
+    ${queinfo}    runCommand    su user1 -c "jjobs -l ${jobid2}"
+    log    ${queinfo}
+    ${joba}    queryJobInfo    ${jobid2}
+    ${resvslots}    getJobReservedSlots    ${joba}
+    ${resvhosts}    getJobReserVedHosts    ${joba}
+    Should Be Equal As Integers    ${resvslots}    3
+    Should Contain    ${resvhosts}    2*rhelb
+    Should Contain    ${resvhosts}    rhela1
+    ${hostinfo}    runCommand    su jhadmin -c "jhosts rhela1 rhelb"
+    log    ${hostinfo}
+    Should Match Regexp    ${hostinfo}    rhela1\\s+closed\\s+-\\s+1\\s+1\\s+0\\s+0\\s+0\\s+1
+    Should Match Regexp    ${hostinfo}    rhelb\\s+closed\\s+-\\s+3\\s+3\\s+1\\s+0\\s+0\\s+2
+    ${queinfo}    runCommand    su jhadmin -c "jqueues reserv1"
+    log    ${queinfo}
+    Should Match Regexp    ${queinfo}    reserv1 \ \ \ \ \ \ \ \ \ 10 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 4 \ \ \ \ 1 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 3
+    [Teardown]    modHostInfo    rhelb=1 ()
+
+case10.当作业在预留slots期间，有slots释放，作业会直接run，不会等到预留时间结束后。
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHost    rhelb    3 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -m rhelb -q reserv4 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 4 -m 'rhela1 rhelb' -q reserv4 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    sleep    5
+    checkJobStatus    ${jobid2}    PEND
+    ${queinfo}    runCommand    su user1 -c "jjobs -l ${jobid2}"
+    log    ${queinfo}
+    ${joba}    queryJobInfo    ${jobid2}
+    ${resvslots}    getJobReservedSlots    ${joba}
+    ${resvhosts}    getJobReserVedHosts    ${joba}
+    Should Be Equal As Integers    ${resvslots}    3
+    Should Contain    ${resvhosts}    2*rhelb
+    Should Contain    ${resvhosts}    rhela1
+    ${hostinfo}    runCommand    su jhadmin -c "jhosts rhela1 rhelb"
+    log    ${hostinfo}
+    Should Match Regexp    ${hostinfo}    rhela1\\s+closed\\s+-\\s+1\\s+1\\s+0\\s+0\\s+0\\s+1
+    Should Match Regexp    ${hostinfo}    rhelb\\s+closed\\s+-\\s+3\\s+3\\s+1\\s+0\\s+0\\s+2
+    ${queinfo}    runCommand    su jhadmin -c "jqueues normal reserv4"
+    log    ${queinfo}
+    Should Contain    ${queinfo}    reserv4 \ \ \ \ \ \ \ \ \ 20 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 5 \ \ \ \ 1 \ \ \ \ 1 \ \ \ \ 0 \ \ \ 3
+    Should Contain    ${queinfo}    normal \ \ \ \ \ \ \ \ \ \ 10 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    ${killinfo}    runCommand    su jhadmin -c "jctrl kill ${jobid1}"
+    log    ${killinfo}
+    checkJobStatus    ${jobid2}    RUN
+    ${hostinfo1}    runCommand    su jhadmin -c "jhosts rhela1 rhelb"
+    log    ${hostinfo1}
+    Should Match Regexp    ${hostinfo1}    rhela1\\s+closed\\s+-\\s+1\\s+1\\s+1\\s+0\\s+0\\s+0
+    Should Match Regexp    ${hostinfo1}    rhelb\\s+closed\\s+-\\s+3\\s+3\\s+3\\s+0\\s+0\\s+0
+    ${queinfo1}    runCommand    su jhadmin -c "jqueues reserv4"
+    log    ${queinfo1}
+    Should Contain    ${queinfo1}    reserv4 \ \ \ \ \ \ \ \ \ 20 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 4 \ \ \ \ 0 \ \ \ \ 4 \ \ \ \ 0 \ \ \ 0
+    [Teardown]    modHostInfo    rhelb=1 ()
+
+case11.测试预留slots作业，在作业预留过程中，kill该作业，执行jqueues，jhosts查看slots是否恢复。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub -m rhela1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 2 -q reserv1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    ${queinfo}    runCommand    su user1 -c "jjobs -l ${jobid2}"
+    log    ${queinfo}
+    ${joba}    queryJobInfo    ${jobid2}
+    ${resvslots}    getJobReservedSlots    ${joba}
+    Should Be Equal As Integers    ${resvslots}    1
+    ${hostinfo}    runCommand    su jhadmin -c "jhosts rhela1 rhelb"
+    log    ${hostinfo}
+    Should Match Regexp    ${hostinfo}    rhelb\\s+closed\\s+-\\s+1\\s+1\\s+0\\s+0\\s+0\\s+1
+    Should Match Regexp    ${hostinfo}    rhela1\\s+closed\\s+-\\s+1\\s+1\\s+1\\s+0\\s+0\\s+0
+    ${queinfo}    runCommand    su jhadmin -c "jqueues reserv1"
+    log    ${queinfo}
+    Should Contain    ${queinfo}    reserv1 \ \ \ \ \ \ \ \ \ 10 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 2 \ \ \ \ 1 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 1
+    ${killinfo}    runCommand    su jhadmin -c "jctrl kill ${jobid1}"
+    log    ${killinfo}
+    checkJobStatus    ${jobid2}    RUN
+    ${hostinfo1}    runCommand    su jhadmin -c "jhosts rhela1 rhelb"
+    log    ${hostinfo1}
+    Should Match Regexp    ${hostinfo1}    rhela1\\s+closed\\s+-\\s+1\\s+1\\s+1\\s+0\\s+0\\s+0
+    Should Match Regexp    ${hostinfo1}    rhelb\\s+closed\\s+-\\s+1\\s+1\\s+1\\s+0\\s+0\\s+0
+    ${queinfo1}    runCommand    su jhadmin -c "jqueues reserv1"
+    log    ${queinfo1}
+    Should Contain    ${queinfo1}    reserv1 \ \ \ \ \ \ \ \ \ 10 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 2 \ \ \ \ 0 \ \ \ \ 2 \ \ \ \ 0 \ \ \ 0
+    [Teardown]    killJob
+
+case12.同时配置抢占调度和reservation调度(不能抢占预留的slots)
+    [Tags]    p1
+    [Setup]    readyTest
+    ${allque}    runCommand    jqueues -l
+    log    ${allque}
+    ${alluser}    runCommand    jusers all
+    log    ${alluser}
+    ${job1}    querySubmitInfo    su user1 -c "jsub -m rhela1 -q resvlow1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 2 -q resvlow1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    sleep    10
+    checkJobStatus    ${jobid2}    PEND
+    ${queinfo}    runCommand    su user1 -c "jjobs -l ${jobid2}"
+    log    ${queinfo}
+    ${joba}    queryJobInfo    ${jobid2}
+    ${resvslots}    getJobReservedSlots    ${joba}
+    Should Be Equal As Integers    ${resvslots}    1
+    ${hostinfo}    runCommand    su jhadmin -c "jhosts rhela1 rhelb"
+    log    ${hostinfo}
+    Should Match Regexp    ${hostinfo}    rhela1\\s+closed\\s+-\\s+1\\s+1\\s+1\\s+0\\s+0\\s+0
+    Should Match Regexp    ${hostinfo}    rhelb\\s+closed\\s+-\\s+1\\s+1\\s+0\\s+0\\s+0\\s+1
+    ${queinfo}    runCommand    su jhadmin -c "jqueues resvlow1"
+    log    ${queinfo}
+    Should Contain    ${queinfo}    resvlow1 \ \ \ \ \ \ \ \ 30 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 3 \ \ \ \ 1 \ \ \ \ 1 \ \ \ \ 0 \ \ \ 1
+    ${job3}    querySubmitInfo    su user1 -c "jsub \ -n \ 2 -q resvhigh2 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    sleep    10
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    PEND
+    ${jobb}    queryJobInfo    ${jobid2}
+    ${resvslots}    getJobReservedSlots    ${jobb}
+    ${resvhosts}    getJobReservedHosts    ${jobb}
+    log    ${resvslots}
+    log    ${resvhosts}
+    ${jobc}    queryJobInfo    ${jobid2}
+    ${resvslots}    getJobReservedSlots    ${jobc}
+    Should Be Equal As Integers    ${resvslots}    1
+    ${hostinfo1}    runCommand    su jhadmin -c "jhosts rhela1 rhelb"
+    log    ${hostinfo1}
+    Should Match Regexp    ${hostinfo1}    rhela1\\s+closed\\s+-\\s+1\\s+1\\s+1\\s+0\\s+0\\s+0
+    Should Match Regexp    ${hostinfo1}    rhelb\\s+closed\\s+-\\s+1\\s+1\\s+0\\s+0\\s+0\\s+1
+    ${queinfo1}    runCommand    su jhadmin -c "jqueues resvlow1 resvhigh2"
+    log    ${queinfo1}
+    Should Contain    ${queinfo1}    resvlow1 \ \ \ \ \ \ \ \ 30 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 3 \ \ \ \ 1 \ \ \ \ 1 \ \ \ \ 0 \ \ \ 1
+    Should Contain    ${queinfo1}    resvhigh2 \ \ \ \ \ \ \ 50 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 2 \ \ \ \ 2 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    ${killinfo}    runCommand    su jhadmin -c "jctrl kill ${jobid1}"
+    log    ${killinfo}
+    sleep    5
+    ${allhost}    runCommand    jhosts -l
+    log    ${allhost}
+    ${allhost1}    runCommand    jhosts -w
+    log    ${allhost1}
+    ${alljob}    runCommand    jjobs -u all -l
+    log    ${alljob}
+    ${allque1}    runCommand    jqueues -l resvlow1 resvhigh2
+    log    ${allque1}
+    ${alluser1}    runCommand    jusers all
+    log    ${alluser1}
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    SSUSP
+    checkJobStatus    ${jobid3}    RUN
+    ${hostinfo2}    runCommand    su jhadmin -c "jhosts rhela1 rhelb"
+    log    ${hostinfo2}
+    ${queinfo3}    runCommand    su jhadmin -c "jqueues resvlow1 resvhigh2"
+    log    ${queinfo3}
+    Should Match Regexp    ${hostinfo2}    rhela1\\s+closed\\s+-\\s+1\\s+2\\s+1\\s+1\\s+0\\s+0
+    Should Match Regexp    ${hostinfo2}    rhelb\\s+closed\\s+-\\s+1\\s+2\\s+1\\s+1\\s+0\\s+0
+    Should Contain    ${queinfo3}    resvlow1 \ \ \ \ \ \ \ \ 30 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 2 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 2 \ \ \ 0
+    Should Contain    ${queinfo3}    resvhigh2 \ \ \ \ \ \ \ 50 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 2 \ \ \ \ 0 \ \ \ \ 2 \ \ \ \ 0 \ \ \ 0
+    [Teardown]    killJob
+
+case13.配置group_limit后，当达到limit限制时，作业状态为pend，但是不会预留slots。
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyUserGroupA    group1    (user1 jhadmin) (jhadmin) ([jhadmin,5])
+    addOrModifyUserA    group1    5 -
+    addOrModifyHost    rhelb    8 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 -q reserv1 -m rhelb sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 4 \ -q reserv1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    sleep    5
+    checkJobStatus    ${jobid2}    PEND
+    ${queinfo}    runCommand    su user1 -c "jjobs -l ${jobid2}"
+    log    ${queinfo}
+    ${joba}    queryJobInfo    ${jobid2}
+    ${pendreason}    getJobPndRsn    ${joba}
+    Should Contain    ${pendreason}    One of the user's groups has reached its job slot limit
+    ${hostinfo}    runCommand    su jhadmin -c "jhosts rhela1 rhelb"
+    log    ${hostinfo}
+    Should Match Regexp    ${hostinfo}    rhelb\\s+ok\\s+-\\s+8\\s+2\\s+2\\s+0\\s+0\\s+0
+    Should Match Regexp    ${hostinfo}    rhela1\\s+ok\\s+-\\s+1\\s+0\\s+0\\s+0\\s+0\\s+0
+    ${queinfo}    runCommand    su jhadmin -c "jqueues reserv1"
+    log    ${queinfo}
+    Should Contain    ${queinfo}    reserv1 \ \ \ \ \ \ \ \ \ 10 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 6 \ \ \ \ 4 \ \ \ \ 2 \ \ \ \ 0 \ \ \ 0
+    [Teardown]    delUserAndUserGroupAndHost    group1    group1    rhelb=1 ()
+
+case14.配置queue job limit，预留的slots不计入limit限制中。
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHost    rhela1    5 ()
+    addOrModifyHost    rhelb    4 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub \ -m rhelb sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 4 -m rhelb -q reserv5 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    sleep    5
+    checkJobStatus    ${jobid2}    PEND
+    ${queinfo}    runCommand    su user1 -c "jjobs -l ${jobid2}"
+    log    ${queinfo}
+    ${joba}    queryJobInfo    ${jobid2}
+    ${resvslots}    getJobReservedSlots    ${joba}
+    ${resvhosts}    getJobReserVedHosts    ${joba}
+    Should Be Equal As Integers    ${resvslots}    3
+    Should Contain    ${resvhosts}    rhelb
+    Should Not Contain    ${resvhosts}    rhela1
+    ${hostinfo}    runCommand    su jhadmin -c "jhosts rhela1 rhelb"
+    log    ${hostinfo}
+    Should Match Regexp    ${hostinfo}    rhela1\\s+ok\\s+-\\s+5\\s+0\\s+0\\s+0\\s+0\\s+0
+    Should Match Regexp    ${hostinfo}    rhelb\\s+closed\\s+-\\s+4\\s+4\\s+1\\s+0\\s+0\\s+3
+    ${queinfo}    runCommand    su jhadmin -c "jqueues reserv4"
+    log    ${queinfo}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 4 -q reserv5 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    sleep    10
+    ${jobinfo}    runCommand    jjobs -l -u all 0
+    log    ${jobinfo}
+    sleep    10
+    [Teardown]    modHostInfo    rhela1=1 ()    rhelb=1 ()
+
+case15.高优先级预留，低优先级不预留。
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHost    rhela1    2 ()
+    addOrModifyHost    rhelb    4 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub \ -n 2 -m rhela1 -q low1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 6 \ -q low1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    sleep    5
+    checkJobStatus    ${jobid2}    PEND
+    ${queinfo}    runCommand    su user1 -c "jjobs -l ${jobid2}"
+    log    ${queinfo}
+    ${joba}    queryJobInfo    ${jobid2}
+    ${resvslots}    getJobReservedSlots    ${joba}
+    ${resvhosts}    getJobReserVedHosts    ${joba}
+    Should Be Equal As Integers    ${resvslots}    4
+    Should Contain    ${resvhosts}    rhelb
+    Should Not Contain    ${resvhosts}    rhela1
+    ${hostinfo}    runCommand    su jhadmin -c "jhosts rhela1 rhelb"
+    log    ${hostinfo}
+    Should Match Regexp    ${hostinfo}    rhela1\\s+closed\\s+-\\s+2\\s+2\\s+2\\s+0\\s+0\\s+0
+    Should Match Regexp    ${hostinfo}    rhelb\\s+closed\\s+-\\s+4\\s+4\\s+0\\s+0\\s+0\\s+4
+    ${queinfo}    runCommand    su jhadmin -c "jqueues low1"
+    log    ${queinfo}
+    Should Contain    ${queinfo}    low1 \ \ \ \ \ \ \ \ \ \ \ \ 30 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 8 \ \ \ \ 2 \ \ \ \ 2 \ \ \ \ 0 \ \ \ 4
+    ${job3}    querySubmitInfo    su user1 -c "jsub -n 5 -q high1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    sleep    11
+    checkJobStatus    ${jobid3}    PEND
+    ${jobinfo}    runCommand    jjobs -l -u all 0
+    log    ${jobinfo}
+    ${jobb}    queryJobInfo    ${jobid2}
+    ${resvslots1}    getJobReservedSlots    ${jobb}
+    ${resvhosts1}    getJobReserVedHosts    ${jobb}
+    Should Be Empty    ${resvslots1}
+    Should Be Empty    ${resvhosts1}
+    ${jobc}    queryJobInfo    ${jobid3}
+    ${resvslots2}    getJobReservedSlots    ${jobc}
+    ${resvhosts2}    getJobReserVedHosts    ${jobc}
+    Should Be Equal As Integers    ${resvslots2}    4
+    ${hostinfo1}    runCommand    su jhadmin -c "jhosts rhela1 rhelb"
+    log    ${hostinfo1}
+    Should Match Regexp    ${hostinfo1}    rhela1\\s+closed\\s+-\\s+2\\s+2\\s+2\\s+0\\s+0\\s+0
+    Should Match Regexp    ${hostinfo1}    rhelb\\s+closed\\s+-\\s+4\\s+4\\s+0\\s+0\\s+0\\s+4
+    ${queinfo1}    runCommand    su jhadmin -c "jqueues low1 high1"
+    log    ${queinfo1}
+    Should Contain    ${queinfo1}    high1 \ \ \ \ \ \ \ \ \ \ \ 50 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 5 \ \ \ \ 1 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 4
+    Should Contain    ${queinfo1}    low1 \ \ \ \ \ \ \ \ \ \ \ \ 30 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 8 \ \ \ \ 6 \ \ \ \ 2 \ \ \ \ 0 \ \ \ 0
+    [Teardown]    modHostInfo    rhela1=1 ()    rhelb=1 ()
+
+case16.reconfig后的预留作业的恢复。
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHost    rhela1    2 ()
+    addOrModifyHost    rhelb    4 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub \ -n 2 -m rhela1 -q low1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 6 \ -q low1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    sleep    5
+    checkJobStatus    ${jobid2}    PEND
+    ${queinfo}    runCommand    su user1 -c "jjobs -l ${jobid2}"
+    log    ${queinfo}
+    ${joba}    queryJobInfo    ${jobid2}
+    ${resvslots}    getJobReservedSlots    ${joba}
+    ${resvhosts}    getJobReserVedHosts    ${joba}
+    Should Be Equal As Integers    ${resvslots}    4
+    Should Contain    ${resvhosts}    rhelb
+    Should Not Contain    ${resvhosts}    rhela1
+    ${hostinfo}    runCommand    su jhadmin -c "jhosts rhela1 rhelb"
+    log    ${hostinfo}
+    Should Match Regexp    ${hostinfo}    rhela1\\s+closed\\s+-\\s+2\\s+2\\s+2\\s+0\\s+0\\s+0
+    Should Match Regexp    ${hostinfo}    rhelb\\s+closed\\s+-\\s+4\\s+4\\s+0\\s+0\\s+0\\s+4
+    ${queinfo}    runCommand    su jhadmin -c "jqueues low1"
+    log    ${queinfo}
+    Should Contain    ${queinfo}    low1 \ \ \ \ \ \ \ \ \ \ \ \ 30 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 8 \ \ \ \ 2 \ \ \ \ 2 \ \ \ \ 0 \ \ \ 4
+    ${job3}    querySubmitInfo    su user1 -c "jsub -n 5 -q high1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    sleep    11
+    checkJobStatus    ${jobid3}    PEND
+    ${jobinfo}    runCommand    jjobs -l -u all 0
+    log    ${jobinfo}
+    ${jobb}    queryJobInfo    ${jobid2}
+    ${resvslots1}    getJobReservedSlots    ${jobb}
+    ${resvhosts1}    getJobReserVedHosts    ${jobb}
+    Should Be Empty    ${resvslots1}
+    Should Be Empty    ${resvhosts1}
+    ${jobc}    queryJobInfo    ${jobid3}
+    ${resvslots2}    getJobReservedSlots    ${jobc}
+    ${resvhosts2}    getJobReserVedHosts    ${jobc}
+    Should Be Equal As Integers    ${resvslots2}    4
+    ${hostinfo1}    runCommand    su jhadmin -c "jhosts rhela1 rhelb"
+    log    ${hostinfo1}
+    Should Match Regexp    ${hostinfo1}    rhela1\\s+closed\\s+-\\s+2\\s+2\\s+2\\s+0\\s+0\\s+0
+    Should Match Regexp    ${hostinfo1}    rhelb\\s+closed\\s+-\\s+4\\s+4\\s+0\\s+0\\s+0\\s+4
+    ${queinfo1}    runCommand    su jhadmin -c "jqueues low1 high1"
+    log    ${queinfo1}
+    Should Contain    ${queinfo1}    high1 \ \ \ \ \ \ \ \ \ \ \ 50 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 5 \ \ \ \ 1 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 4
+    Should Contain    ${queinfo1}    low1 \ \ \ \ \ \ \ \ \ \ \ \ 30 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 8 \ \ \ \ 6 \ \ \ \ 2 \ \ \ \ 0 \ \ \ 0
+    ${jadminschedinfo}    runCommand    su jhadmin -c "jadmin schedreconfig"
+    log    ${jadminschedinfo}
+    sleep    5
+    checkHostStatus    rhela1    closed_Full
+    checkHostStatus    rhelb    closed_Full
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    PEND
+    ${hostinfo1}    runCommand    su jhadmin -c "jhosts rhela1 rhelb"
+    log    ${hostinfo1}
+    Should Match Regexp    ${hostinfo1}    rhela1\\s+closed\\s+-\\s+2\\s+2\\s+2\\s+0\\s+0\\s+0
+    Should Match Regexp    ${hostinfo1}    rhelb\\s+closed\\s+-\\s+4\\s+4\\s+0\\s+0\\s+0\\s+4
+    ${queinfo1}    runCommand    su jhadmin -c "jqueues low1 high1"
+    log    ${queinfo1}
+    Should Contain    ${queinfo1}    high1 \ \ \ \ \ \ \ \ \ \ \ 50 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 5 \ \ \ \ 1 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 4
+    Should Contain    ${queinfo1}    low1 \ \ \ \ \ \ \ \ \ \ \ \ 30 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 8 \ \ \ \ 6 \ \ \ \ 2 \ \ \ \ 0 \ \ \ 0
+    [Teardown]    modHostInfo    rhela1=1 ()    rhelb=1 ()
+
+case17.jctrl requeue后，作业释放slots。使用jhosts/jqueues查看节点上的slots预留。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub -m rhela1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 2 -q reserv1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    sleep    5
+    checkJobStatus    ${jobid2}    PEND
+    ${queinfo}    runCommand    su user1 -c "jjobs -l ${jobid2}"
+    log    ${queinfo}
+    ${joba}    queryJobInfo    ${jobid2}
+    ${resvslots}    getJobReservedSlots    ${joba}
+    Should Be Equal As Integers    ${resvslots}    1
+    ${hostinfo}    runCommand    su jhadmin -c "jhosts rhela1 rhelb"
+    log    ${hostinfo}
+    Should Match Regexp    ${hostinfo}    rhelb\\s+closed\\s+-\\s+1\\s+1\\s+0\\s+0\\s+0\\s+1
+    Should Match Regexp    ${hostinfo}    rhela1\\s+closed\\s+-\\s+1\\s+1\\s+1\\s+0\\s+0\\s+0
+    ${queinfo}    runCommand    su jhadmin -c "jqueues reserv1"
+    log    ${queinfo}
+    Should Contain    ${queinfo}    reserv1 \ \ \ \ \ \ \ \ \ 10 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 2 \ \ \ \ 1 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 1
+    ${job3}    querySubmitInfo    su user1 -c "jsub -n 2 -q high1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    sleep    2
+    ${jctrlrequeue}    runCommand    su jhadmin -c "jctrl requeue ${jobid2}"
+    log    ${jctrlrequeue}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    PEND
+    ${queinfo1}    runCommand    su user1 -c "jjobs -l -u all"
+    log    ${queinfo1}
+    ${jobb}    queryJobInfo    ${jobid3}
+    ${resvslots1}    getJobReservedSlots    ${jobb}
+    Should Be Equal As Integers    ${resvslots1}    1
+    ${hostinfo}    runCommand    su jhadmin -c "jhosts rhela1 rhelb"
+    log    ${hostinfo}
+    Should Match Regexp    ${hostinfo}    rhelb\\s+closed\\s+-\\s+1\\s+1\\s+0\\s+0\\s+0\\s+1
+    Should Match Regexp    ${hostinfo}    rhela1\\s+closed\\s+-\\s+1\\s+1\\s+1\\s+0\\s+0\\s+0
+    ${queinfo}    runCommand    su jhadmin -c "jqueues reserv1 high1"
+    log    ${queinfo}
+    Should Contain    ${queinfo}    reserv1 \ \ \ \ \ \ \ \ \ 10 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 2 \ \ \ \ 2 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    high1 \ \ \ \ \ \ \ \ \ \ \ 50 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 2 \ \ \ \ 1 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 1
+    ${jobc}    queryJobInfo    ${jobid2}
+    ${resvslots1}    getJobReservedSlots    ${jobc}
+    ${resvhosts1}    getJobReservedHosts    ${jobc}
+    Should Be Empty    ${resvslots1}
+    Should Be Empty    ${resvhosts1}
+    [Teardown]    killJob
+
+case18.jctrl stop(释放预留的slots)
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub -m rhela1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 2 -q reserv1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    sleep    5
+    checkJobStatus    ${jobid2}    PEND
+    ${queinfo}    runCommand    su user1 -c "jjobs -l ${jobid2}"
+    log    ${queinfo}
+    ${joba}    queryJobInfo    ${jobid2}
+    ${resvslots}    getJobReservedSlots    ${joba}
+    Should Be Equal As Integers    ${resvslots}    1
+    ${hostinfo}    runCommand    su jhadmin -c "jhosts rhela1 rhelb"
+    log    ${hostinfo}
+    Should Match Regexp    ${hostinfo}    rhelb\\s+closed\\s+-\\s+1\\s+1\\s+0\\s+0\\s+0\\s+1
+    Should Match Regexp    ${hostinfo}    rhela1\\s+closed\\s+-\\s+1\\s+1\\s+1\\s+0\\s+0\\s+0
+    ${queinfo}    runCommand    su jhadmin -c "jqueues reserv1"
+    log    ${queinfo}
+    Should Contain    ${queinfo}    reserv1 \ \ \ \ \ \ \ \ \ 10 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 2 \ \ \ \ 1 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 1
+    ${stopinfo}    runCommand    su jhadmin -c "jctrl stop ${jobid2}"
+    log    ${stopinfo}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PSUSP
+    ${queinfo1}    runCommand    su user1 -c "jjobs -l -u all"
+    log    ${queinfo1}
+    ${jobb}    queryJobInfo    ${jobid2}
+    ${resvslots1}    getJobReservedSlots    ${jobb}
+    Should Be Empty    ${resvslots1}
+    ${hostinfo1}    runCommand    su jhadmin -c "jhosts rhela1 rhelb"
+    log    ${hostinfo1}
+    Should Match Regexp    ${hostinfo1}    rhelb\\s+ok\\s+-\\s+1\\s+0\\s+0\\s+0\\s+0\\s+0
+    Should Match Regexp    ${hostinfo1}    rhela1\\s+closed\\s+-\\s+1\\s+1\\s+1\\s+0\\s+0\\s+0
+    ${queinfo1}    runCommand    su jhadmin -c "jqueues reserv1"
+    log    ${queinfo1}
+    Should Contain    ${queinfo1}    reserv1 \ \ \ \ \ \ \ \ \ 10 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 2 \ \ \ \ 2 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    [Teardown]    killJob
+
+case19.jctrl kill（释放预留的slots）
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub -m rhela1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 2 -q reserv1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    sleep    5
+    checkJobStatus    ${jobid2}    PEND
+    ${queinfo}    runCommand    su user1 -c "jjobs -l ${jobid2}"
+    log    ${queinfo}
+    ${joba}    queryJobInfo    ${jobid2}
+    ${resvslots}    getJobReservedSlots    ${joba}
+    Should Be Equal As Integers    ${resvslots}    1
+    ${hostinfo}    runCommand    su jhadmin -c "jhosts rhela1 rhelb"
+    log    ${hostinfo}
+    Should Match Regexp    ${hostinfo}    rhelb\\s+closed\\s+-\\s+1\\s+1\\s+0\\s+0\\s+0\\s+1
+    Should Match Regexp    ${hostinfo}    rhela1\\s+closed\\s+-\\s+1\\s+1\\s+1\\s+0\\s+0\\s+0
+    ${queinfo}    runCommand    su jhadmin -c "jqueues reserv1"
+    log    ${queinfo}
+    Should Contain    ${queinfo}    reserv1 \ \ \ \ \ \ \ \ \ 10 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 2 \ \ \ \ 1 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 1
+    ${stopinfo}    runCommand    su jhadmin -c "jctrl kill ${jobid2}"
+    log    ${stopinfo}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    EXIT
+    ${queinfo1}    runCommand    su user1 -c "jjobs -l -u all"
+    log    ${queinfo1}
+    ${jobb}    queryJobInfo    ${jobid2}
+    ${resvslots1}    getJobReservedSlots    ${jobb}
+    Should Be Empty    ${resvslots1}
+    ${hostinfo1}    runCommand    su jhadmin -c "jhosts rhela1 rhelb"
+    log    ${hostinfo1}
+    Should Match Regexp    ${hostinfo1}    rhelb\\s+ok\\s+-\\s+1\\s+0\\s+0\\s+0\\s+0\\s+0
+    Should Match Regexp    ${hostinfo1}    rhela1\\s+closed\\s+-\\s+1\\s+1\\s+1\\s+0\\s+0\\s+0
+    ${queinfo1}    runCommand    su jhadmin -c "jqueues reserv1"
+    log    ${queinfo1}
+    Should Contain    ${queinfo1}    reserv1 \ \ \ \ \ \ \ \ \ 10 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    [Teardown]    killJob
+
+case20.jctrl start 一个预留作业
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub -m rhela1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 2 -q reserv1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    sleep    5
+    checkJobStatus    ${jobid2}    PEND
+    ${queinfo}    runCommand    su user1 -c "jjobs -l ${jobid2}"
+    log    ${queinfo}
+    ${joba}    queryJobInfo    ${jobid2}
+    ${resvslots}    getJobReservedSlots    ${joba}
+    Should Be Equal As Integers    ${resvslots}    1
+    ${hostinfo}    runCommand    su jhadmin -c "jhosts rhela1 rhelb"
+    log    ${hostinfo}
+    Should Match Regexp    ${hostinfo}    rhelb\\s+closed\\s+-\\s+1\\s+1\\s+0\\s+0\\s+0\\s+1
+    Should Match Regexp    ${hostinfo}    rhela1\\s+closed\\s+-\\s+1\\s+1\\s+1\\s+0\\s+0\\s+0
+    ${queinfo}    runCommand    su jhadmin -c "jqueues reserv1"
+    log    ${queinfo}
+    Should Contain    ${queinfo}    reserv1 \ \ \ \ \ \ \ \ \ 10 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 2 \ \ \ \ 1 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 1
+    ${stopinfo}    runCommand    su jhadmin -c "jctrl start -m 'rhela1 rhelb' ${jobid2}"
+    log    ${stopinfo}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    ${queinfo1}    runCommand    su user1 -c "jjobs -l -u all"
+    log    ${queinfo1}
+    ${jobb}    queryJobInfo    ${jobid2}
+    ${resvslots1}    getJobReservedSlots    ${jobb}
+    Should Be Empty    ${resvslots1}
+    ${hostinfo1}    runCommand    su jhadmin -c "jhosts rhela1 rhelb"
+    log    ${hostinfo1}
+    Should Match Regexp    ${hostinfo1}    rhela1\\s+closed\\s+-\\s+1\\s+2\\s+2\\s+0\\s+0\\s+0
+    Should Match Regexp    ${hostinfo1}    rhelb\\s+closed\\s+-\\s+1\\s+1\\s+1\\s+0\\s+0\\s+0
+    ${queinfo1}    runCommand    su jhadmin -c "jqueues reserv1"
+    log    ${queinfo1}
+    Should Contain    ${queinfo1}    reserv1 \ \ \ \ \ \ \ \ \ 10 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 2 \ \ \ \ 0 \ \ \ \ 2 \ \ \ \ 0 \ \ \ 0
+    [Teardown]    killJob

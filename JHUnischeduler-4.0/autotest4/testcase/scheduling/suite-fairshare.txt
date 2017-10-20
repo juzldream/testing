@@ -1,0 +1,518 @@
+*** Settings ***
+Suite Setup       preSuite    spooler/conf/conf-fairshare
+Suite Teardown    postSuite
+Library           /apps/autotest4/lib/clusterKeyword.py
+Library           /apps/autotest4/lib/clusterLib.py
+Library           /apps/autotest4/lib/common.py
+Library           /apps/autotest4/lib/hostKeyword.py
+Library           /apps/autotest4/lib/hostLib.py
+Library           /apps/autotest4/lib/hostsConfLib.py
+Library           /apps/autotest4/lib/jobKeyword.py
+Library           /apps/autotest4/lib/jobLib.py
+Library           /apps/autotest4/lib/myUtils.py
+Library           /apps/autotest4/lib/OperatingSystem.py
+Library           /apps/autotest4/lib/queueKeyword.py
+Library           /apps/autotest4/lib/queueLib.py
+Library           /apps/autotest4/lib/paramsConfLib.py
+Library           /apps/autotest4/lib/queuesConfLib.py
+Library           /apps/autotest4/lib/retry.py
+Library           /apps/autotest4/lib/schedulerConfLib.py
+Library           /apps/autotest4/lib/userGroupKeyword.py
+Library           /apps/autotest4/lib/userGroupLib.py
+Library           /apps/autotest4/lib/userKeyword.py
+Library           /apps/autotest4/lib/usersConfLib.py
+Library           /apps/autotest4/lib/userLib.py
+
+*** Test Cases ***
+case1.在一个队列中，先提交的作业先执行
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyUserGroupA    group1    (user1 user2 user3) \ \ (user1) \ \ ([default,1])
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user4 -c "jsub sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user4 -c "jsub sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    ${job3}    querySubmitInfo    su user3 -c "jsub -q fair1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user2 -c "jsub -q fair1 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    ${job5}    querySubmitInfo    su user1 -c "jsub -q fair1 sleep 1000"
+    ${jobid5}    getJobId    ${job5}
+    sleep    2
+    runCommand    jctrl kill ${jobid2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    PEND
+    checkJobStatus    ${jobid5}    PEND
+    [Teardown]    delUserGroup    group1
+
+case2.当pend作业在不同优先级时，查看调度顺序
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyUserGroupA    group1    (user1 user2 user3) \ \ (user1) \ \ ([default,1])
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user4 -c "jsub sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user4 -c "jsub sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    ${job3}    querySubmitInfo    su user4 -c "jsub -q test1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user1 -c "jsub -q fair1 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    ${job5}    querySubmitInfo    su user2 -c "jsub -q fair1 sleep 1000"
+    ${jobid5}    getJobId    ${job5}
+    ${job6}    querySubmitInfo    su user3 -c "jsub -q fair1 sleep 1000"
+    ${jobid6}    getJobId    ${job6}
+    sleep    2
+    runCommand    jctrl kill ${jobid2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    RUN
+    checkJobStatus    ${jobid5}    PEND
+    checkJobStatus    ${jobid6}    PEND
+    runCommand    jctrl kill ${jobid1}
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    RUN
+    checkJobStatus    ${jobid5}    RUN
+    checkJobStatus    ${jobid6}    PEND
+    runCommand    jctrl kill ${jobid4}
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    EXIT
+    checkJobStatus    ${jobid5}    RUN
+    checkJobStatus    ${jobid6}    RUN
+    runCommand    jctrl kill ${jobid5}
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    EXIT
+    checkJobStatus    ${jobid5}    EXIT
+    checkJobStatus    ${jobid6}    RUN
+    [Teardown]    delUserGroup    group1
+
+case3.当group中部分用户有run的作业，作业调度顺序。
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyUserGroupA    group1    (user1 user2 user3) (user1) ([user1,100] [user2,20] [user3,10])
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -q fair1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user4 -c "jsub sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    ${job3}    querySubmitInfo    su user4 -c "jsub -q test1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user1 -c "jsub -q fair1 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    ${job5}    querySubmitInfo    su user3 -c "jsub -q fair1 sleep 1000"
+    ${jobid5}    getJobId    ${job5}
+    ${job6}    querySubmitInfo    su user2 -c "jsub -q fair1 sleep 1000"
+    ${jobid6}    getJobId    ${job6}
+    sleep    2
+    runCommand    jctrl kill ${jobid2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    checkJobStatus    ${jobid5}    PEND
+    checkJobStatus    ${jobid6}    RUN
+    [Teardown]    delUserGroup    group1
+
+case4.当部分用户有作业（部分用户有-n作业），计算优先级是按照作业使用的slots
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHost    rhelb    5 ()
+    addOrModifyUserGroupA    group1    (user1 user2 user3) (user1) ([user1,80] [user2,100] [user3,60])
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 -q fair1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user2 -c "jsub -q fair1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user2 -c "jsub -q fair1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user4 -c "jsub -q fair1 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    ${job5}    querySubmitInfo    su user4 -c "jsub -q fair1 sleep 1000"
+    ${jobid5}    getJobId    ${job5}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    RUN
+    checkJobStatus    ${jobid5}    RUN
+    ${job6}    querySubmitInfo    su user2 -c "jsub -q fair1 sleep 1000"
+    ${jobid6}    getJobId    ${job6}
+    ${job7}    querySubmitInfo    su user1 -c "jsub -q fair1 sleep 1000"
+    ${jobid7}    getJobId    ${job7}
+    ${job8}    querySubmitInfo    su user3 -c "jsub -q fair1 sleep 1000"
+    ${jobid8}    getJobId    ${job8}
+    sleep    2
+    runCommand    jctrl kill ${jobid4}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    EXIT
+    checkJobStatus    ${jobid5}    RUN
+    checkJobStatus    ${jobid6}    PEND
+    checkJobStatus    ${jobid7}    PEND
+    checkJobStatus    ${jobid8}    RUN
+    runCommand    jctrl kill ${jobid5}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    EXIT
+    checkJobStatus    ${jobid5}    EXIT
+    checkJobStatus    ${jobid6}    RUN
+    checkJobStatus    ${jobid7}    PEND
+    checkJobStatus    ${jobid8}    RUN
+    [Teardown]    delUserGroupAndHost    group1,group2    rhelb=1 ()
+
+case5.当向不同优先级的队列提交作业
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHost    rhelb    3 ()
+    addOrModifyUserGroupA    group1    (user1 user2 user3) (user1) ([user1,10] [user2,50] [user3,100])
+    jadminJhdsSched
+    checkClusterStatus
+    ${job0}    querySubmitInfo    su user4 -c "jsub sleep 1000"
+    ${jobid0}    getJobId    ${job0}
+    ${job1}    querySubmitInfo    su user1 -c "jsub \ sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user2 -c "jsub \ sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user3 -c "jsub \ sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    ${job4}    querySubmitInfo    su user1 -c "jsub -q fair1 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    ${job5}    querySubmitInfo    su user2 -c "jsub -q fair1 sleep 1000"
+    ${jobid5}    getJobId    ${job5}
+    ${job6}    querySubmitInfo    su user3 -c "jsub -q fair1 sleep 1000"
+    ${jobid6}    getJobId    ${job6}
+    ${job7}    querySubmitInfo    su user2 -c "jsub -q fair2 sleep 1000"
+    ${jobid7}    getJobId    ${job7}
+    ${job8}    querySubmitInfo    su user1 -c "jsub -q fair2 sleep 1000"
+    ${jobid8}    getJobId    ${job8}
+    ${job9}    querySubmitInfo    su user3 -c "jsub -q fair2 sleep 1000"
+    ${jobid9}    getJobId    ${job9}
+    sleep    2
+    runCommand    jctrl kill ${jobid0}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    PEND
+    checkJobStatus    ${jobid5}    PEND
+    checkJobStatus    ${jobid6}    PEND
+    checkJobStatus    ${jobid7}    PEND
+    checkJobStatus    ${jobid8}    PEND
+    checkJobStatus    ${jobid9}    RUN
+    [Teardown]    delUserGroupAndHost    group1    rhelb=1 ()
+
+case6.bug11868当设置多层group时（当两个group的动态优先级相同时）
+    [Tags]    p1    bug
+    [Setup]    readyTest
+    addOrModifyHost    rhelb    3 \ ()
+    addOrModifyUserGroupA    group0    (user1 user2 user3) (user1) ([user1,10] [default,5])
+    addOrModifyUserGroupA    group1    (user1 user4) (user1) ([user1,10] [user4,20])
+    addOrModifyUserGroupA    group2    (group0 user5 jhadmin) (user1) ([user5,20] [jhadmin,30] [group0,10])
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user5 -c "jsub -q fair1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -q fair1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user6 -c "jsub -n 2 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    ${job4}    querySubmitInfo    su user1 -c "jsub -q fair1 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    ${job5}    querySubmitInfo    su user2 -c "jsub -q fair1 sleep 1000"
+    ${jobid5}    getJobId    ${job5}
+    ${job6}    querySubmitInfo    su user3 -c "jsub -q fair1 sleep 1000"
+    ${jobid6}    getJobId    ${job6}
+    ${job7}    querySubmitInfo    su user4 -c "jsub -q fair1 sleep 1000"
+    ${jobid7}    getJobId    ${job7}
+    ${job8}    querySubmitInfo    su user5 -c "jsub -q fair1 sleep 1000"
+    ${jobid8}    getJobId    ${job8}
+    ${job9}    querySubmitInfo    su jhadmin -c "jsub -q fair1 sleep 1000"
+    ${jobid9}    getJobId    ${job9}
+    sleep    2
+    runCommand    jctrl kill ${jobid3}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    EXIT
+    checkJobStatus    ${jobid4}    PEND
+    checkJobStatus    ${jobid5}    PEND
+    checkJobStatus    ${jobid6}    PEND
+    checkJobStatus    ${jobid7}    RUN
+    checkJobStatus    ${jobid8}    PEND
+    checkJobStatus    ${jobid9}    RUN
+    [Teardown]    delUserGroupAndHost    group0,group1,group2    rhelb=1 ()
+
+case7.当设置多层group时（只有一个group没有run作业）
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHost    rhelb    5 ()
+    addOrModifyUserGroupA    group0    (user1 user2 user3) (user1) ([user1,10] [default,5])
+    addOrModifyUserGroupA    group1    (user1 user4) (user1) ([user1,10] [user4,20])
+    addOrModifyUserGroupA    group2    (group0 user5 jhadmin) (user1) ([user5,20] [jhadmin,30] [group0,10])
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user5 -c "jsub -n 2 -q fair1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su jhadmin -c "jsub -n 2 -q fair1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user4 -c "jsub -q fair1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user6 -c "jsub sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    RUN
+    ${job5}    querySubmitInfo    su user2 -c "jsub -q fair1 sleep 1000"
+    ${jobid5}    getJobId    ${job5}
+    ${job6}    querySubmitInfo    su user3 -c "jsub -q fair1 sleep 1000"
+    ${jobid6}    getJobId    ${job6}
+    ${job7}    querySubmitInfo    su user4 -c "jsub -q fair1 sleep 1000"
+    ${jobid7}    getJobId    ${job7}
+    ${job8}    querySubmitInfo    su user5 -c "jsub -q fair1 sleep 1000"
+    ${jobid8}    getJobId    ${job8}
+    ${job9}    querySubmitInfo    su jhadmin -c "jsub -q fair1 sleep 1000"
+    ${jobid9}    getJobId    ${job9}
+    ${job10}    querySubmitInfo    su user1 -c "jsub -q fair1 sleep 1000"
+    ${jobid10}    getJobId    ${job10}
+    sleep    2
+    runCommand    jctrl kill ${jobid4}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    EXIT
+    checkJobStatus    ${jobid5}    PEND
+    checkJobStatus    ${jobid6}    PEND
+    checkJobStatus    ${jobid7}    PEND
+    checkJobStatus    ${jobid8}    PEND
+    checkJobStatus    ${jobid9}    PEND
+    checkJobStatus    ${jobid10}    RUN
+    [Teardown]    delUserGroupAndHost    group0,group1,group2    rhelb=1 ()
+
+case8.bug11162当fairshare选中的作业资源不满足时
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyUserGroupA    group0    (user1 user2 user3) (user1) ([user1,10] [default,5])
+    addOrModifyUserGroupA    group1    (user1 user4) (user4) ([user1,10] [user4,20])
+    addOrModifyUserGroupA    group2    (group0 user5 jhadmin) (user5) ([user5,20] [jhadmin,30] [group0,10])
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user6 -c "jsub sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user5 -c "jsub -q fair1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    ${job3}    querySubmitInfo    su jhadmin -c "jsub -q fair1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user3 -c "jsub -q fair1 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    ${job5}    querySubmitInfo    su user2 -c "jsub -q fair1 sleep 1000"
+    ${jobid5}    getJobId    ${job5}
+    ${job6}    querySubmitInfo    su user5 -c "jsub -q fair1 sleep 1000"
+    ${jobid6}    getJobId    ${job6}
+    ${job7}    querySubmitInfo    su user1 -c "jsub -R "rusage[mem=50]" -q fair1 sleep 1000"
+    ${jobid7}    getJobId    ${job7}
+    ${job8}    querySubmitInfo    su user4 -c "jsub -n 2 -q fair1 sleep 1000"
+    ${jobid8}    getJobId    ${job8}
+    sleep    2
+    runCommand    jctrl kill ${jobid1}
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    checkJobStatus    ${jobid5}    PEND
+    checkJobStatus    ${jobid6}    PEND
+    checkJobStatus    ${jobid7}    RUN
+    checkJobStatus    ${jobid8}    PEND
+    sleep    20
+    ${hostall}    runCommand    jhosts -l
+    log    ${hostall}
+    ${exechost1}    getAndCheckJobExecHost    ${jobid7}
+    ${userd}    getAndCheckJobRusageInfo    ${jobid7}    MEM
+    ${host1}    QueryHostInfo    ${exechost1}
+    ${resv}    getHostReserved    ${host1}    mem
+    checkRusageValue    50    ${resv}    ${userd}
+    [Teardown]    delUserGroup    group0,group1,group2
+
+case9.当fairshare选中的group组中没有pend作业时
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHost    rhelb    2 ()
+    addOrModifyUserGroupA    group0    (user1 user2 user3) (user1) ([user3,10] [default,5])
+    addOrModifyUserGroupA    group1    (user1 user4) (user4) ([user1,10] [user4,20])
+    addOrModifyUserGroupA    group2    (group0 user5 jhadmin) (user5) ([user5,20] [jhadmin,10] [group0,30])
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user6 -c "jsub sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user6 -c "jsub sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user5 -c "jsub -q fair1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    ${job4}    querySubmitInfo    su user2 -c "jsub -q fair1 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    ${job5}    querySubmitInfo    su user3 -c "jsub -q fair1 sleep 1000"
+    ${jobid5}    getJobId    ${job5}
+    ${job6}    querySubmitInfo    su jhadmin -c "jsub -q fair1 sleep 1000"
+    ${jobid6}    getJobId    ${job6}
+    ${job7}    querySubmitInfo    su user5 -c "jsub -q fair1 sleep 1000"
+    ${jobid7}    getJobId    ${job7}
+    ${job8}    querySubmitInfo    su user6 -c "jsub -q fair1 sleep 1000"
+    ${jobid8}    getJobId    ${job8}
+    sleep    2
+    runCommand    jctrl kill ${jobid2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    PEND
+    checkJobStatus    ${jobid5}    RUN
+    checkJobStatus    ${jobid6}    PEND
+    checkJobStatus    ${jobid7}    PEND
+    checkJobStatus    ${jobid8}    PEND
+    ${job9}    querySubmitInfo    su user1 -c "jsub -q fair1 sleep 1000"
+    ${jobid9}    getJobId    ${job9}
+    ${job10}    querySubmitInfo    su user4 -c "jsub -q fair1 sleep 1000"
+    ${jobid10}    getJobId    ${job10}
+    ${job11}    querySubmitInfo    su user3 -c "jsub -q fair1 sleep 1000"
+    ${jobid11}    getJobId    ${job11}
+    sleep    2
+    runCommand    jctrl kill ${jobid1}
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    PEND
+    checkJobStatus    ${jobid5}    RUN
+    checkJobStatus    ${jobid6}    PEND
+    checkJobStatus    ${jobid7}    PEND
+    checkJobStatus    ${jobid8}    PEND
+    checkJobStatus    ${jobid9}    PEND
+    checkJobStatus    ${jobid10}    RUN
+    checkJobStatus    ${jobid11}    PEND
+    [Teardown]    delUserGroupAndHost    group0,group1,group2    rhelb= 1 ()
+
+case10.当非group成员、没有share值的group组成员向fair队列提交作业时，作业调度顺序
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyUserGroupA    group1    (user1 user2 user3) (user1) ([user1,10] [user2,50])
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user4 -c "jsub -n 2 -q fair1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${job2}    querySubmitInfo    su user4 -c "jsub -q fair1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub -q fair1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user2 -c "jsub -q fair1 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    ${job5}    querySubmitInfo    su user3 -c "jsub -q fair1 sleep 1000"
+    ${jobid5}    getJobId    ${job5}
+    sleep    2
+    runCommand    jctrl kill ${jobid1}
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    RUN
+    checkJobStatus    ${jobid5}    PEND
+    runCommand    jctrl kill ${jobid3}
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    EXIT
+    checkJobStatus    ${jobid4}    RUN
+    checkJobStatus    ${jobid5}    RUN
+    [Teardown]    delUserGroup    group1
+
+case11.当份额值相同配置JOB_RUNTIME参数，作业调度顺序
+    [Tags]    p1    long-time
+    [Setup]    readyTest
+    addOrModifyHost    rhelb    3 ()
+    addOrModifyUserGroupA    group1    (user1 user2 user3) (user1) ([default,1])
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user4 -c "jsub sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -q fair4 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    sleep    20
+    ${job3}    querySubmitInfo    su user2 -c "jsub -q fair4 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    sleep    20
+    ${job4}    querySubmitInfo    su user3 -c "jsub -q fair4 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    ${job5}    querySubmitInfo    su user1 -c "jsub -q fair4 sleep 1000"
+    ${jobid5}    getJobId    ${job5}
+    ${job6}    querySubmitInfo    su user2 -c "jsub -q fair4 sleep 1000"
+    ${jobid6}    getJobId    ${job6}
+    ${job7}    querySubmitInfo    su user3 -c "jsub -q fair4 sleep 1000"
+    ${jobid7}    getJobId    ${job7}
+    sleep    2
+    runCommand    jctrl kill ${jobid1}
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    RUN
+    checkJobStatus    ${jobid5}    PEND
+    checkJobStatus    ${jobid6}    PEND
+    checkJobStatus    ${jobid7}    RUN
+    [Teardown]    delUserGroupAndHost    group1    rhelb= 1 ()
+
+case12.配置all参数
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyUserGroupA    group0    (all) (user1) ([default,1])
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su jhadmin -c "jsub sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su jhadmin -c "jsub sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    ${job3}    querySubmitInfo    su user1 -c "jsub -q fair1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user2 -c "jsub -q fair1 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    ${job5}    querySubmitInfo    su user3 -c "jsub -q fair1 sleep 1000"
+    ${jobid5}    getJobId    ${job5}
+    sleep    2
+    runCommand    jctrl kill ${jobid1}
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    PEND
+    checkJobStatus    ${jobid5}    PEND
+    [Teardown]    delUserGroup    group0

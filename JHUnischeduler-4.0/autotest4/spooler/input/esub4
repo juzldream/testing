@@ -1,0 +1,8 @@
+#!/bin/sh
+. $JH_SUB_PARM_FILE
+exec 1>&2
+USER=`whoami`
+if [ $USER == "user1" -a $JH_SUB_QUEUE != "q2" ];then
+    echo "user1 has submitted a job to an incorrect queue(q2)"
+    echo 'JH_SUB_QUEUE="q2"'>$JH_SUB_MODIFY_FILE
+fi

@@ -1,0 +1,4 @@
+#!/bin/sh
+. $JH_SUB_PARM_FILE
+exec 1>&2
+echo 'JH_SUB_PRE_EXEC="whoami"'>$JH_SUB_MODIFY_FILE

@@ -1,0 +1,327 @@
+*** Settings ***
+Suite Setup       preSuite    spooler/conf/conf-jctrl-peek
+Suite Teardown    postSuite
+Library           /apps/autotest4/lib/clusterKeyword.py
+Library           /apps/autotest4/lib/clusterLib.py
+Library           /apps/autotest4/lib/common.py
+Library           /apps/autotest4/lib/hostKeyword.py
+Library           /apps/autotest4/lib/hostLib.py
+Library           /apps/autotest4/lib/hostsConfLib.py
+Library           /apps/autotest4/lib/jobKeyword.py
+Library           /apps/autotest4/lib/jobLib.py
+Library           /apps/autotest4/lib/myUtils.py
+Library           /apps/autotest4/lib/OperatingSystem.py
+Library           /apps/autotest4/lib/queueKeyword.py
+Library           /apps/autotest4/lib/queueLib.py
+Library           /apps/autotest4/lib/paramsConfLib.py
+Library           /apps/autotest4/lib/queuesConfLib.py
+Library           /apps/autotest4/lib/retry.py
+Library           /apps/autotest4/lib/schedulerConfLib.py
+Library           /apps/autotest4/lib/userGroupKeyword.py
+Library           /apps/autotest4/lib/userGroupLib.py
+Library           /apps/autotest4/lib/userKeyword.py
+Library           /apps/autotest4/lib/usersConfLib.py
+Library           /apps/autotest4/lib/userLib.py
+
+*** Test Cases ***
+case1.bug code level jctrl peek的用户权限，任何用户包括root用户、管理员用户等都只能查看自己作业的输出。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file}    Set Variable    ${filedir}/spooler/input/peek.sh
+    addOrModifyUserGroupA    group1    (user1 user2) (user2) ([default,1])
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -q qadmin ${file}"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    sleep    50
+    ${exitcode1}    ${out1}    peekJob    su user1 -c "jctrl peek ${jobid1}"
+    log    ${out1}
+    Should Contain    ${out1}    user1
+    ${exitcode2}    ${out2}    peekJob    su user2 -c "jctrl peek ${jobid1}"
+    log    ${out2}
+    Should Contain    ${out2}    Job <${jobid1}>: User permission denied
+    ${exitcode3}    ${out3}    peekJob    su user3 -c "jctrl peek ${jobid1}"
+    log    ${out3}
+    Should Contain    ${out3}    Job <${jobid1}>: User permission denied
+    ${exitcode4}    ${out4}    peekJob    su jhadmin -c "jctrl peek ${jobid1}"
+    log    ${out4}
+    Should Contain    ${out4}    Job <${jobid1}>: User permission denied
+    [Teardown]    delUserGroup    group1
+
+case2.jctrl peek jobid
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file}    Set Variable    ${filedir}/spooler/input/peek1.sh
+    ${job1}    querySubmitInfo    su user1 -c "jsub ${file}"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub ${file}"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    sleep    2
+    ${exitcode1}    ${out1}    peekJob    su user1 -c "jctrl peek ${jobid2}"
+    log    ${out1}
+    ${exitcode2}    ${out2}    peekJob    su user1 -c "jctrl peek -f \ ${jobid2}"
+    log    ${out2}
+    Should Contain    ${out1}    begin
+    Should Not Contain    ${out1}    ${jobid2}
+    Should Not Contain    ${out1}    end
+    Should Contain    ${out2}    begin
+    Should Contain X Times    ${out2}    ${jobid2}    3
+    Should Contain    ${out2}    end
+    [Teardown]    delUserGroup    group1
+
+case3.jctrl peek [-f] jobid[index]
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file}    Set Variable    ${filedir}/spooler/input/peek1.sh
+    ${job1}    querySubmitInfo    su user1 -c "jsub -J arr[1-3] ${file}"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    sleep    2
+    ${exitcode1}    ${out1}    peekJob    su user1 -c "jctrl peek ${jobid1}[2]"
+    log    ${out1}
+    ${exitcode2}    ${out2}    peekJob    su user1 -c "jctrl peek -f \ ${jobid1}[2]"
+    log    ${out2}
+    Should Contain    ${out1}    begin
+    Should Not Contain    ${out1}    ${jobid1}[2]
+    Should Not Contain    ${out1}    end
+    Should Contain    ${out2}    begin
+    Should Contain X Times    ${out2}    ${jobid1}[2]    3
+    Should Contain    ${out2}    end
+    [Teardown]    killJob
+
+case4.jctrl peek -h
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file}    Set Variable    ${filedir}/spooler/input/peek-help.txt
+    log    ${file}
+    ${peekhelp}    runCommand    jctrl peek -h
+    log    ${peekhelp}
+    ${peekfile}    Get File    ${file}
+    log    ${peekfile}
+    Should Be Equal    ${peekhelp}    ${peekfile}
+
+case5.(95)jctrl peek -f该命令只有等到作业run完才退出。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file}    Set Variable    ${filedir}/spooler/input/peek1.sh
+    ${file2}    Set Variable    ${filedir}/spooler/input/peek2.sh
+    ${job1}    querySubmitInfo    su user1 -c "jsub \ ${file}"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    sleep    2
+    ${exitcode1}    ${out1}    peekJob    su user1 -c "jctrl peek -f ${jobid1}"
+    log    ${out1}
+    Should Contain    ${out1}    begin
+    Should Contain X Times    ${out1}    ${jobid1}    3
+    Should Contain    ${out1}    end
+    ${job2}    querySubmitInfo    su user1 -c "jsub \ ${file2}"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid2}    RUN
+    sleep    2
+    ${exitcode2}    ${out2}    peekJob    su user1 -c "jctrl peek -f ${jobid2}"
+    log    ${out2}
+    ${joba}    queryJobInfo    ${jobid2}
+    ${status2}    getJobStatus    ${joba}
+    Should Be Equal    ${status2}    DONE
+    Should Contain X Times    ${out2}    ${jobid2}    1
+    [Teardown]    killJob
+
+case6.bug 12093(114)jctrl peek exec当作业在执行pre-exec时，执行jctrl peek，查看输出。
+    [Tags]    p2    bug
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${inputdir}    Set Variable    ${filedir}/spooler/input/peek1.sh
+    checkClusterStatus
+    ${localhost}    runCommand    hostname
+    ${job1}    QuerySubmitInfo    su jhadmin -c "jsub -E ${inputdir} sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    sleep    2
+    ${exitcode1}    ${out1}    peekJob    su jhadmin -c "jctrl peek ${jobid1}"
+    log    ${out1}
+    ${exitcode2}    ${out2}    peekJob    su jhadmin -c "jctrl peek -f ${jobid1}"
+    log    ${out2}
+    Should Contain    ${out1}    begin
+    Should Not Contain    ${out1}    ${jobid1}
+    Should Not Contain    ${out1}    end
+    Should Contain    ${out2}    begin
+    Should Contain X Times    ${out2}    ${jobid1}    3
+    Should Contain    ${out2}    end
+    [Teardown]    killJob
+
+case7.(116)jctrl peek [-f]多个jobid
+    [Tags]    p2
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file}    Set Variable    ${filedir}/spooler/input/peek3.sh
+    ${job1}    querySubmitInfo    su user1 -c "jsub \ ${file}"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub \ ${file}"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    sleep    2
+    ${out1}    runCommand    su user1 -c "jctrl peek ${jobid1} ${jobid2}"
+    log    ${out1}
+    ${out2}    runCommand    su user1 -c "jctrl peek -f ${jobid1} ${jobid2}"
+    log    ${out2}
+    Should Contain    ${out1}    usage: jctrl
+    Should Contain    ${out1}    jctrl: error
+    Should Contain    ${out2}    usage: jctrl
+    Should Contain    ${out2}    jctrl: error
+    [Teardown]    killJob
+
+case8.bug11395(117)jctrl peek [-f]一个不存在的jobid
+    [Tags]    p2
+    [Setup]    readyTest
+    ${out1}    runCommand    su user1 -c "jctrl peek -f -1"
+    log    ${out1}
+    Should Be Equal    ${out1}    -1: Illegal job Id
+    ${out2}    runCommand    su user1 -c "jctrl peek -f 1000000"
+    log    ${out2}
+    Should Be Equal    ${out2}    No matching job found
+    ${out3}    runCommand    su user1 -c "jctrl peek -f s"
+    log    ${out3}
+    Should Be Equal    ${out3}    s: Illegal job Id
+    ${out4}    runCommand    su user1 -c "jctrl peek -1"
+    log    ${out4}
+    Should Be Equal    ${out4}    -1: Illegal job Id
+    ${out5}    runCommand    su user1 -c "jctrl peek 1000000"
+    log    ${out5}
+    Should Be Equal    ${out5}    No matching job found
+    ${out6}    runCommand    su user1 -c "jctrl peek s"
+    log    ${out6}
+    Should Be Equal    ${out6}    s: Illegal job Id
+    ${out7}    runCommand    su user1 -c "jctrl peek 1.5"
+    log    ${out7}
+    Should Be Equal    ${out7}    1.5: Illegal job Id
+    ${out8}    runCommand    su user1 -c "jctrl peek -f 1.5"
+    log    ${out8}
+    Should Be Equal    ${out8}    1.5: Illegal job Id
+    [Teardown]    killJob
+
+case9.(119)jctrl peek [-f]一个不存在的数组作业加索引
+    [Tags]    p2
+    [Setup]    readyTest
+    ${out1}    runCommand    su user1 -c "jctrl peek -f 10000[11]"
+    log    ${out1}
+    ${out2}    runCommand    su user1 -c "jctrl peek 1000[111]"
+    log    ${out2}
+    Should Contain    ${out1}    No matching job found
+    Should Contain    ${out2}    No matching job found
+    [Teardown]    killJob
+
+case10.(122)对各种状态的作业执行jctrl peek。
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file}    Set Variable    ${filedir}/spooler/input/peek.sh
+    ${job1}    querySubmitInfo    su user1 -c "jsub sleep 1"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid2}    RUN
+    runCommand    jctrl kill ${jobid2}
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid1}    DONE
+    ${job3}    querySubmitInfo    su user1 -c "jsub -q prelow1 ${file}"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user1 -c "jsub ${file}"
+    ${jobid4}    getJobId    ${job4}
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    RUN
+    sleep    3
+    ${job5}    querySubmitInfo    su user1 -c "jsub \ -q prehigh1 sleep 1000"
+    ${jobid5}    getJobId    ${job5}
+    ${job6}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid6}    getJobId    ${job6}
+    ${job7}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid7}    getJobId    ${job7}
+    ${job8}    querySubmitInfo    su user1 -c "jsub -J arr[1-2] sleep 1000"
+    ${jobid8}    getJobId    ${job8}
+    runCommand    su user1 -c "jctrl stop ${jobid4} ${jobid6}"
+    checkJobStatus    ${jobid1}    DONE
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    SSUSP
+    checkJobStatus    ${jobid4}    USUSP
+    checkJobStatus    ${jobid5}    RUN
+    checkJobStatus    ${jobid6}    PSUSP
+    checkJobStatus    ${jobid7}    PEND
+    checkJobStatus    ${jobid8}[1]    PEND
+    checkJobStatus    ${jobid8}[2]    PEND
+    ${info1}    runCommand    su user1 -c "jctrl peek ${jobid1}"
+    log    ${info1}
+    Should Be Equal    ${info1}    Job <${jobid1}>: Job has already finished
+    ${info2}    runCommand    su user1 -c "jctrl peek -f ${jobid1}"
+    log    ${info2}
+    Should Be Equal    ${info2}    Job <${jobid1}>: Job has already finished
+    ${info3}    runCommand    su user1 -c "jctrl peek ${jobid2}"
+    log    ${info3}
+    Should Be Equal    ${info3}    Job <${jobid2}>: Job has already finished
+    ${info4}    runCommand    su user1 -c "jctrl peek -f ${jobid2}"
+    log    ${info4}
+    Should Be Equal    ${info4}    Job <${jobid2}>: Job has already finished
+    ${info5}    runCommand    su user1 -c "jctrl peek ${jobid6}"
+    log    ${info5}
+    Should Be Equal    ${info5}    Job <${jobid6}>: Job has not started yet
+    ${info6}    runCommand    su user1 -c "jctrl peek -f ${jobid6}"
+    log    ${info6}
+    Should Be Equal    ${info6}    Job <${jobid6}>: Job has not started yet
+    ${info7}    runCommand    su user1 -c "jctrl peek ${jobid7}"
+    log    ${info7}
+    Should Be Equal    ${info7}    Job <${jobid7}>: Job has not started yet
+    ${info8}    runCommand    su user1 -c "jctrl peek -f ${jobid7}"
+    log    ${info8}
+    Should Be Equal    ${info8}    Job <${jobid7}>: Job has not started yet
+    ${info9}    runCommand    su user1 -c "jctrl peek ${jobid8}[1]"
+    log    ${info9}
+    Should Be Equal    ${info9}    Job <${jobid8}[1]>: Job has not started yet
+    ${info10}    runCommand    su user1 -c "jctrl peek -f ${jobid8}[1]"
+    log    ${info10}
+    Should Be Equal    ${info10}    Job <${jobid8}[1]>: Job has not started yet
+    ${info11}    runCommand    su user1 -c "jctrl peek ${jobid3}"    10
+    log    ${info11}
+    Should Contain    ${info11}    Killed
+    ${info12}    runCommand    su user1 -c "jctrl peek -f ${jobid3}"    10
+    log    ${info12}
+    Should Contain    ${info12}    Killed
+    ${info13}    runCommand    su user1 -c "jctrl peek ${jobid4}"    10
+    log    ${info13}
+    Should Contain    ${info13}    Killed
+    ${info14}    runCommand    su user1 -c "jctrl peek -f ${jobid4}"    10
+    log    ${info14}
+    Should Contain    ${info14}    Killed
+    [Teardown]    killJob
+
+case11.bug 12093(add1)jctrl peek exec当作业真正执行时，执行jctrl peek，查看输出。
+    [Tags]    p2    bug
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${inputdir}    Set Variable    ${filedir}/spooler/input/peek4.sh
+    ${inputdir1}    Set Variable    ${filedir}/spooler/input/peek5.sh
+    checkClusterStatus
+    ${localhost}    runCommand    hostname
+    ${job1}    QuerySubmitInfo    su jhadmin -c "jsub -E ${inputdir} ${inputdir1}"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    sleep    8
+    ${exitcode1}    ${out1}    peekJob    su jhadmin -c "jctrl peek ${jobid1}"
+    log    ${out1}
+    ${exitcode2}    ${out2}    peekJob    su jhadmin -c "jctrl peek -f ${jobid1}"
+    log    ${out2}
+    Should Contain    ${out1}    prebegin
+    Should Contain    ${out1}    ${jobid1}
+    Should Contain    ${out1}    preend
+    Should Not Contain    ${out1}    jobend
+    Should Contain    ${out2}    preend
+    Should Contain    ${out2}    jobbegin
+    Should Contain    ${out2}    ${jobid1}
+    Should Contain    ${out2}    jobend
+    [Teardown]    killJob

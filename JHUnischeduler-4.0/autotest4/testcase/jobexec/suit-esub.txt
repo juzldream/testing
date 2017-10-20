@@ -1,0 +1,289 @@
+*** Settings ***
+Suite Setup       preSuite    spooler/conf/conf-esub
+Suite Teardown    postSuite
+Library           /apps/autotest4/lib/clusterKeyword.py
+Library           /apps/autotest4/lib/clusterLib.py
+Library           /apps/autotest4/lib/common.py
+Library           /apps/autotest4/lib/hostKeyword.py
+Library           /apps/autotest4/lib/hostLib.py
+Library           /apps/autotest4/lib/hostsConfLib.py
+Library           /apps/autotest4/lib/jobKeyword.py
+Library           /apps/autotest4/lib/jobLib.py
+Library           /apps/autotest4/lib/myUtils.py
+Library           /apps/autotest4/lib/OperatingSystem.py
+Library           /apps/autotest4/lib/queueKeyword.py
+Library           /apps/autotest4/lib/queueLib.py
+Library           /apps/autotest4/lib/paramsConfLib.py
+Library           /apps/autotest4/lib/queuesConfLib.py
+Library           /apps/autotest4/lib/retry.py
+Library           /apps/autotest4/lib/schedulerConfLib.py
+Library           /apps/autotest4/lib/userGroupKeyword.py
+Library           /apps/autotest4/lib/userGroupLib.py
+Library           /apps/autotest4/lib/userKeyword.py
+Library           /apps/autotest4/lib/usersConfLib.py
+Library           /apps/autotest4/lib/userLib.py
+
+*** Test Cases ***
+case1.测试esub拒绝作业提交功能
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${inputdir}    Set Variable    ${filedir}/spooler/input/esub1
+    ${sbindir}    getSbinPath
+    Copy File    ${inputdir}    ${sbindir}/esub
+    sleep    2
+    ${job1}    querySubmitInfo    su user1 -c "jsub \ sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${job2}    querySubmitInfo    su user2 -c "jsub \ sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    log    ${job2}
+    Length Should Be    ${jobid2}    0
+    ${out}    ${exitcode}    ${job1}    submitEsubJob    su user2 -c 'jsub sleep 1000'
+    log    ${out}
+    Should Contain    ${out}    JH Unischeduler is Rejecting your job submission\nRequest aborted by esub. Job not submitted
+    Should Be Equal As Integers    ${exitcode}    255
+    [Teardown]    removeEsub
+
+case2.测试esub拒绝作业提交功能,exit97
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${inputdir}    Set Variable    ${filedir}/spooler/input/esub2
+    ${sbindir}    getSbinPath
+    Copy File    ${inputdir}    ${sbindir}/esub
+    sleep    2
+    ${job1}    querySubmitInfo    su user1 -c "jsub \ sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${job2}    querySubmitInfo    su user2 -c "jsub \ sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    log    ${job2}
+    Length Should Be    ${jobid2}    0
+    ${out}    ${exitcode}    ${job1}    submitEsubJob    su user2 -c 'jsub sleep 1000'
+    log    ${out}
+    Should Contain    ${out}    JH Unischeduler is Rejecting your job submission\nRequest aborted by esub. Job not submitted
+    Should Be Equal As Integers    ${exitcode}    255
+    [Teardown]    removeEsub
+
+case3.esub拒绝作业提交功能,exit3
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${inputdir}    Set Variable    ${filedir}/spooler/input/esub3
+    ${sbindir}    getSbinPath
+    Copy File    ${inputdir}    ${sbindir}/esub
+    sleep    2
+    ${job1}    querySubmitInfo    su user1 -c "jsub \ sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${out2}    ${exitcode2}    ${job2}    submitEsubJob    su user2 -c 'jsub sleep 1000'
+    ${jobid2}    getJobId    ${job2}
+    ${outxx}    log    ${out2}
+    Should Contain    ${out2}    JH Unischeduler is Rejecting your job submission
+    Should Contain    ${out2}    Job <${jobid2}> is submitted to default queue <normal>
+    Should Be Equal As Integers    ${exitcode2}    0
+    [Teardown]    removeEsub
+
+case4.测试esub修改作业提交参数成功，队列q2存在。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${inputdir}    Set Variable    ${filedir}/spooler/input/esub4
+    ${sbindir}    getSbinPath
+    Copy File    ${inputdir}    ${sbindir}/esub
+    sleep    2
+    ${out}    ${exitcode}    ${job1}    submitEsubJob    su user1 -c 'jsub sleep 1000'
+    log    ${out}
+    log    ${exitcode}
+    ${jobid1}    getJobId    ${job1}
+    ${que1}    getJobQueue    ${job1}
+    Should Be Equal As Integers    ${exitcode}    0
+    Should Be Equal    ${que1}    q2
+    Should Contain    ${out}    user1 has submitted a job to an incorrect queue(q2)\nJob <${jobid1}> is submitted to default queue <q2>
+    checkJobStatus    ${jobid1}    RUN
+    ${joba}    queryJobInfo    ${jobid1}
+    ${quea}    getJobQueue    ${joba}
+    Should Be Equal    ${quea}    q2
+    ${job2}    querySubmitInfo    su user2 -c "jsub -q q1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${que2}    getJobQueue    ${job2}
+    Should Be Equal    ${que2}    q1
+    checkJobStatus    ${jobid2}    RUN
+    ${jobb}    queryJobInfo    ${jobid2}
+    ${queb}    getJobQueue    ${jobb}
+    Should Be Equal    ${queb}    q1
+    [Teardown]    removeEsub
+
+case5.测试esub修改作业提交时的环境变量，修改作业的提交路径PWD。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    Remove files    ${filedir}/spooler/output/esub*.txt
+    ${file}    Set Variable    ${filedir}/spooler/input/esub_job1.sh
+    ${inputdir}    Set Variable    ${filedir}/spooler/input/esub5
+    ${sbindir}    getSbinPath
+    Copy File    ${inputdir}    ${sbindir}/esub
+    ${localhost}    RUN    hostname
+    sleep    2
+    ${out}    ${exitcode}    ${job1}    submitEsubJob    su jhadmin \ -c 'export TESTA=aaa;jsub -m ${localhost} ${file}'
+    log    ${out}
+    log    ${exitcode}
+    ${jobid1}    getJobId    ${job1}
+    Should Be Equal As Integers    ${exitcode}    0
+    checkJobStatus    ${jobid1}    RUN
+    sleep    2
+    ${info}    Get file    ${filedir}/spooler/output/esub1.txt
+    log    ${info}
+    Remove files    ${filedir}/spooler/output/esub*.txt
+    [Teardown]    removeEsub
+
+case6.通过esub添加一个作业的提交参数。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${inputdir}    Set Variable    ${filedir}/spooler/input/esub6
+    ${sbindir}    getSbinPath
+    Copy File    ${inputdir}    ${sbindir}/esub
+    sleep    2
+    ${out}    ${exitcode}    ${job1}    submitEsubJob    su user1 -c 'jsub sleep 1000'
+    log    ${out}
+    log    ${exitcode}
+    ${jobid1}    getJobId    ${job1}
+    ${que1}    getJobQueue    ${job1}
+    Should Be Equal As Integers    ${exitcode}    0
+    Should Be Equal    ${que1}    q2
+    checkJobStatus    ${jobid1}    RUN
+    ${joba}    queryJobInfo    ${jobid1}
+    ${quea}    getJobQueue    ${joba}
+    Should Be Equal    ${quea}    q2
+    [Teardown]    removeEsub
+
+case7.修改多个参数。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file}    Set Variable    ${filedir}/spooler/input/esub_job1.sh
+    ${inputdir}    Set Variable    ${filedir}/spooler/input/esub7
+    ${sbindir}    getSbinPath
+    Copy File    ${inputdir}    ${sbindir}/esub
+    sleep    2
+    ${localhost}    RUN    hostname
+    ${out}    ${exitcode}    ${job1}    submitEsubJob    su user1 \ -c 'jsub -q q1 -m ${localhost} hostname'
+    log    ${out}
+    log    ${exitcode}
+    ${jobid1}    getJobId    ${job1}
+    ${que1}    getJobQueue    ${job1}
+    Should Be Equal As Integers    ${exitcode}    0
+    Should Be Equal    ${que1}    q2
+    checkJobStatus    ${jobid1}    DONE
+    ${joba}    queryJobInfo    ${jobid1}
+    ${quea}    getJobQueue    ${joba}
+    Should Be Equal    ${quea}    q2
+    ${info}    Get file    ${filedir}/spooler/output/esub2.out
+    log    ${info}
+    Should Contain    ${info}    rhela1
+    Remove file    ${filedir}/spooler/output/esub2.out
+    [Teardown]    removeEsub
+
+case8.通过修改独占参数JH_SUB_EXCLUSIVE。
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHost    rhela1    3 ()
+    addOrModifyHost    rhelb    3 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${filedir}    getFileDir
+    ${inputdir}    Set Variable    ${filedir}/spooler/input/esub8
+    ${sbindir}    getSbinPath
+    Copy File    ${inputdir}    ${sbindir}/esub
+    sleep    2
+    ${out}    ${exitcode}    ${job1}    submitEsubJob    su user1 \ -c 'jsub -q clulow1 sleep 1000'
+    log    ${out}
+    log    ${exitcode}
+    ${jobid1}    getJobId    ${job1}
+    ${que1}    getJobQueue    ${job1}
+    Should Be Equal As Integers    ${exitcode}    0
+    Should Be Equal    ${que1}    clulow1
+    checkJobStatus    ${jobid1}    RUN
+    ${joba}    queryJobInfo    ${jobid1}
+    ${quea}    getJobQueue    ${joba}
+    ${host1}    getAndCheckJobExecHost    ${jobid1}
+    Should Be Equal    ${quea}    clulow1
+    checkHostStatus    ${host1}    closed_Excl
+    ${out2}    ${exitcode2}    ${job2}    submitEsubJob    su user1 \ -c 'jsub -x -q clulow1 sleep 1000'
+    log    ${out2}
+    log    ${exitcode2}
+    ${jobid2}    getJobId    ${job2}
+    ${que2}    getJobQueue    ${job2}
+    Should Be Equal As Integers    ${exitcode2}    0
+    Should Be Equal    ${que2}    clulow1
+    checkJobStatus    ${jobid2}    RUN
+    ${jobb}    queryJobInfo    ${jobid2}
+    ${queb}    getJobQueue    ${jobb}
+    ${host2}    getAndCheckJobExecHost    ${jobid2}
+    Should Be Equal    ${queb}    clulow1
+    checkHostStatus    ${host2}    closed_Excl
+    ${hostall}    runCommand    jhosts -l
+    log    ${hostall}
+    runCommand    su jhadmin -c "jctrl kill ${jobid1}"
+    ${jobinfo}    runCommand    jjobs -u all
+    log    ${jobinfo}
+    checkHostStatus    ${host1}    ok
+    ${out3}    ${exitcode3}    ${job3}    submitEsubJob    su user1 \ -c 'jsub -q q1 sleep 1000'
+    log    ${out3}
+    log    ${exitcode3}
+    ${jobid3}    getJobId    ${job3}
+    ${que3}    getJobQueue    ${job3}
+    Should Be Equal As Integers    ${exitcode3}    0
+    Should Be Equal    ${que3}    q1
+    checkJobStatus    ${jobid3}    RUN
+    ${jobc}    queryJobInfo    ${jobid3}
+    ${quec}    getJobQueue    ${jobc}
+    ${host3}    getAndCheckJobExecHost    ${jobid3}
+    Should Be Equal    ${quec}    q1
+    checkHostStatus    ${host3}    ok
+    [Teardown]    modHostInfoAndDelEsub    rhela1=1 ()    rhelb=1 ()
+
+case9.通过修改参数JH_SUB_RES_REQ。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${inputdir}    Set Variable    ${filedir}/spooler/input/esub9
+    ${sbindir}    getSbinPath
+    Copy File    ${inputdir}    ${sbindir}/esub
+    sleep    2
+    ${out}    ${exitcode}    ${job1}    submitEsubJob    su user1 \ -c 'jsub -q q2 sleep 1000'
+    log    ${out}
+    log    ${exitcode}
+    ${jobid1}    getJobId    ${job1}
+    Should Be Equal As Integers    ${exitcode}    0
+    checkJobStatus    ${jobid1}    RUN
+    sleep    30
+    ${joba}    queryJobInfo    ${jobid1}
+    ${quea}    getJobQueue    ${joba}
+    ${exechost1}    getAndCheckJobExecHost    ${jobid1}
+    ${used1}    getAndCheckJobRusageInfo    ${jobid1}    MEM
+    ${host1}    QueryHostInfo    ${exechost1}
+    ${resv1}    getHostReserved    ${host1}    mem
+    checkRusageValue    100    ${resv1}    ${used1}
+    [Teardown]    removeEsub
+
+case10.通过修改参数-E。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${inputdir}    Set Variable    ${filedir}/spooler/input/esub10
+    ${sbindir}    getSbinPath
+    Copy File    ${inputdir}    ${sbindir}/esub
+    sleep    2
+    ${out}    ${exitcode}    ${job1}    submitEsubJob    su user1 \ -c 'jsub -E hostname sleep 1000'
+    log    ${out}
+    log    ${exitcode}
+    ${jobid1}    getJobId    ${job1}
+    Should Be Equal As Integers    ${exitcode}    0
+    checkJobStatus    ${jobid1}    RUN
+    ${jobaa}    queryJobInfo    ${jobid1}
+    ${precmd}    getJobPreCmd    ${jobaa}
+    log    ${precmd}
+    [Teardown]    removeEsub

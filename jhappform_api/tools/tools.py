@@ -79,13 +79,13 @@ class Tools():
    
 
 
-    def send_mail(self,Attachment):
+    def send_mail(self,Attachment,par):
         try:
 
             sender = "rzhou@jhinno.com"  
               
 
-            receiver = "rzhou@jhinno.com;1576768715@qq.com"  
+            receiver =  par
 
             sendfile = open(Attachment,"r").read()  
               

@@ -1,0 +1,112 @@
+*** Settings ***
+Suite Setup       preSuiteBack
+Suite Teardown    postSuite
+Library           /apps/autotest4/lib/clusterKeyword.py
+Library           /apps/autotest4/lib/clusterLib.py
+Library           /apps/autotest4/lib/common.py
+Library           /apps/autotest4/lib/hostKeyword.py
+Library           /apps/autotest4/lib/hostLib.py
+Library           /apps/autotest4/lib/hostsConfLib.py
+Library           /apps/autotest4/lib/jobKeyword.py
+Library           /apps/autotest4/lib/jobLib.py
+Library           /apps/autotest4/lib/myUtils.py
+Library           /apps/autotest4/lib/OperatingSystem.py
+Library           /apps/autotest4/lib/queueKeyword.py
+Library           /apps/autotest4/lib/queueLib.py
+Library           /apps/autotest4/lib/paramsConfLib.py
+Library           /apps/autotest4/lib/queuesConfLib.py
+Library           /apps/autotest4/lib/retry.py
+Library           /apps/autotest4/lib/schedulerConfLib.py
+Library           /apps/autotest4/lib/userGroupKeyword.py
+Library           /apps/autotest4/lib/userGroupLib.py
+Library           /apps/autotest4/lib/userKeyword.py
+Library           /apps/autotest4/lib/usersConfLib.py
+Library           /apps/autotest4/lib/userLib.py
+
+*** Test Cases ***
+case1.jusergroup -l
+    [Tags]    p1
+    [Setup]    readyTest
+    addormodifyusergroupa    group0    (user1 user2) (user1) ([default,1])
+    addormodifyusergroupa    group1    (group0 user3 user4) (user3) ([default,1])
+    addOrModifyUserA    group0    2 -
+    addOrModifyUserA    group1@    4 4
+    jadminJhdsSched
+    checkclusterstatus
+    ${uginfo}    runCommand    jusergroup -l
+    log    ${uginfo}
+    Should Match Regexp    ${uginfo}    Group: group0\\s*\\n\\s+Users = user[12] user[12]\\s*\\n\\s+Group Admins = user1\\s*\\n\\s+Shares = \\[default, 1\\]\\s*\\n\\n\\Group: group1\\s*\\n\\s+Users = user[34] user[34] group0/\\s*\\n\\s+Group Admins = user3\\s*\\n\\s+Shares = \\[default, 1\\]
+    [Teardown]    delUserAndUserGroup    group0,group1@    group0,group1
+
+case2.jusergroup -l -r
+    [Tags]    p1
+    [Setup]    readyTest
+    addormodifyusergroupa    group0    (user1 user2) (user1) ([default,1])
+    addormodifyusergroupa    group1    (group0 user3 user4) (user3) ([default,1])
+    addOrModifyUserA    group0    2 -
+    addOrModifyUserA    group1@    4 4
+    jadminJhdsSched
+    checkclusterstatus
+    ${uginfo}    runCommand    jusergroup -l -r
+    log    ${uginfo}
+    Should Match Regexp    ${uginfo}    Group: group0\\s*\\n\\s+Users = user[12] user[12]\\s*\\n\\s+Group Admins = user1\\s*\\n\\s+Shares = \\[default, 1\\]\\s*\\n\\nGroup: group1\\s*\\n\\s+Users = user[34] user[34] user[12] user[12]\\s*\\n\\s+Group Admins = user3\\s*\\n\\s+Shares = \\[default, 1\\]
+    [Teardown]    delUserAndUserGroup    group0,group1@    group0,group1
+
+case3.jusergroup -r
+    [Tags]    p1
+    [Setup]    readyTest
+    addormodifyusergroupa    group0    (user1 user2) (user1) ([default,1])
+    addormodifyusergroupa    group1    (group0 user3 user4) (user3) ([default,1])
+    addOrModifyUserA    group0    2 -
+    addOrModifyUserA    group1@    4 4
+    jadminJhdsSched
+    checkclusterstatus
+    ${uginfo}    runCommand    jusergroup -r
+    log    ${uginfo}
+    Should Match Regexp    ${uginfo}    GROUP_NAME: \ \ \ \ \ group0\\s*\\nUSERS: \ \ \ \ \ \ \ \ \ \ user[12] user[12]\\s*\\nGROUP_ADMINS: \ \ \ user1\\s*\\n\\nGROUP_NAME: \ \ \ \ \ group1\\s*\\n\\USERS: \ \ \ \ \ \ \ \ \ \ user[1234] user[1234] user[1234] user[1234]\\s*\\nGROUP_ADMINS: \ \ \ user3
+    [Teardown]    delUserAndUserGroup    group0,group1@    group0,group1
+
+case4.jusergroup -w
+    [Tags]    p1
+    [Setup]    readyTest
+    addormodifyusergroupa    group0    (user1 user2) (user1) ([default,1])
+    addormodifyusergroupa    group1    (group0 user3 user4) (user3) ([default,1])
+    addOrModifyUserA    group0    2 -
+    addOrModifyUserA    group1@    4 4
+    jadminJhdsSched
+    checkclusterstatus
+    ${uginfo}    runCommand    jusergroup -w
+    log    ${uginfo}
+    Should Match Regexp    ${uginfo}    GROUP_NAME: \ \ \ \ \ group0\\s*\\nUSERS: \ \ \ \ \ \ \ \ \ \ user[12] user[12]\\s*\\nGROUP_ADMINS: \ \ \ user1\\s*\\n\\nGROUP_NAME: \ \ \ \ \ group1\\s*\\n\\USERS: \ \ \ \ \ \ \ \ \ \ user[34] user[34] group0/\\s*\\nGROUP_ADMINS: \ \ \ user3
+    [Teardown]    delUserAndUserGroup    group0,group1@    group0,group1
+
+case5.jusergroup group
+    [Tags]    p1
+    [Setup]    readyTest
+    addormodifyusergroupa    group0    (user1 user2) (user1) ([default,1])
+    addormodifyusergroupa    group1    (group0 user3 user4) (user3) ([default,1])
+    addOrModifyUserA    group0    2 -
+    addOrModifyUserA    group1@    4 4
+    jadminJhdsSched
+    checkclusterstatus
+    ${uginfo}    runCommand    jusergroup group1
+    log    ${uginfo}
+    Should Match Regexp    ${uginfo}    GROUP_NAME: \ \ \ \ \ group1\\s*\\n\\USERS: \ \ \ \ \ \ \ \ \ \ user[34] user[34] group0/\\s*\\nGROUP_ADMINS: \ \ \ user3
+    ${uginfo1}    runCommand    jusergroup group0 group1
+    log    ${uginfo1}
+    Should Match Regexp    ${uginfo1}    GROUP_NAME: \ \ \ \ \ group0\\s*\\nUSERS: \ \ \ \ \ \ \ \ \ \ user[12] user[12]\\s*\\nGROUP_ADMINS: \ \ \ user1\\s*\\n\\nGROUP_NAME: \ \ \ \ \ group1\\s*\\n\\USERS: \ \ \ \ \ \ \ \ \ \ user[34] user[34] group0/\\s*\\nGROUP_ADMINS: \ \ \ user3
+    [Teardown]    delUserAndUserGroup    group0,group1@    group0,group1
+
+case6.jusergroup group -r
+    [Tags]    p1
+    [Setup]    readyTest
+    addormodifyusergroupa    group0    (user1 user2) (user1) ([default,1])
+    addormodifyusergroupa    group1    (group0 user3 user4) (user3) ([default,1])
+    addOrModifyUserA    group0    2 -
+    addOrModifyUserA    group1@    4 4
+    jadminJhdsSched
+    checkclusterstatus
+    ${uginfo}    runCommand    jusergroup group1 -r
+    log    ${uginfo}
+    Should Match Regexp    ${uginfo}    GROUP_NAME: \ \ \ \ \ group1\\s*\\n\\USERS: \ \ \ \ \ \ \ \ \ \ user[1234] user[1234] user[1234] user[1234]\\s*\\nGROUP_ADMINS: \ \ \ user3
+    [Teardown]    delUserAndUserGroup    group0,group1@    group0,group1

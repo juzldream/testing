@@ -1,0 +1,23 @@
+usage: jctrl requeue [-h] [-u user_name | -u all] [-J job_name] [-d] [-e] [-r]
+                     [-a] [-H]
+                     0 | jobId | jobId[index] [0 | jobId | jobId[index] ...]
+
+positional arguments:
+  0 | jobId | jobId[index]
+                        operates on the job or job array elements that are
+                        specified by jobIds or jobIds[index]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -u user_name | -u all
+                        operates on jobs submitted by the specified user or
+                        group, or all users if you specify the keyword all
+  -J job_name           operates on only jobs with the specified name
+  -d                    requeues jobs that have finished running with DONE job
+                        status.
+  -e                    requeues jobs that have terminated abnormally with
+                        EXIT job status
+  -r                    requeues jobs that are running
+  -a                    requeues all jobs including running jobs, suspending
+                        jobs, and jobs with EXIT or DONE status
+  -H                    requeues jobs to PSUSP job status

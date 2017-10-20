@@ -1,0 +1,10 @@
+usage: jctrl peek [-h] [-f] jobId | jobId[index]
+
+positional arguments:
+  jobId | jobId[index]  operates only job that are specified by jobId or
+                        jobId[index]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -f                    displays the output of the job using the command tail
+                        -f

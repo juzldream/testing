@@ -1,0 +1,554 @@
+*** Settings ***
+Suite Setup       preSuite    spooler/conf/conf-jadmin
+Suite Teardown    postJadminSuite
+Library           /apps/autotest4/lib/clusterKeyword.py
+Library           /apps/autotest4/lib/clusterLib.py
+Library           /apps/autotest4/lib/common.py
+Library           /apps/autotest4/lib/hostKeyword.py
+Library           /apps/autotest4/lib/hostLib.py
+Library           /apps/autotest4/lib/hostsConfLib.py
+Library           /apps/autotest4/lib/jobKeyword.py
+Library           /apps/autotest4/lib/jobLib.py
+Library           /apps/autotest4/lib/myUtils.py
+Library           /apps/autotest4/lib/OperatingSystem.py
+Library           /apps/autotest4/lib/queueKeyword.py
+Library           /apps/autotest4/lib/queueLib.py
+Library           /apps/autotest4/lib/paramsConfLib.py
+Library           /apps/autotest4/lib/queuesConfLib.py
+Library           /apps/autotest4/lib/retry.py
+Library           /apps/autotest4/lib/schedulerConfLib.py
+Library           /apps/autotest4/lib/userGroupKeyword.py
+Library           /apps/autotest4/lib/userGroupLib.py
+Library           /apps/autotest4/lib/userKeyword.py
+Library           /apps/autotest4/lib/usersConfLib.py
+Library           /apps/autotest4/lib/userLib.py
+
+*** Test Cases ***
+case1.jadmin hclose/open
+    [Tags]    p1
+    [Setup]    readyTest
+    ${info1}    runCommand    su user1 -c "jadmin hclose"
+    log    ${info1}
+    Should Contain    ${info1}    Close <rhela1> ...... User permission denied
+    ${info2}    runCommand    su jhadmin -c "jadmin hclose"
+    log    ${info2}
+    sleep    2
+    checkHostStatus    rhela1    closed_Adm
+    checkHostStatus    rhelb    ok
+    ${info3}    runCommand    su jhadmin -c "jhosts -w"
+    log    ${info3}
+    Should Match Regexp    ${info3}    rhela1\\s+closed_Adm\\s+ - \\s+1\\s+0\\s+ 0 \\s+0 \\s+0 \\s+0
+    Should Match Regexp    ${info3}    rhelb\\s+ ok\\s+-\\s+1 \\s+ 0 \\s+ 0 \\s+0 \\s+ 0\\s+ 0
+    ${job}    querySubmitInfo    su jhadmin -c "jsub -m rhela1 sleep 1000 "
+    ${jobid1}    getJobId    ${job}
+    sleep    3
+    ${jobaa}    queryJobInfo    ${jobid1}
+    ${infoa}    getJobPndRsn    ${jobaa}
+    log    ${infoa}
+    Should Contain    ${infoa}    Closed by unischeduler administrator:
+    ${result1}    runCommand    su user1 -c "jadmin hopen"
+    log    ${result1}
+    Should Contain    ${result1}    Open <rhela1> ...... User permission denied
+    ${result2}    runCommand    su jhadmin -c "jadmin hopen"
+    log    ${result2}
+    sleep    2
+    checkHostStatus    rhela1    closed_Full
+    checkHostStatus    rhelb    ok
+    ${result3}    runCommand    su jhadmin -c "jhosts -w"
+    log    ${result3}
+    Should Match Regexp    ${result3}    rhela1\\s+ closed_Full\\s+ - \\s+ 1\\s+1 \\s+1 \\s+ 0 \\s+ 0 \\s+ 0
+    Should Match Regexp    ${result3}    rhelb \\s+ ok \\s+ - \\s+ 1\\s+ 0\\s+0\\s+ 0\\s+0\\s+ 0
+    checkJobStatus    ${jobid1}    RUN
+    [Teardown]    postJadmin
+
+case2.jadmin hclose/open all
+    [Tags]    p1
+    [Setup]    readyTest
+    ${info1}    runCommand    su user1 -c "jadmin hclose all"
+    log    ${info1}
+    Should Contain    ${info1}    Close <rhela1> ...... User permission denied
+    Should Contain    ${info1}    Close <rhelb> ...... User permission denied
+    ${info2}    runCommand    su jhadmin -c "jadmin hclose all"
+    log    ${info2}
+    sleep    2
+    checkHostStatus    rhela1    closed_Adm
+    checkHostStatus    rhelb    closed_Adm
+    ${info3}    runCommand    su jhadmin -c "jhosts -w"
+    log    ${info3}
+    Should Match Regexp    ${info3}    rhela1\\s+closed_Adm\\s+ -\\s+1\\s+0\\s+0\\s+0\\s+0\\s+0
+    Should Match Regexp    ${info3}    rhelb \\s+closed_Adm\\s+ -\\s+1\\s+0\\s+0 \\s+0\\s+0\\s+0
+    ${job1}    querySubmitInfo    su jhadmin -c "jsub -m rhela1 sleep 1000 "
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su jhadmin -c "jsub -m rhelb sleep 1000 "
+    ${jobid2}    getJobId    ${job2}
+    sleep    3
+    ${job11}    queryJobInfo    ${jobid1}
+    ${info11}    getJobPndRsn    ${job11}
+    log    ${info11}
+    Should Contain    ${info11}    Closed by unischeduler administrator:
+    ${job22}    queryJobInfo    ${jobid2}
+    ${info22}    getJobPndRsn    ${job22}
+    log    ${info22}
+    Should Contain    ${info22}    Closed by unischeduler administrator:
+    ${result1}    runCommand    su user1 -c "jadmin hopen all"
+    log    ${result1}
+    Should Contain    ${result1}    Open <rhela1> ...... User permission denied
+    Should Contain    ${result1}    Open <rhelb> ...... User permission denied
+    ${result2}    runCommand    su jhadmin -c "jadmin hopen all"
+    log    ${result2}
+    sleep    2
+    checkHostStatus    rhela1    closed_Full
+    checkHostStatus    rhelb    closed_Full
+    ${result3}    runCommand    su jhadmin -c "jhosts -w"
+    log    ${result3}
+    Should Match Regexp    ${result3}    rhela1\\s+closed_Full\\s+-\\s+1\\s+1\\s+1\\s+0\\s+0\\s+0
+    Should Match Regexp    ${result3}    rhelb \\s+closed_Full\\s+-\\s+1\\s+1\\s+1\\s+0\\s+0\\s+0
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    [Teardown]    postJadmin
+
+case3.jadmin hclose/open slave host
+    [Tags]    p1
+    [Setup]    readyTest
+    ${info1}    runCommand    su user1 -c "jadmin hclose rhelb"
+    log    ${info1}
+    Should Contain    ${info1}    Close <rhelb> ...... User permission denied
+    ${info2}    runCommand    su jhadmin -c "jadmin hclose rhelb"
+    log    ${info2}
+    Should Contain    ${info2}    Close <rhelb> ...... done
+    sleep    2
+    checkHostStatus    rhela1    ok
+    checkHostStatus    rhelb    closed_Adm
+    ${info3}    runCommand    su jhadmin -c "jhosts -w"
+    log    ${info3}
+    Should Match Regexp    ${info3}    rhela1\\s+ok\\s+-\\s+1\\s+0\\s+0\\s+0\\s+0\\s+0
+    Should Match Regexp    ${info3}    rhelb \\s+closed_Adm\\s+-\\s+1\\s+0\\s+0\\s+0\\s+0\\s+0
+    ${job}    querySubmitInfo    su jhadmin -c "jsub -m rhelb sleep 1000 "
+    ${jobid1}    getJobId    ${job}
+    sleep    3
+    ${jobaa}    queryJobInfo    ${jobid1}
+    ${infoa}    getJobPndRsn    ${jobaa}
+    log    ${infoa}
+    Should Contain    ${infoa}    Closed by unischeduler administrator:
+    ${result1}    runCommand    su user1 -c "jadmin hopen rhelb"
+    log    ${result1}
+    Should Contain    ${result1}    Open <rhelb> ...... User permission denied
+    ${result2}    runCommand    su jhadmin -c "jadmin hopen rhelb"
+    log    ${result2}
+    Should Contain    ${result2}    Open <rhelb> ...... done
+    sleep    2
+    checkHostStatus    rhela1    ok
+    checkHostStatus    rhelb    closed_Full
+    ${result3}    runCommand    su jhadmin -c "jhosts -w"
+    log    ${result3}
+    Should Match Regexp    ${result3}    rhela1\\s+ok\\s+-\\s+1\\s+0\\s+0\\s+0\\s+0\\s+0
+    Should Match Regexp    ${result3}    rhelb \\s+closed_Full\\s+- \\s+1\\s+1\\s+1\\s+0\\s+0\\s+0
+    checkJobStatus    ${jobid1}    RUN
+    [Teardown]    postJadmin
+
+case4.jadmin hclose/open host1 host2
+    [Tags]    p1
+    [Setup]    readyTest
+    ${info1}    runCommand    su user1 -c "jadmin hclose rhela1 rhelb"
+    log    ${info1}
+    Should Contain    ${info1}    Close <rhela1> ...... User permission denied
+    Should Contain    ${info1}    Close <rhelb> ...... User permission denied
+    ${info2}    runCommand    su jhadmin -c "jadmin hclose all"
+    log    ${info2}
+    Should Contain    ${info2}    Close <rhela1> ...... done
+    Should Contain    ${info2}    Close <rhelb> ...... done
+    sleep    2
+    checkHostStatus    rhela1    closed_Adm
+    checkHostStatus    rhelb    closed_Adm
+    ${info3}    runCommand    su jhadmin -c "jhosts -w"
+    log    ${info3}
+    Should Match Regexp    ${info3}    rhela1\\s+closed_Adm\\s+-\\s+1\\s+0\\s+0\\s+0\\s+0\\s+ 0
+    Should Match Regexp    ${info3}    rhelb\\s+closed_Adm\\s+-\\s+1\\s+0\\s+0\\s+0\\s+0\\s+0
+    ${job1}    querySubmitInfo    su jhadmin -c "jsub -m rhela1 sleep 1000 "
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su jhadmin -c "jsub -m rhelb sleep 1000 "
+    ${jobid2}    getJobId    ${job2}
+    sleep    3
+    ${job11}    queryJobInfo    ${jobid1}
+    ${info11}    getJobPndRsn    ${job11}
+    log    ${info11}
+    Should Contain    ${info11}    Closed by unischeduler administrator:
+    ${job22}    queryJobInfo    ${jobid2}
+    ${info22}    getJobPndRsn    ${job22}
+    log    ${info22}
+    Should Contain    ${info22}    Closed by unischeduler administrator:
+    ${result1}    runCommand    su user1 -c "jadmin hopen rhela1 rhelb"
+    log    ${result1}
+    ${result2}    runCommand    su jhadmin -c "jadmin hopen rhela1 rhelb"
+    log    ${result2}
+    Should Contain    ${result2}    Open <rhela1> ...... done
+    Should Contain    ${result2}    Open <rhelb> ...... done
+    sleep    2
+    checkHostStatus    rhela1    closed_Full
+    checkHostStatus    rhelb    closed_Full
+    ${result3}    runCommand    su jhadmin -c "jhosts -w"
+    log    ${result3}
+    Should Match Regexp    ${result3}    rhela1\\s+closed_Full\\s+-\\s+1\\s+1\\s+1\\s+0\\s+0\\s+0
+    Should Match Regexp    ${result3}    rhelb\\s+closed_Full\\s+-\\s+1\\s+1\\s+1\\s+0\\s+0\\s+0
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    [Teardown]    postJadmin
+
+case5.普通用户执行jadmin qopen/qclose/qact/qinact
+    [Tags]    p1
+    [Setup]    readyTest
+    ${info1}    runCommand    su user3 -c "jadmin qinact"
+    log    ${info1}
+    Should Contain    ${info1}    Queue <normal> .... User permission denied
+    ${info2}    runCommand    su user3 -c "jadmin qinact qadmin"
+    log    ${info2}
+    Should Contain    ${info2}    Queue <qadmin> .... User permission denied
+    ${info3}    runCommand    su user3 -c "jadmin qinact test"
+    log    ${info3}
+    Should Contain    ${info3}    Queue <test> .... User permission denied
+    ${info4}    runCommand    su user3 -c "jadmin qact"
+    log    ${info4}
+    Should Contain    ${info4}    Queue <normal> .... User permission denied
+    ${info5}    runCommand    su user3 -c "jadmin qact qadmin"
+    log    ${info5}
+    Should Contain    ${info5}    Queue <qadmin> .... User permission denied
+    ${info6}    runCommand    su user3 -c "jadmin qact test"
+    log    ${info6}
+    Should Contain    ${info6}    Queue <test> .... User permission denied
+    ${info7}    runCommand    su user3 -c "jadmin qclose"
+    log    ${info7}
+    Should Contain    ${info7}    Queue <normal> .... User permission denied
+    ${info8}    runCommand    su user3 -c "jadmin qclose qadmin"
+    log    ${info8}
+    Should Contain    ${info8}    Queue <qadmin> .... User permission denied
+    ${info9}    runCommand    su user3 -c "jadmin qclose test"
+    log    ${info9}
+    Should Contain    ${info9}    Queue <test> .... User permission denied
+    ${info10}    runCommand    su user3 -c "jadmin qopen"
+    log    ${info10}
+    Should Contain    ${info10}    Queue <normal> .... User permission denied
+    ${info11}    runCommand    su user3 -c "jadmin qopen qadmin"
+    log    ${info11}
+    Should Contain    ${info11}    Queue <qadmin> .... User permission denied
+    ${info12}    runCommand    su user3 -c "jadmin qopen test"
+    log    ${info12}
+    Should Contain    ${info12}    Queue <test> .... User permission denied
+    [Teardown]    postJadmin
+
+case6.集群管理员执行jadmin qinact/qact
+    [Tags]    p1
+    [Setup]    readyTest
+    ${info1}    runCommand    su jhadmin -c "jadmin qinact"
+    log    ${info1}
+    Should Contain    ${info1}    Queue <normal> is inactivated
+    ${job0}    querySubmitInfo    su user1 -c "jsub sleep 1000 "
+    ${jobid0}    getJobId    ${job0}
+    sleep    3
+    ${job00}    queryJobInfo    ${jobid0}
+    ${info00}    getJobPndRsn    ${job00}
+    log    ${info00}
+    Should Contain    ${info00}    The queue is inactivated by the administrator;
+    ${result0}    runCommand    su jhadmin -c "jadmin qact"
+    log    ${result0}
+    Should Contain    ${result0}    Queue <normal> is activated
+    checkJobStatus    ${jobid0}    RUN
+    runCommand    su jhadmin -c "jctrl kill ${jobid0}"
+    ${info2}    runCommand    su jhadmin -c "jadmin qinact qadmin"
+    log    ${info2}
+    Should Contain    ${info2}    Queue <qadmin> is inactivated
+    ${info3}    runCommand    su jhadmin -c "jadmin qinact test"
+    log    ${info3}
+    Should Contain    ${info3}    Queue <test> is inactivated
+    sleep    2
+    ${info4}    runCommand    su jhadmin -c "jqueues -w"
+    log    ${info4}
+    Should Contain    ${info4}    qadmin \ \ \ \ \ \ \ \ \ \ 30 \ Open:Inact \ \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${info4}    test \ \ \ \ \ \ \ \ \ \ \ \ 30 \ Open:Inact \ \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    ${job1}    querySubmitInfo    su jhadmin -c "jsub -q qadmin sleep 1000 "
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su jhadmin -c "jsub -q test sleep 1000 "
+    ${jobid2}    getJobId    ${job2}
+    sleep    3
+    ${job11}    queryJobInfo    ${jobid1}
+    ${info11}    getJobPndRsn    ${job11}
+    log    ${info11}
+    Should Contain    ${info11}    The queue is inactivated by the administrator;
+    ${job22}    queryJobInfo    ${jobid2}
+    ${info22}    getJobPndRsn    ${job22}
+    log    ${info22}
+    Should Contain    ${info22}    The queue is inactivated by the administrator;
+    ${result1}    runCommand    su jhadmin -c "jadmin qact qadmin"
+    log    ${result1}
+    ${result2}    runCommand    su jhadmin -c "jadmin qact test"
+    log    ${result2}
+    sleep    2
+    checkHostStatus    rhela1    closed_Full
+    checkHostStatus    rhelb    closed_Full
+    ${result3}    runCommand    su jhadmin -c "jqueues -w"
+    log    ${result3}
+    Should Contain    ${result3}    qadmin \ \ \ \ \ \ \ \ \ \ 30 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 1 \ \ \ \ 0 \ \ \ \ 1 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${result3}    test \ \ \ \ \ \ \ \ \ \ \ \ 30 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 1 \ \ \ \ 0 \ \ \ \ 1 \ \ \ \ 0 \ \ \ 0
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    [Teardown]    postJadmin
+
+case7.队列管理员执行jadmin qinact/qact
+    [Tags]    p1
+    [Setup]    readyTest
+    ${info0}    runCommand    su user1 -c "jadmin qinact"
+    log    ${info0}
+    Should Contain    ${info0}    Queue <normal> .... User permission denied
+    ${info1}    runCommand    su user1 -c "jadmin qact"
+    log    ${info1}
+    Should Contain    ${info1}    Queue <normal> .... User permission denied
+    ${info2}    runCommand    su user1 -c "jadmin qinact qadmin"
+    log    ${info2}
+    Should Contain    ${info2}    Queue <qadmin> is inactivated
+    ${info3}    runCommand    su user1 -c "jadmin qinact test"
+    log    ${info3}
+    Should Contain    ${info3}    Queue <test> .... User permission denied
+    sleep    2
+    ${info4}    runCommand    su user1 -c "jqueues -w"
+    log    ${info4}
+    Should Contain    ${info4}    normal \ \ \ \ \ \ \ \ \ 100 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${info4}    qadmin \ \ \ \ \ \ \ \ \ \ 30 \ Open:Inact \ \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${info4}    test \ \ \ \ \ \ \ \ \ \ \ \ 30 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    ${job1}    querySubmitInfo    su user1 -c "jsub -q qadmin sleep 1000 "
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -q test sleep 1000 "
+    ${jobid2}    getJobId    ${job2}
+    sleep    3
+    ${job11}    queryJobInfo    ${jobid1}
+    ${info11}    getJobPndRsn    ${job11}
+    log    ${info11}
+    Should Contain    ${info11}    The queue is inactivated by the administrator;
+    checkJobStatus    ${jobid2}    RUN
+    ${result1}    runCommand    su user1 -c "jadmin qact qadmin"
+    log    ${result1}
+    Should Contain    ${result1}    Queue <qadmin> is activated
+    ${result2}    runCommand    su user1 -c "jadmin qact test"
+    log    ${result2}
+    Should Contain    ${result2}    Queue <test> .... User permission denied
+    sleep    2
+    ${result3}    runCommand    su jhadmin -c "jqueues -w"
+    log    ${result3}
+    Should Contain    ${result3}    normal \ \ \ \ \ \ \ \ \ 100 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${result3}    qadmin \ \ \ \ \ \ \ \ \ \ 30 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 1 \ \ \ \ 0 \ \ \ \ 1 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${result3}    test \ \ \ \ \ \ \ \ \ \ \ \ 30 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 1 \ \ \ \ 0 \ \ \ \ 1 \ \ \ \ 0 \ \ \ 0
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    [Teardown]    postJadmin
+
+case8.队列管理员执行jadmin qopen/qclose
+    [Tags]    p1
+    [Setup]    readyTest
+    ${info0}    runCommand    su user1 -c "jadmin qclose"
+    log    ${info0}
+    Should Contain    ${info0}    Queue <normal> .... User permission denied
+    ${info1}    runCommand    su user1 -c "jadmin qopen"
+    log    ${info1}
+    Should Contain    ${info1}    Queue <normal> .... User permission denied
+    ${info2}    runCommand    su user1 -c "jadmin qclose qadmin"
+    log    ${info2}
+    Should Contain    ${info2}    Queue <qadmin> is closed
+    ${info3}    runCommand    su user1 -c "jadmin qclose test"
+    log    ${info3}
+    Should Contain    ${info3}    Queue <test> .... User permission denied
+    sleep    2
+    ${info4}    runCommand    su user1 -c "jqueues -w"
+    log    ${info4}
+    Should Contain    ${info4}    normal \ \ \ \ \ \ \ \ \ 100 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${info4}    qadmin \ \ \ \ \ \ \ \ \ \ 30 \ Closed:Active \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${info4}    test \ \ \ \ \ \ \ \ \ \ \ \ 30 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    ${info5}    runCommand    su user1 -c "jsub -q qadmin sleep 1000 "
+    log    ${info5}
+    Should Contain    ${info5}    qadmin: Queue has been closed. Job not submitted
+    ${info6}    querySubmitInfo    su user1 -c "jsub -q test sleep 1000 "
+    ${jobid6}    getJobId    ${info6}
+    checkJobStatus    ${jobid6}    RUN
+    ${info7}    runCommand    su user1 -c "jadmin qopen qadmin"
+    log    ${info7}
+    Should Contain    ${info7}    Queue <qadmin> is opened
+    ${info8}    runCommand    su user1 -c "jadmin qopen test"
+    log    ${info8}
+    Should Contain    ${info8}    Queue <test> .... User permission denied
+    sleep    2
+    ${info9}    runCommand    su jhadmin -c "jqueues -w"
+    log    ${info9}
+    Should Contain    ${info9}    normal \ \ \ \ \ \ \ \ \ 100 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${info9}    qadmin \ \ \ \ \ \ \ \ \ \ 30 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${info9}    test \ \ \ \ \ \ \ \ \ \ \ \ 30 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 1 \ \ \ \ 0 \ \ \ \ 1 \ \ \ \ 0 \ \ \ 0
+    ${info10}    querySubmitInfo    su user1 -c "jsub -q qadmin sleep 1000 "
+    ${jobid10}    getJobId    ${info10}
+    checkJobStatus    ${jobid10}    RUN
+    runCommand    su jhadmin -c "jctrl kill -u all 0"
+    checkClusterStatus
+    ${loglog}    runCommand    su jhadmin -c "jqueues -w"
+    log    ${loglog}
+    ${info11}    runCommand    su user1 -c "jadmin qclose qadmin test"
+    log    ${info11}
+    Should Contain    ${info11}    Queue <qadmin> is closed
+    Should Contain    ${info11}    Queue <test> .... User permission denied
+    ${info12}    runCommand    su jhadmin -c "jqueues -w"
+    log    ${info12}
+    Should Contain    ${info12}    normal \ \ \ \ \ \ \ \ \ 100 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${info12}    qadmin \ \ \ \ \ \ \ \ \ \ 30 \ Closed:Active \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${info12}    test \ \ \ \ \ \ \ \ \ \ \ \ 30 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    ${info13}    runCommand    su user1 -c "jsub -q qadmin sleep 1000 "
+    log    ${info13}
+    Should Contain    ${info13}    qadmin: Queue has been closed. Job not submitted
+    ${info14}    querySubmitInfo    su user1 -c "jsub -q test sleep 1000 "
+    ${jobid14}    getJobId    ${info14}
+    checkJobStatus    ${jobid14}    RUN
+    ${info15}    runCommand    su user1 -c "jadmin qopen normal qadmin"
+    log    ${info15}
+    Should Contain    ${info15}    Queue <qadmin> is opened
+    Should Contain    ${info15}    Queue <normal> .... User permission denied
+    runCommand    su jhadmin -c "jctrl kill -u all 0"
+    checkClusterStatus
+    ${info16}    runCommand    su user1 -c "jadmin qclose all"
+    log    ${info16}
+    Should Contain    ${info16}    Queue <normal> .... User permission denied
+    Should Contain    ${info16}    Queue <qadmin> is closed
+    Should Contain    ${info16}    Queue <test> .... User permission denied
+    ${info17}    runCommand    su jhadmin -c "jqueues -w"
+    log    ${info17}
+    Should Contain    ${info17}    normal \ \ \ \ \ \ \ \ \ 100 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${info17}    qadmin \ \ \ \ \ \ \ \ \ \ 30 \ Closed:Active \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${info17}    test \ \ \ \ \ \ \ \ \ \ \ \ 30 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    ${info18}    runCommand    su user1 -c "jsub -q qadmin sleep 1000 "
+    log    ${info18}
+    Should Contain    ${info18}    qadmin: Queue has been closed. Job not submitted
+    ${info19}    querySubmitInfo    su user1 -c "jsub -q test sleep 1000 "
+    ${jobid19}    getJobId    ${info19}
+    ${info20}    querySubmitInfo    su user1 -c "jsub -q normal sleep 1000 "
+    ${jobid20}    getJobId    ${info20}
+    checkJobStatus    ${jobid19}    RUN
+    checkJobStatus    ${jobid20}    RUN
+    ${jobid21}    runCommand    su user1 -c "jadmin qopen all"
+    log    ${jobid21}
+    ${jobid22}    runCommand    su jhadmin -c "jqueues -w"
+    log    ${jobid22}
+    Should Contain    ${jobid22}    normal \ \ \ \ \ \ \ \ \ 100 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 1 \ \ \ \ 0 \ \ \ \ 1 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${jobid22}    qadmin \ \ \ \ \ \ \ \ \ \ 30 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${jobid22}    test \ \ \ \ \ \ \ \ \ \ \ \ 30 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 1 \ \ \ \ 0 \ \ \ \ 1 \ \ \ \ 0 \ \ \ 0
+    runCommand    su jhadmin -c "jctrl kill -u all 0"
+    checkClusterStatus
+    ${jobid23}    querySubmitInfo    su user1 -c "jsub -q qadmin sleep 1000 "
+    ${jobid23}    getJobId    ${jobid23}
+    checkJobStatus    ${jobid23}    RUN
+    [Teardown]    postJadmin
+
+case9.集群管理员执行jadmin qopen/qclose
+    [Tags]    p1
+    [Setup]    readyTest
+    ${info0}    runCommand    su jhadmin -c "jadmin qclose"
+    log    ${info0}
+    Should Contain    ${info0}    Queue <normal> is closed
+    ${info1}    runCommand    su jhadmin -c "jsub sleep 1000"
+    log    ${info1}
+    Should Contain    ${info1}    normal: Queue has been closed. Job not submitted
+    ${info2}    runCommand    su jhadmin -c "jadmin qopen"
+    log    ${info2}
+    Should Contain    ${info2}    Queue <normal> is opened
+    ${info3}    querySubmitInfo    su jhadmin -c "jsub sleep 1000"
+    ${jobid3}    getJobId    ${info3}
+    checkJobStatus    ${jobid3}    RUN
+    runCommand    su jhadmin -c "jctrl kill -u all 0"
+    checkClusterStatus
+    ${info4}    runCommand    su jhadmin -c "jadmin qclose qadmin"
+    log    ${info4}
+    Should Contain    ${info4}    Queue <qadmin> is closed
+    ${info5}    runCommand    su jhadmin -c "jadmin qclose test"
+    log    ${info5}
+    Should Contain    ${info5}    Queue <test> is closed
+    sleep    2
+    ${info6}    runCommand    su jhadmin -c "jqueues -w"
+    log    ${info6}
+    Should Contain    ${info6}    qadmin \ \ \ \ \ \ \ \ \ \ 30 \ Closed:Active \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${info6}    test \ \ \ \ \ \ \ \ \ \ \ \ 30 \ Closed:Active \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${info6}    normal \ \ \ \ \ \ \ \ \ 100 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    ${info7}    runCommand    su jhadmin -c "jsub -q qadmin sleep 1000 "
+    log    ${info7}
+    Should Contain    ${info7}    qadmin: Queue has been closed. Job not submitted
+    ${info8}    runCommand    su jhadmin -c "jsub -q test sleep 1000 "
+    log    ${info8}
+    Should Contain    ${info8}    test: Queue has been closed. Job not submitted
+    ${info9}    runCommand    su jhadmin -c "jadmin qopen qadmin"
+    log    ${info9}
+    Should Contain    ${info9}    Queue <qadmin> is opened
+    ${info10}    runCommand    su jhadmin -c "jadmin qopen test"
+    log    ${info10}
+    Should Contain    ${info10}    Queue <test> is opened
+    sleep    2
+    ${info11}    runCommand    su jhadmin -c "jqueues -w"
+    log    ${info11}
+    Should Contain    ${info11}    normal \ \ \ \ \ \ \ \ \ 100 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${info11}    qadmin \ \ \ \ \ \ \ \ \ \ 30 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${info11}    test \ \ \ \ \ \ \ \ \ \ \ \ 30 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    ${info12}    querySubmitInfo    su jhadmin \ -c "jsub -q qadmin sleep 1000 "
+    ${jobid12}    getJobId    ${info12}
+    checkJobStatus    ${jobid12}    RUN
+    ${info13}    querySubmitInfo    su jhadmin -c "jsub -q test sleep 1000 "
+    ${jobid13}    getJobId    ${info13}
+    checkJobStatus    ${jobid13}    RUN
+    runCommand    su jhadmin -c "jctrl kill -u all 0"
+    checkClusterStatus
+    ${info14}    runCommand    su jhadmin -c "jadmin qclose qadmin test"
+    log    ${info14}
+    Should Contain    ${info14}    Queue <qadmin> is closed
+    Should Contain    ${info14}    Queue <test> is closed
+    ${info15}    runCommand    su jhadmin -c "jqueues -w"
+    log    ${info15}
+    Should Contain    ${info15}    normal \ \ \ \ \ \ \ \ \ 100 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${info15}    qadmin \ \ \ \ \ \ \ \ \ \ 30 \ Closed:Active \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${info15}    test \ \ \ \ \ \ \ \ \ \ \ \ 30 \ Closed:Active \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    ${info16}    runCommand    su jhadmin -c "jsub -q qadmin sleep 1000 "
+    log    ${info16}
+    Should Contain    ${info16}    qadmin: Queue has been closed. Job not submitted
+    ${info17}    runCommand    su jhadmin -c "jsub -q test sleep 1000 "
+    log    ${info17}
+    Should Contain    ${info17}    test: Queue has been closed. Job not submitted
+    ${info18}    runCommand    su jhadmin -c "jadmin qopen test qadmin"
+    log    ${info18}
+    Should Contain    ${info18}    Queue <qadmin> is opened
+    Should Contain    ${info18}    Queue <test> is opened
+    runCommand    su jhadmin -c "jctrl kill -u all 0"
+    checkClusterStatus
+    ${info19}    runCommand    su jhadmin -c "jadmin qclose all"
+    log    ${info19}
+    Should Contain    ${info19}    Queue <normal> is closed
+    Should Contain    ${info19}    Queue <qadmin> is closed
+    Should Contain    ${info19}    Queue <test> is closed
+    ${info20}    runCommand    su jhadmin -c "jqueues -w"
+    log    ${info20}
+    Should Contain    ${info20}    normal \ \ \ \ \ \ \ \ \ 100 \ Closed:Active \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${info20}    qadmin \ \ \ \ \ \ \ \ \ \ 30 \ Closed:Active \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${info20}    test \ \ \ \ \ \ \ \ \ \ \ \ 30 \ Closed:Active \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    ${info21}    runCommand    su jhadmin -c "jsub -q qadmin sleep 1000 "
+    log    ${info21}
+    Should Contain    ${info21}    qadmin: Queue has been closed. Job not submitted
+    ${info22}    runCommand    su jhadmin -c "jsub -q test sleep 1000 "
+    log    ${info22}
+    Should Contain    ${info22}    test: Queue has been closed. Job not submitted
+    ${info23}    runCommand    su jhadmin -c "jsub -q normal sleep 1000 "
+    log    ${info23}
+    Should Contain    ${info23}    normal: Queue has been closed. Job not submitted
+    ${info24}    runCommand    su jhadmin -c "jadmin qopen all"
+    log    ${info24}
+    Should Contain    ${info24}    Queue <normal> is opened
+    Should Contain    ${info24}    Queue <qadmin> is opened
+    Should Contain    ${info24}    Queue <test> is opened
+    ${info25}    runCommand    su jhadmin -c "jqueues -w"
+    log    ${info25}
+    Should Contain    ${info25}    normal \ \ \ \ \ \ \ \ \ 100 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${info25}    qadmin \ \ \ \ \ \ \ \ \ \ 30 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${info25}    test \ \ \ \ \ \ \ \ \ \ \ \ 30 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    runCommand    su jhadmin -c "jctrl kill -u all 0"
+    ${info25}    querySubmitInfo    su jhadmin -c "jsub -q qadmin sleep 1000 "
+    ${jobid25}    getJobId    ${info25}
+    checkJobStatus    ${jobid25}    RUN
+    ${info26}    querySubmitInfo    su jhadmin -c "jsub -q test sleep 1000 "
+    ${info26}    getJobId    ${info26}
+    checkJobStatus    ${info26}    RUN
+    [Teardown]    postJadmin

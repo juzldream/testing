@@ -68,31 +68,31 @@
 
 1. 文件重命名 renamefile api
 
-	- URL:http://192.168.0.157:8080/appform/ws/ping?token=
+	- URL:http://192.168.0.157:8080/appform/ws/renamefile?old_file_name=/apps/jhappform/logs/portal.log&new_file_name=portal.log.bak_1019&token=
 	- 成功返回值：
 	```
 	{
-	    "result": "success",
-	    "message": "success",
-	    "data": null
+	    "result":"success",
+	    "message":"重名命成功。",
+	    "data": None
 	}
 	```	
 	- 失败返回值：
 	```
 	{
 	    "result": "failed",
-	    "message": "005：用户验证失败。",
+	    "message": "005：安全令牌必须输入。",
 	    "data": null
 	}
 	```
 2. 删除文件 deletefile api
 
-	- URL:http://192.168.0.157:8080/appform/ws/delete?token=
+	- URL:http://192.168.0.157:8080/appform/ws/deletefile?file_name=/apps/jhappform/logs/portal.log.baktwo&token=
 	- 成功返回值：
 	```
 	{
 	    "result": "success",
-	    "message": "success",
+	    "message": "删除成功。",
 	    "data": null
 	}
 	```	

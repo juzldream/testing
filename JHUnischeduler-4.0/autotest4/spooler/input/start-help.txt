@@ -1,0 +1,12 @@
+usage: jctrl start [-h] [-f] -m host_name jobId | jobId[index]
+
+positional arguments:
+  jobId | jobId[index]  required, start job that are specified by jobId or
+                        jobId[index]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -f                    allows the job to run without being suspended due to
+                        run windows or suspending conditions
+  -m host_name          required, specify one or more hosts on which to run
+                        the job

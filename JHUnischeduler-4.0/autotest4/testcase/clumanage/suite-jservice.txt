@@ -1,0 +1,60 @@
+*** Settings ***
+Suite Setup       preSuite    spooler/conf/conf-jhosts
+Suite Teardown    postSuite
+Library           /apps/autotest4/lib/clusterKeyword.py
+Library           /apps/autotest4/lib/clusterLib.py
+Library           /apps/autotest4/lib/common.py
+Library           /apps/autotest4/lib/hostKeyword.py
+Library           /apps/autotest4/lib/hostLib.py
+Library           /apps/autotest4/lib/hostsConfLib.py
+Library           /apps/autotest4/lib/jobKeyword.py
+Library           /apps/autotest4/lib/jobLib.py
+Library           /apps/autotest4/lib/myUtils.py
+Library           /apps/autotest4/lib/OperatingSystem.py
+Library           /apps/autotest4/lib/queueKeyword.py
+Library           /apps/autotest4/lib/queueLib.py
+Library           /apps/autotest4/lib/paramsConfLib.py
+Library           /apps/autotest4/lib/queuesConfLib.py
+Library           /apps/autotest4/lib/retry.py
+Library           /apps/autotest4/lib/schedulerConfLib.py
+Library           /apps/autotest4/lib/userGroupKeyword.py
+Library           /apps/autotest4/lib/userGroupLib.py
+Library           /apps/autotest4/lib/userKeyword.py
+Library           /apps/autotest4/lib/usersConfLib.py
+Library           /apps/autotest4/lib/userLib.py
+
+*** Test Cases ***
+case1.bug12155jservice -h
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file}    Set Variable    ${filedir}/spooler/input/jservice-help.txt
+    log    ${file}
+    ${jservicehelp}    runCommand    jservice -h
+    log    ${jservicehelp}
+    ${helpfile}    Get File    ${file}
+    log    ${helpfile}
+    Should Be Equal    ${jservicehelp}    ${helpfile}
+
+case2.bug12147jservice -V
+    [Tags]    p2
+    [Setup]    readyTest
+    ${version}    checkjhdsVersion    jservice -V
+
+case3.jservice list
+    [Tags]    p1
+    [Setup]    readyTest
+    ${hostinfo}    runCommand    jservice list
+    log    ${hostinfo}
+    Should Contain X Times    ${hostinfo}    Service: jobagent    2
+    Should Contain X Times    ${hostinfo}    Service: sched    1
+    Should Contain X Times    ${hostinfo}    \ \ \ Status = running    3
+    Should Contain    ${hostinfo}    \ \ \ Host = rhela1
+    Should Contain    ${hostinfo}    \ \ \ Host = rhelb
+    Should Contain X Times    ${hostinfo}    PID = \    3
+    Should Contain X Times    ${hostinfo}    \ \ \ UT =    3
+    Should Contain X Times    ${hostinfo}    \ \ \ Virt =    3
+    Should Contain X Times    ${hostinfo}    \ \ \ Res =    3
+    Should Contain X Times    ${hostinfo}    \ \ \ StartTime =    3
+    Should Contain X Times    ${hostinfo}    \ \ \ LastUpdated =    3
+    [Teardown]    killJob

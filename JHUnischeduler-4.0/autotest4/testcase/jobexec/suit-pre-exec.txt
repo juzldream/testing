@@ -1,0 +1,374 @@
+*** Settings ***
+Suite Setup       preSuiteBack
+Suite Teardown    postSuite
+Library           /apps/autotest4/lib/clusterKeyword.py
+Library           /apps/autotest4/lib/clusterLib.py
+Library           /apps/autotest4/lib/common.py
+Library           /apps/autotest4/lib/hostKeyword.py
+Library           /apps/autotest4/lib/hostLib.py
+Library           /apps/autotest4/lib/hostsConfLib.py
+Library           /apps/autotest4/lib/jobKeyword.py
+Library           /apps/autotest4/lib/jobLib.py
+Library           /apps/autotest4/lib/myUtils.py
+Library           /apps/autotest4/lib/OperatingSystem.py
+Library           /apps/autotest4/lib/queueKeyword.py
+Library           /apps/autotest4/lib/queueLib.py
+Library           /apps/autotest4/lib/paramsConfLib.py
+Library           /apps/autotest4/lib/queuesConfLib.py
+Library           /apps/autotest4/lib/retry.py
+Library           /apps/autotest4/lib/schedulerConfLib.py
+Library           /apps/autotest4/lib/userGroupKeyword.py
+Library           /apps/autotest4/lib/userGroupLib.py
+Library           /apps/autotest4/lib/userKeyword.py
+Library           /apps/autotest4/lib/usersConfLib.py
+Library           /apps/autotest4/lib/userLib.py
+
+*** Test Cases ***
+case1.pre_exec执行成功，作业执行成功。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${inputdir}    Set Variable    ${filedir}/spooler/input/pre-exec-cmd.sh
+    ${outputdir}    Set Variable    ${filedir}/spooler/output/pre-exec-1.txt
+    Remove files    ${filedir}/spooler/output/*.txt
+    checkClusterStatus
+    ${job1}    QuerySubmitInfo    su user1 -c "jsub -E ${inputdir} hostname"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    DONE
+    sleep    4
+    ${result}    Get File    ${outputdir}
+    log    ${result}
+    Should Contain    ${result}    user1
+    ${histinfo}    RUN    jhist -l ${jobid1}
+    log    ${histinfo}
+    Should Contain    ${histinfo}    Pre job process done successfully;
+    Remove files    ${filedir}/spooler/output/*.txt
+    [Teardown]    delOutputFile
+
+case2.pre_exec执行失败，作业是否有影响。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${inputdir}    Set Variable    ${filedir}/spooler/input/pre-exec-cmd-err.sh
+    ${outputdir}    Set Variable    ${filedir}/spooler/output/pre-exec-cmd-err.txt
+    Remove files    ${filedir}/spooler/output/*.txt
+    checkClusterStatus
+    ${job1}    QuerySubmitInfo    su user1 -c "jsub -E ${inputdir} hostname"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    sleep    4
+    checkJobStatus    ${jobid1}    PEND
+    File Should Not Exist    ${outputdir}
+    ${histinfo}    RUN    jhist -l ${jobid1}
+    log    ${histinfo}
+    Should Match Regexp    ${histinfo}    Pending: The job's pre-exec command exited with non-zero s\\s+tatus;
+    Remove files    ${filedir}/spooler/output/*.txt
+    [Teardown]    delOutputFile
+
+case3.向配置了pre-exec的队列提交作业，pre-exec执行成功，作业执行成功。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${queinputdir}    Set Variable    ${filedir}/spooler/input/pre-exec-que.sh
+    ${queoutputdir}    Set Variable    ${filedir}/spooler/output/pre-exec-3.txt
+    Remove files    ${filedir}/spooler/output/*.txt
+    checkClusterStatus
+    ${qinfo}    getString    PRIORITY=20\nPRE_EXEC=${queinputdir}>${queoutputdir}\n
+    addOrModifyQueue    pre3    ${qinfo}
+    jadminSched
+    checkClusterStatus
+    ${job1}    QuerySubmitInfo    su user1 -c "jsub -q pre3 hostname"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    DONE
+    sleep    4
+    ${result1}    Get File    ${queoutputdir}
+    log    ${result1}
+    Should Contain    ${result1}    user1
+    checkJobStatus    ${jobid1}    DONE
+    ${histinfo}    RUN    su user1 -c "jhist -l ${jobid1}"
+    log    ${histinfo}
+    Should Contain    ${histinfo}    Pre job process done successfully;
+    Remove files    ${filedir}/spooler/output/*.txt
+    [Teardown]    delQueue    pre3
+
+case4.向pre-exec的队列提交作业，队列级的pre-exec执行失败，查看作业是否执行成功。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${queinputdir}    Set Variable    ${filedir}/spooler/input/pre-exec-que-err.sh
+    ${queoutputdir}    Set Variable    ${filedir}/spooler/output/pre-exec-4.txt
+    Remove files    ${filedir}/spooler/output/*.txt
+    checkClusterStatus
+    ${qinfo}    getString    PRIORITY=20\nPRE_EXEC=${queinputdir}>${queoutputdir}\n
+    addOrModifyQueue    pre4    ${qinfo}
+    jadminSched
+    checkClusterStatus
+    ${job1}    QuerySubmitInfo    su user1 -c "jsub -q pre4 hostname"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    sleep    4
+    checkJobStatus    ${jobid1}    PEND
+    File Should Be Empty    ${queoutputdir}
+    ${histinfo}    RUN    su user1 -c "jhist -l ${jobid1}"
+    log    ${histinfo}
+    Should Match Regexp    ${histinfo}    Pending: The job's pre-exec command exited with non-zero s\\s+tatus;
+    Remove files    ${filedir}/spooler/output/*.txt
+    [Teardown]    delQueue    pre4
+
+case5.向配置了pre-exec的队列提交-E的作业。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${inputdir}    Set Variable    ${filedir}/spooler/input/pre-exec-cmd.sh
+    ${queinputdir}    Set Variable    ${filedir}/spooler/input/pre-exec-que.sh
+    ${outputdir}    Set Variable    ${filedir}/spooler/output/pre-exec-1.txt
+    ${queoutputdir}    Set Variable    ${filedir}/spooler/output/pre-exec-5.txt
+    Remove files    ${filedir}/spooler/output/*.txt
+    checkClusterStatus
+    ${qinfo}    getString    PRIORITY=20\nPRE_EXEC=${queinputdir}>${queoutputdir}\n
+    addOrModifyQueue    pre5    ${qinfo}
+    jadminSched
+    checkClusterStatus
+    ${job1}    QuerySubmitInfo    su user1 -c "jsub -E ${inputdir} \ -q pre5 hostname"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    DONE
+    sleep    2
+    ${result}    Get File    ${outputdir}
+    log    ${result}
+    Should Contain    ${result}    user1
+    ${result1}    Get File    ${queoutputdir}
+    log    ${result1}
+    Should Contain    ${result1}    user1
+    ${histinfo}    RUN    su user1 -c "jhist -l ${jobid1}"
+    log    ${histinfo}
+    Should Contain    ${histinfo}    Pre job process done successfully;
+    Remove files    ${filedir}/spooler/output/*.txt
+    [Teardown]    delQueue    pre5
+
+case6.向配置了pre-exec的队列提交-E作业，队列级pre-exec执行失败，查看作业级pre执行是否成功,作业是否执行成功。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${inputdir}    Set Variable    ${filedir}/spooler/input/pre-exec-cmd.sh
+    ${queinputdir}    Set Variable    ${filedir}/spooler/input/pre-exec-que-err.sh
+    ${outputdir}    Set Variable    ${filedir}/spooler/output/pre-exec-1.txt
+    ${queoutputdir}    Set Variable    ${filedir}/spooler/output/pre-exec-6.txt
+    Remove files    ${filedir}/spooler/output/*.txt
+    checkClusterStatus
+    ${qinfo}    getString    PRIORITY=20\nPRE_EXEC=${queinputdir}>${queoutputdir}\n
+    addOrModifyQueue    pre6    ${qinfo}
+    jadminSched
+    checkClusterStatus
+    ${job1}    QuerySubmitInfo    su user1 -c "jsub -E ${inputdir} \ -q pre6 hostname"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid1}    PEND
+    File Should Be Empty    ${queoutputdir}
+    File Should Not Exist    ${outputdir}
+    ${histinfo}    RUN    su user1 -c "jhist -l ${jobid1}"
+    log    ${histinfo}
+    Should Match Regexp    ${histinfo}    Pending: The job's pre-exec command exited with non-zero s\\s+tatus;
+    Remove files    ${filedir}/spooler/output/*.txt
+    [Teardown]    delQueue    pre6
+
+case7.向配置了pre-exec的队列提交-E作业，作业级pre-exec执行失败，查看队列级pre执行是否成功,作业是否执行成功。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${inputdir}    Set Variable    ${filedir}/spooler/input/pre-exec-cmd-err.sh
+    ${queinputdir}    Set Variable    ${filedir}/spooler/input/pre-exec-que.sh
+    ${outputdir}    Set Variable    ${filedir}/spooler/output/pre-exec-1.txt
+    ${queoutputdir}    Set Variable    ${filedir}/spooler/output/pre-exec-7.txt
+    Remove files    ${filedir}/spooler/output/*.txt
+    checkClusterStatus
+    ${qinfo}    getString    PRIORITY=20\nPRE_EXEC=${queinputdir}>${queoutputdir}\n
+    addOrModifyQueue    pre7    ${qinfo}
+    jadminSched
+    checkClusterStatus
+    ${job1}    QuerySubmitInfo    su user1 -c "jsub -E ${inputdir} \ -q pre7 hostname"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    sleep    4
+    checkJobStatus    ${jobid1}    PEND
+    ${result1}    Get File    ${queoutputdir}
+    log    ${result1}
+    Should Contain    ${result1}    user1
+    File Should Not Exist    ${outputdir}
+    ${histinfo}    RUN    su user1 -c "jhist -l ${jobid1}"
+    log    ${histinfo}
+    Should Match Regexp    ${histinfo}    Pending: The job's pre-exec command exited with non-zero s\\s+tatus;
+    Remove files    ${filedir}/spooler/output/*.txt
+    [Teardown]    delQueue    pre7
+
+case8.jctrl start强制执行一个带-E选项的作业。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${inputdir}    Set Variable    ${filedir}/spooler/input/pre-exec-cmd.sh
+    ${outputdir}    Set Variable    ${filedir}/spooler/output/pre-exec-1.txt
+    Remove files    ${filedir}/spooler/output/*.txt
+    checkClusterStatus
+    ${job1}    QuerySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    QuerySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    QuerySubmitInfo    su user1 -c "jsub -E ${inputdir} hostname"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    PEND
+    sleep    2
+    runCommand    jctrl start -m rhela1 ${jobid3}
+    checkJobStatus    ${jobid3}    DONE
+    sleep    2
+    ${result}    Get File    ${outputdir}
+    log    ${result}
+    Should Contain    ${result}    user1
+    ${histinfo}    RUN    jhist -l ${jobid3}
+    log    ${histinfo}
+    Should Contain    ${histinfo}    Pre job process done successfully;
+    Remove files    ${filedir}/spooler/output/*.txt
+    [Teardown]    delOutputFile
+
+case9.执行jctrl stop/resume命令停止和恢复-E选项的作业。
+    [Tags]    p1    long-time
+    ${filedir}    getFileDir
+    ${inputdir}    Set Variable    ${filedir}/spooler/input/pre-exec-cmd.sh
+    ${queinputdir}    Set Variable    ${filedir}/spooler/input/pre-exec-que.sh
+    ${outputdir}    Set Variable    ${filedir}/spooler/output/pre-exec-1.txt
+    ${queoutputdir}    Set Variable    ${filedir}/spooler/output/pre-exec-9.txt
+    Remove files    ${filedir}/spooler/output/*.txt
+    checkClusterStatus
+    ${qinfo}    getString    PRIORITY=20\nPOST_EXEC=${queinputdir}>${queoutputdir}\n
+    addOrModifyQueue    pre9    ${qinfo}
+    jadminSched
+    checkClusterStatus
+    ${jctrl}    Set Variable    ${filedir}/spooler/input/posta.sh
+    ${job1}    querySubmitInfo    su user1 -c "jsub -E ${inputdir} \ -q pre9 ${jctrl}"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    sleep    3
+    runCommand    su user1 -c "jctrl stop ${jobid1}"
+    checkJobStatus    ${jobid1}    USUSP
+    ${job1}    queryjobinfo    ${jobid1}
+    ${reason1}    getjobspndrsn    ${job1}
+    log    ${reason1}
+    should contain    ${reason1}    The job was suspended by user;
+    ${outputdir1}    Set Variable    ${filedir}/spooler/output/jobout${jobid1}.txt
+    ${result1}    Get File    ${outputdir1}
+    log    ${result1}
+    ${size1}    Get File Size    ${outputdir1}
+    log    ${size1}
+    sleep    3
+    ${result2}    Get File    ${outputdir1}
+    log    ${result2}
+    ${size2}    Get File Size    ${outputdir1}
+    log    ${size2}
+    Should Be Equal As Integers    ${size1}    ${size2}
+    runCommand    su user1 -c "jctrl resume ${jobid1}"
+    checkJobStatus    ${jobid1}    RUN
+    ${outputdir3}    Set Variable    ${filedir}/spooler/output/jobout${jobid1}.txt
+    ${result5}    Get File    ${outputdir3}
+    log    ${result5}
+    ${size5}    Get File Size    ${outputdir3}
+    log    ${size5}
+    sleep    3
+    ${result6}    Get File    ${outputdir3}
+    log    ${result6}
+    ${size6}    Get File Size    ${outputdir3}
+    log    ${size6}
+    Should Not Be Equal As Integers    ${size5}    ${size6}
+    sleep    5
+    checkJobStatus    ${jobid1}    DONE
+    sleep    2
+    ${result}    Get File    ${outputdir}
+    log    ${result}
+    Should Contain    ${result}    user1
+    ${result1}    Get File    ${queoutputdir}
+    log    ${result1}
+    Should Contain    ${result1}    user1
+    Remove files    ${filedir}/spooler/output/*.txt
+    ${histinfo}    RUN    su user1 -c "jhist -l ${jobid1}"
+    log    ${histinfo}
+    Should Contain    ${histinfo}    Pre job process done successfully;
+    [Teardown]    delQueue    post9
+
+case10.jctrl requeue命令让-个带-E选项的作业重排队，当pre-exec正在执行时。
+    [Tags]    p1    long-time
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${inputdir}    Set Variable    ${filedir}/spooler/input/pre-exec-cmd-long.sh
+    ${outputdir}    Set Variable    ${filedir}/spooler/output/pre-exec-long.txt
+    Remove files    ${filedir}/spooler/output/*.txt
+    checkClusterStatus
+    ${job1}    QuerySubmitInfo    su user1 -c "jsub -E ${inputdir} hostname"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    QuerySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    ${job3}    QuerySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    QuerySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    sleep    2
+    ${result}    Get File    ${outputdir}
+    log    ${result}
+    Should Contain    ${result}    user1
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    runCommand    jctrl requeue ${jobid1}
+    checkJobStatus    ${jobid1}    PEND
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    PEND
+    runCommand    jctrl kill ${jobid2}
+    checkJobStatus    ${jobid1}    PEND
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    RUN
+    runCommand    jctrl kill ${jobid3}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    EXIT
+    checkJobStatus    ${jobid4}    RUN
+    checkJobStatus    ${jobid1}    DONE
+    ${result}    Get File    ${outputdir}
+    log    ${result}
+    Should Contain    ${result}    user1
+    Should Contain    ${result}    end
+    Should Contain X Times    ${result}    begin    2
+    ${histinfo}    RUN    su user1 -c "jhist -l ${jobid1}"
+    log    ${histinfo}
+    Should Contain    ${histinfo}    Pre job process done successfully;
+    Remove files    ${filedir}/spooler/output/*.txt
+    [Teardown]    delOutputFile
+
+case11.当pre_exec正在执行时，重启集群。
+    [Tags]    p1    long-time
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${inputdir}    Set Variable    ${filedir}/spooler/input/pre-exec-cmd-long.sh
+    ${outputdir}    Set Variable    ${filedir}/spooler/output/pre-exec-long.txt
+    Remove files    ${filedir}/spooler/output/*.txt
+    checkClusterStatus
+    ${job1}    QuerySubmitInfo    su user1 -c "jsub -E ${inputdir} hostname"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    sleep    2
+    ${result}    Get File    ${outputdir}
+    log    ${result}
+    Should Contain    ${result}    begin
+    jadminJhdsSched
+    checkClusterStatus
+    checkJobStatus    ${jobid1}    DONE
+    ${result}    Get File    ${outputdir}
+    log    ${result}
+    Should Contain    ${result}    user1
+    Should Contain    ${result}    end
+    Should Contain X Times    ${result}    begin    1
+    ${histinfo}    RUN    jhist -l ${jobid1}
+    log    ${histinfo}
+    Should Contain    ${histinfo}    Pre job process done successfully;
+    Remove files    ${filedir}/spooler/output/*.txt
+    [Teardown]    delOutputFile

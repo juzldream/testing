@@ -1,0 +1,909 @@
+*** Settings ***
+Suite Setup       preSuite    spooler/conf/conf-jjobs
+Suite Teardown    postSuite
+Library           /apps/autotest4/lib/clusterKeyword.py
+Library           /apps/autotest4/lib/clusterLib.py
+Library           /apps/autotest4/lib/common.py
+Library           /apps/autotest4/lib/hostKeyword.py
+Library           /apps/autotest4/lib/hostLib.py
+Library           /apps/autotest4/lib/hostsConfLib.py
+Library           /apps/autotest4/lib/jobKeyword.py
+Library           /apps/autotest4/lib/jobLib.py
+Library           /apps/autotest4/lib/myUtils.py
+Library           /apps/autotest4/lib/OperatingSystem.py
+Library           /apps/autotest4/lib/queueKeyword.py
+Library           /apps/autotest4/lib/queueLib.py
+Library           /apps/autotest4/lib/paramsConfLib.py
+Library           /apps/autotest4/lib/queuesConfLib.py
+Library           /apps/autotest4/lib/retry.py
+Library           /apps/autotest4/lib/schedulerConfLib.py
+Library           /apps/autotest4/lib/userGroupKeyword.py
+Library           /apps/autotest4/lib/userGroupLib.py
+Library           /apps/autotest4/lib/userKeyword.py
+Library           /apps/autotest4/lib/usersConfLib.py
+Library           /apps/autotest4/lib/userLib.py
+
+*** Test Cases ***
+case78.(72)jjobs \ -m -q -u -P -J
+    [Tags]    p2
+    [Setup]    readyTest
+    addOrModifyHost    rhela1    6 ()
+    addOrModifyHost    rhelb    3 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -m rhela1 -q q1 -P project1 -J job1 sleep 1"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -m rhela1 -q q1 -P project1 -J job1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job01}    querySubmitInfo    su user2 -c "jsub -m rhela1 -q q1 -P project1 -J job1 sleep 1"
+    ${jobid01}    getJobId    ${job01}
+    ${job02}    querySubmitInfo    su user2 -c "jsub -m rhela1 -q q1 -P project1 -J job1 sleep 1000"
+    ${jobid02}    getJobId    ${job02}
+    checkJobStatus    ${jobid1}    DONE
+    checkJobStatus    ${jobid01}    DONE
+    ${killinfo}    runCommand    su jhadmin -c "jctrl kill ${jobid2} ${jobid02}"
+    log    ${killinfo}
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid02}    EXIT
+    ${job3}    querySubmitInfo    su user1 -c "jsub -m rhelb -q q1 -P project1 -J job1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user1 -c "jsub -m rhelb -q q1 -P project1 -J job1 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    CheckJobStatus    ${jobid3}    RUN
+    CheckJobStatus    ${jobid4}    RUN
+    ${job5}    querySubmitInfo    su user1 -c "jsub -m rhela1 -q q1 -P project1 -J job1 sleep 1000"
+    ${jobid5}    getJobId    ${job5}
+    ${job6}    querySubmitInfo    su user1 -c "jsub -m rhela1 -q q1 -P project1 -J job1 sleep 1000"
+    ${jobid6}    getJobId    ${job6}
+    ${job7}    querySubmitInfo    su user2 -c "jsub -m rhela1 -q q1 -P project1 -J job1 sleep 1000"
+    ${jobid7}    getJobId    ${job7}
+    ${job8}    querySubmitInfo    su user1 -c "jsub -m rhela1 -q q1 -P project1 -J job1 sleep 1000"
+    ${jobid8}    getJobId    ${job8}
+    ${job9}    querySubmitInfo    su user2 -c "jsub -m rhela1 -q q1 -P project1 -J job1 sleep 1000"
+    ${jobid9}    getJobId    ${job9}
+    ${job10}    querySubmitInfo    su user1 -c "jsub -m rhela1 -P project1 -J job1 sleep 1000"
+    ${jobid10}    getJobId    ${job10}
+    ${job11}    querySubmitInfo    su user1 -c "jsub -m rhelb -q q1 -P project1 -J job1 sleep 1000"
+    ${jobid11}    getJobId    ${job11}
+    CheckJobStatus    ${jobid5}    RUN
+    CheckJobStatus    ${jobid6}    RUN
+    CheckJobStatus    ${jobid7}    RUN
+    CheckJobStatus    ${jobid8}    RUN
+    CheckJobStatus    ${jobid9}    RUN
+    CheckJobStatus    ${jobid10}    RUN
+    CheckJobStatus    ${jobid11}    RUN
+    ${job12}    querySubmitInfo    su user1 -c "jsub -m rhela1 -q q1 -P project1 -J job1 sleep 1000"
+    ${jobid12}    getJobId    ${job12}
+    ${job13}    querySubmitInfo    su user1 -c "jsub -m rhela1 -q q1 -P project1 -J job1 sleep 1000"
+    ${jobid13}    getJobId    ${job13}
+    ${job14}    querySubmitInfo    su user2 -c "jsub -m rhela1 -q q1 -P project1 -J job1 sleep 1000"
+    ${jobid14}    getJobId    ${job14}
+    ${job15}    querySubmitInfo    su user2 -c "jsub -m rhela1 -q q1 -P project1 -J job1 sleep 1000"
+    ${jobid15}    getJobId    ${job15}
+    ${job16}    querySubmitInfo    su user1 -c "jsub -m rhela1 -q q3 -P project1 -J job1 sleep 1000"
+    ${jobid16}    getJobId    ${job16}
+    ${job17}    querySubmitInfo    su user2 -c "jsub -m rhela1 -q q3 -P project1 -J job1 sleep 1000"
+    ${jobid17}    getJobId    ${job17}
+    CheckJobStatus    ${jobid16}    RUN
+    CheckJobStatus    ${jobid17}    RUN
+    CheckJobStatus    ${jobid12}    PEND
+    CheckJobStatus    ${jobid13}    PEND
+    CheckJobStatus    ${jobid14}    PEND
+    CheckJobStatus    ${jobid15}    PEND
+    CheckJobStatus    ${jobid8}    SSUSP
+    CheckJobStatus    ${jobid9}    SSUSP
+    ${stopinfo}    runCommand    jctrl stop ${jobid5} ${jobid12}
+    checkJobStatus    ${jobid5}    USUSP
+    checkJobStatus    ${jobid12}    PSUSP
+    ${string1}    runCommand    su jhadmin -c "jjobs -m rhela1 -q q1 -u user1 -P project1 -J job1"
+    log    ${string1}
+    Should Not Match Regexp    ${string1}    \n${jobid1}\\s+
+    Should Not Match Regexp    ${string1}    \n${jobid2}\\s+
+    Should Not Match Regexp    ${string1}    \n${jobid3}\\s+
+    Should Not Match Regexp    ${string1}    \n${jobid4}\\s+
+    Should Match Regexp    ${string1}    \n${jobid5}\\s+
+    Should Match Regexp    ${string1}    \n${jobid6}\\s+
+    Should Not Match Regexp    ${string1}    \n${jobid7}\\s+
+    Should Match Regexp    ${string1}    \n${jobid8}\\s+
+    Should Not Match Regexp    ${string1}    \n${jobid9}\\s+
+    Should Not Match Regexp    ${string1}    \n${jobid10}\\s+
+    Should Not Match Regexp    ${string1}    \n${jobid11}\\s+
+    Should Not Match Regexp    ${string1}    \n${jobid12}\\s+
+    Should Not Match Regexp    ${string1}    \n${jobid13}\\s+
+    Should Not Match Regexp    ${string1}    \n${jobid14}\\s+
+    Should Not Match Regexp    ${string1}    \n${jobid15}\\s+
+    Should Not Match Regexp    ${string1}    \n${jobid16}\\s+
+    Should Not Match Regexp    ${string1}    \n${jobid17}\\s+
+    Should Not Match Regexp    ${string1}    \n${jobid01}\\s+
+    Should Not Match Regexp    ${string1}    \n${jobid02}\\s+
+    [Teardown]    modHostInfo    rhela1= 1 ()    rhelb=1 ()
+
+case79.(73)jjobs数组作业的显示，只有pend的作业会合起来，其它状态的作业都不会合起来。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub -J arr[1-10] sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}[1]    RUN
+    checkJobStatus    ${jobid1}[2]    RUN
+    ${jobinfo1}    runCommand    su user1 -c "jjobs ${jobid1}"
+    log    ${jobinfo1}
+    Should Match Regexp    ${jobinfo1}    \n${jobid1}\\[1\\]\\s+
+    Should Match Regexp    ${jobinfo1}    \n${jobid1}\\[2\\]\\s+
+    Should Match Regexp    ${jobinfo1}    \n${jobid1}\\[3-10\\]\\s+
+    ${killinfo}    runCommand    su user1 -c "jctrl kill ${jobid1}[4]"
+    log    ${killinfo}
+    ${stopinfo}    runCommand    su user1 -c "jctrl stop ${jobid1}[8]"
+    log    ${stopinfo}
+    ${jobinfo2}    runCommand    su user1 -c "jjobs ${jobid1}"
+    log    ${jobinfo2}
+    Should Match Regexp    ${jobinfo2}    \n${jobid1}\\[1\\]\\s+
+    Should Match Regexp    ${jobinfo2}    \n${jobid1}\\[2\\]\\s+
+    Should Match Regexp    ${jobinfo2}    \n${jobid1}\\[3\\]\\s+
+    Should Match Regexp    ${jobinfo2}    \n${jobid1}\\[5-7\\]\\s+
+    Should Match Regexp    ${jobinfo2}    \n${jobid1}\\[9-10\\]\\s+
+    Should Match Regexp    ${jobinfo2}    \n${jobid1}\\[4\\]\\s+
+    Should Match Regexp    ${jobinfo2}    \n${jobid1}\\[8\\]\\s+
+    [Teardown]    killJob
+
+case80.(75)jjobs -m指定不存在的节点。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${jobinfo1}    runCommand    su jhadmin -c "jjobs -m hostxwfno"
+    log    ${jobinfo1}
+    Should Be Equal    ${jobinfo1}    hostxwfno: Bad host name, host group name or cluster name
+    [Teardown]    killJob
+
+case81.(76)jjobs -m 指定多个节点。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub -m rhela1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -m rhelb sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    ${jobinfo1}    runCommand    su user1 -c 'jjobs -m "rhela1 rhelb"'
+    log    ${jobinfo1}
+    Should Match Regexp    ${jobinfo1}    \n${jobid1}\\s+
+    Should Match Regexp    ${jobinfo1}    \n${jobid2}\\s+
+    [Teardown]    killJob
+
+case81.(76)xwfjjobs -m 指定多个节点。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c 'jsub -n 2 \ sleep 1000'
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${jobinfo1}    runCommand    su user1 -c 'jjobs -m "rhela1 rhelb"'
+    log    ${jobinfo1}
+    log    ${jobinfo1}
+    Should Match Regexp    ${jobinfo1}    \n${jobid1}\\s+
+    [Teardown]    killJob
+
+case82.bug11672(77)jjobs -m指定节点组。
+    [Tags]    p2
+    [Setup]    readyTest
+    addOrModifyHostGroup    group0    (rhela1 rhelb)
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -m rhela1 \ sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -m rhelb sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    ${jobinfo1}    runCommand    su user1 -c 'jjobs -m group0'
+    log    ${jobinfo1}
+    Should Be Equal    ${jobinfo1}    group0: Bad host name, host group name or cluster name
+    [Teardown]    delHostGroup    group0
+
+case83.bug11673(78)jjobs -m指定节点以排除节点的形式。
+    [Tags]    p2
+    [Setup]    readyTest
+    addOrModifyHostGroup    group0    (rhela1 rhelb)
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -m rhela1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -m rhelb sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    ${jobinfo1}    runCommand    su user1 -c 'jjobs -m "group0 ~rhela1" '
+    log    ${jobinfo1}
+    Should Be Equal    ${jobinfo1}    group0: Bad host name, host group name or cluster name
+    ${jobinfo2}    runCommand    su user1 -c 'jjobs -m "~rhela1" '
+    log    ${jobinfo2}
+    Should Be Equal    ${jobinfo2}    ~rhela1: Bad host name, host group name or cluster name
+    ${jobinfo3}    runCommand    su user1 -c 'jjobs -m "~rhela1 ~rhelb" '
+    log    ${jobinfo3}
+    Should Be Equal    ${jobinfo3}    ~rhela1: Bad host name, host group name or cluster name
+    ${jobinfo4}    runCommand    su user1 -c 'jjobs -m "~group0" '
+    log    ${jobinfo4}
+    Should Be Equal    ${jobinfo4}    ~group0: Bad host name, host group name or cluster name
+    [Teardown]    delHostGroup    group0
+
+case84.(80)jjobs -q指定不存在的队列。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub -m rhela1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${jobinfo1}    runCommand    su user1 -c "jjobs -q qxwfno"
+    log    ${jobinfo1}
+    Should Be Equal    ${jobinfo1}    qxwfno: No such queue
+    [Teardown]    killJob
+
+case85.(81)jjobs -q指定多个队列。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub -q q1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -q q3 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    ${jobinfo1}    runCommand    su user1 -c 'jjobs -q "q1 q3"'
+    log    ${jobinfo1}
+    Should Match Regexp    ${jobinfo1}    \n${jobid1}\\s+
+    Should Match Regexp    ${jobinfo1}    \n${jobid2}\\s+
+    [Teardown]    killJob
+
+case86.(83)jjobs -u指定不存在的用户。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub -q q1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -q q3 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    ${jobinfo1}    runCommand    su jhadmin -c 'jjobs -u xwfuser'
+    log    ${jobinfo1}
+    Should Be Equal    ${jobinfo1}    No unfinished job found
+    [Teardown]    killJob
+
+case87.(84)jjobs -u指定多个用户。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub -q q1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -q q3 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    ${jobinfo1}    runCommand    su jhadmin -c 'jjobs -u "user1 user2"'
+    log    ${jobinfo1}
+    Should Match Regexp    ${jobinfo1}    \n${jobid1}\\s+
+    Should Match Regexp    ${jobinfo1}    \n${jobid2}\\s+
+    ${jobinfo2}    runCommand    su jhadmin -c 'jjobs -u "user1 xwfuser user2"'
+    log    ${jobinfo2}
+    Should Match Regexp    ${jobinfo2}    \n${jobid1}\\s+
+    Should Match Regexp    ${jobinfo2}    \n${jobid2}\\s+
+    [Teardown]    killJob
+
+case88.(86)jjobs -P指定不存在的项目名。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub -P p1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -P p2 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    ${jobinfo1}    runCommand    su user1 -c 'jjobs -P px'
+    log    ${jobinfo1}
+    Should Be Equal    ${jobinfo1}    No unfinished job found in project <px>
+    [Teardown]    killJob
+
+case89.(87)jjobs -P指定多个项目名。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub -P p1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -P p2 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    ${jobinfo1}    runCommand    su user1 -c 'jjobs -P "p1 p2"'
+    log    ${jobinfo1}
+    Should Be Equal    ${jobinfo1}    No unfinished job found in project <p1 p2>
+    ${jobinfo2}    runCommand    su user1 -c 'jjobs -P "p1 p3 p2"'
+    log    ${jobinfo2}
+    Should Be Equal    ${jobinfo2}    No unfinished job found in project <p1 p3 p2>
+    [Teardown]    killJob
+
+case90.(90)jjobs -J指定不存在的作业名。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub -J job1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -J job2 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    ${jobinfo1}    runCommand    su user1 -c 'jjobs -J job3'
+    log    ${jobinfo1}
+    Should Be Equal    ${jobinfo1}    No unfinished job found in job name <job3>
+    [Teardown]    killJob
+
+case91.bug11676(91)jjobs -J指定多个作业名。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub -J job1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -J job2 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    ${jobinfo1}    runCommand    su user1 -c 'jjobs -J "job1 job2"'
+    log    ${jobinfo1}
+    Should Be Equal    ${jobinfo1}    No unfinished job found in job name <job1 job2>
+    ${jobinfo2}    runCommand    su user1 -c 'jjobs -J "job1 job3 job2"'
+    log    ${jobinfo2}
+    Should Be Equal    ${jobinfo2}    No unfinished job found in job name <job1 job3 job2>
+    [Teardown]    killJob
+
+case92.(93)jjobs 指定不存在的作业id。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub -J job1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -J job2 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    ${jobinfo1}    runCommand    su user1 -c 'jjobs 100000000'
+    log    ${jobinfo1}
+    Should Be Equal    ${jobinfo1}    Job <100000000> is not found
+    [Teardown]    killJob
+
+case93.(95)指定不存在的jobid[index]。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub -J arr[1-3] \ sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}[1]    RUN
+    checkJobStatus    ${jobid1}[2]    RUN
+    ${jobinfo1}    runCommand    su user1 -c 'jjobs ${jobid1}[5]'
+    log    ${jobinfo1}
+    Should Be Equal    ${jobinfo1}    Job <${jobid1}[5]> is not found
+    [Teardown]    killJob
+
+case94.(96)当集群中没有run作业时，执行jjobs -r。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub -J job1 sleep 1"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -J job2 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    DONE
+    checkJobStatus    ${jobid2}    RUN
+    ${killinfo}    runCommand    su user1 -c "jctrl kill ${jobid2}"
+    log    ${killinfo}
+    checkJobStatus    ${jobid2}    EXIT
+    ${job3}    querySubmitInfo    su user1 -c "jsub -q q1 -J job1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user1 -c "jsub -J job2 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    RUN
+    ${job5}    querySubmitInfo    su user1 -c "jsub -q q3 -J job1 sleep 1000"
+    ${jobid5}    getJobId    ${job5}
+    ${job6}    querySubmitInfo    su user1 -c "jsub -J job2 sleep 1000"
+    ${jobid6}    getJobId    ${job6}
+    ${job7}    querySubmitInfo    su user1 -c "jsub -J job2 sleep 1000"
+    ${jobid7}    getJobId    ${job7}
+    checkJobStatus    ${jobid3}    SSUSP
+    checkJobStatus    ${jobid4}    RUN
+    checkJobStatus    ${jobid5}    RUN
+    checkJobStatus    ${jobid6}    PEND
+    checkJobStatus    ${jobid7}    PEND
+    ${stopinfo}    runCommand    su user1 -c "jctrl stop ${jobid4} ${jobid5} ${jobid6}"
+    log    ${stopinfo}
+    checkJobStatus    ${jobid3}    SSUSP
+    checkJobStatus    ${jobid4}    USUSP
+    checkJobStatus    ${jobid5}    USUSP
+    checkJobStatus    ${jobid6}    PSUSP
+    checkJobStatus    ${jobid7}    PEND
+    ${jjobs-r}    runCommand    su user1 -c "jjobs -r"
+    log    ${jjobs-r}
+    Should Be Equal    ${jjobs-r}    No running job found
+    [Teardown]    killJob
+
+case95.(97)当集群中没有完成的作业，执行jjobs -d。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub -J job1 sleep 1"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -J job2 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    DONE
+    checkJobStatus    ${jobid2}    RUN
+    ${killinfo}    runCommand    su user1 -c "jctrl kill ${jobid2}"
+    log    ${killinfo}
+    checkJobStatus    ${jobid2}    EXIT
+    ${jjobs-d}    runCommand    su root -c "jjobs -d"
+    log    ${jjobs-d}
+    Should Be Equal    ${jjobs-d}    No DONE/EXIT job found
+    [Teardown]    killJob
+
+case96.(98)当集群中没有pend、psusp的作业，执行jjobs -p。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub -J job1 sleep 1"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -J job2 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    DONE
+    checkJobStatus    ${jobid2}    RUN
+    ${killinfo}    runCommand    su user1 -c "jctrl kill ${jobid2}"
+    log    ${killinfo}
+    checkJobStatus    ${jobid2}    EXIT
+    ${job3}    querySubmitInfo    su user1 -c "jsub -q q1 -J job1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user1 -c "jsub -J job2 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    RUN
+    ${job5}    querySubmitInfo    su user1 -c "jsub -q q3 -J job1 sleep 1000"
+    ${jobid5}    getJobId    ${job5}
+    checkJobStatus    ${jobid3}    SSUSP
+    checkJobStatus    ${jobid4}    RUN
+    checkJobStatus    ${jobid5}    RUN
+    ${stopinfo}    runCommand    su user1 -c "jctrl stop ${jobid4} ${jobid5}"
+    log    ${stopinfo}
+    checkJobStatus    ${jobid3}    SSUSP
+    checkJobStatus    ${jobid4}    USUSP
+    checkJobStatus    ${jobid5}    USUSP
+    ${jjobs-p}    runCommand    su user1 -c "jjobs -p"
+    log    ${jjobs-p}
+    Should Be Equal    ${jjobs-p}    No pending job found
+    [Teardown]    killJob
+
+case97.(99)当集群中没有USUSP、SSUSP的作业，执行jjobs -s。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub -J job1 sleep 1"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -J job2 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    DONE
+    checkJobStatus    ${jobid2}    RUN
+    ${killinfo}    runCommand    su user1 -c "jctrl kill ${jobid2}"
+    log    ${killinfo}
+    checkJobStatus    ${jobid2}    EXIT
+    ${job3}    querySubmitInfo    su user1 -c "jsub -J job1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user1 -c "jsub -J job2 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    RUN
+    ${job5}    querySubmitInfo    su user1 -c "jsub -J job1 sleep 1000"
+    ${jobid5}    getJobId    ${job5}
+    ${job6}    querySubmitInfo    su user1 -c "jsub -J job2 sleep 1000"
+    ${jobid6}    getJobId    ${job6}
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    RUN
+    checkJobStatus    ${jobid5}    PEND
+    checkJobStatus    ${jobid6}    PEND
+    ${stopinfo}    runCommand    su user1 -c "jctrl stop ${jobid6}"
+    log    ${stopinfo}
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    RUN
+    checkJobStatus    ${jobid5}    PEND
+    checkJobStatus    ${jobid6}    PSUSP
+    ${jjobs-s}    runCommand    su user1 -c "jjobs -s"
+    log    ${jjobs-s}
+    Should Be Equal    ${jjobs-s}    No suspended job found
+    [Teardown]    killJob
+
+case98.(100)当集群中没有数组作业执行jjobs -A。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub -J arr[1-2] sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}[1]    RUN
+    checkJobStatus    ${jobid1}[2]    RUN
+    ${jjobs-A}    runCommand    su root -c "jjobs -A"
+    log    ${jjobs-A}
+    Should Be Equal    ${jjobs-A}    Job array is not found
+    [Teardown]    killJob
+
+case99.(101)当集群中没有任何作业执行jjobs -a。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${jjobs-a}    runCommand    su root -c "jjobs -a"
+    log    ${jjobs-a}
+    Should Be Equal    ${jjobs-a}    No job found
+    [Teardown]    killJob
+
+case100.(102)同时指定-w、-l，jjobs -w -l。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job0}    querySubmitInfo    su user1 -c "jsub \ sleep 1000"
+    ${jobid0}    getJobId    ${job0}
+    ${job1}    querySubmitInfo    su user1 -c "jsub -J arr[1-2] sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}[1]    RUN
+    checkJobStatus    ${jobid1}[2]    PEND
+    ${jjobs-w-l}    runCommand    su user1 -c "jjobs -w -l"
+    log    ${jjobs-w-l}
+    Should Contain    ${jjobs-w-l}    jjobs: error: argument -l: not allowed with argument -w
+    Should Contain    ${jjobs-w-l}    usage: jjobs
+    [Teardown]    killJob
+
+case101.(103)jjobs指定两个相同的jobid。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job0}    querySubmitInfo    su user1 -c "jsub \ sleep 1000"
+    ${jobid0}    getJobId    ${job0}
+    ${job1}    querySubmitInfo    su user1 -c "jsub -J arr[1-3] sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}[1]    RUN
+    checkJobStatus    ${jobid1}[2]    PEND
+    checkJobStatus    ${jobid1}[3]    PEND
+    ${jjobs-jobid0}    runCommand    su user1 -c "jjobs ${jobid0} ${jobid0}"
+    log    ${jjobs-jobid0}
+    Should Contain X Times    ${jjobs-jobid0}    \n${jobid0}    1
+    ${jjobs-jobid1}    runCommand    su user1 -c "jjobs ${jobid1} ${jobid1}"
+    log    ${jjobs-jobid1}
+    Should Contain X Times    ${jjobs-jobid1}    \n${jobid1}[1]    1
+    Should Contain X Times    ${jjobs-jobid1}    \n${jobid1}[2-3]    1
+    ${jjobs-jobid2}    runCommand    su user1 -c "jjobs ${jobid1}[1] ${jobid1}[1]"
+    log    ${jjobs-jobid2}
+    Should Contain X Times    ${jjobs-jobid2}    \n${jobid1}[1]    1
+    ${jjobs-jobid3}    runCommand    su user1 -c "jjobs ${jobid1}[1-3] ${jobid1}[2]"
+    log    ${jjobs-jobid3}
+    Should Contain X Times    ${jjobs-jobid3}    \n${jobid1}[1]    1
+    Should Contain X Times    ${jjobs-jobid3}    \n${jobid1}[2-3]    1
+    [Teardown]    killJob
+
+case102.(104)jjobs -A jobid(所有状态的作业)
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub sleep 1"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid2}    RUN
+    runCommand    jctrl kill ${jobid2}
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid1}    DONE
+    ${job3}    querySubmitInfo    su user1 -c "jsub -q q1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    RUN
+    ${job5}    querySubmitInfo    su user1 -c "jsub \ -q q3 sleep 1000"
+    ${jobid5}    getJobId    ${job5}
+    ${job6}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid6}    getJobId    ${job6}
+    ${job7}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid7}    getJobId    ${job7}
+    ${job8}    querySubmitInfo    su user1 -c "jsub -J arr[1-2] sleep 1000"
+    ${jobid8}    getJobId    ${job8}
+    runCommand    su user1 -c "jctrl stop ${jobid4} ${jobid6}"
+    checkJobStatus    ${jobid1}    DONE
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    SSUSP
+    checkJobStatus    ${jobid4}    USUSP
+    checkJobStatus    ${jobid5}    RUN
+    checkJobStatus    ${jobid6}    PSUSP
+    checkJobStatus    ${jobid7}    PEND
+    checkJobStatus    ${jobid8}[1]    PEND
+    checkJobStatus    ${jobid8}[2]    PEND
+    ${string3}    runCommand    su user1 -c "jjobs -q q1 ${jobid1} ${jobid2} ${jobid3} ${jobid4} ${jobid5} ${jobid6} ${jobid7} ${jobid8}[1] ${jobid8}[2]"
+    log    ${string3}
+    Should Match Regexp    ${string3}    \n${jobid1}\\s+
+    Should Match Regexp    ${string3}    \n${jobid2}\\s+
+    Should Match Regexp    ${string3}    \n${jobid3}\\s+
+    Should Match Regexp    ${string3}    \n${jobid4}\\s+
+    Should Match Regexp    ${string3}    \n${jobid5}\\s+
+    Should Match Regexp    ${string3}    \n${jobid6}\\s+
+    Should Match Regexp    ${string3}    \n${jobid7}\\s+
+    Should Match Regexp    ${string3}    \n${jobid8}\\[1-2\\]\\s+
+    [Teardown]    killJob
+
+case103.(105)jjobs -m 所有状态的作业（分两种情况，一种指定的节点存在，另一种不存在）
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub sleep 1"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid2}    RUN
+    runCommand    jctrl kill ${jobid2}
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid1}    DONE
+    ${job3}    querySubmitInfo    su user1 -c "jsub -q q1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    RUN
+    ${job5}    querySubmitInfo    su user1 -c "jsub \ -q q3 sleep 1000"
+    ${jobid5}    getJobId    ${job5}
+    ${job6}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid6}    getJobId    ${job6}
+    ${job7}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid7}    getJobId    ${job7}
+    ${job8}    querySubmitInfo    su user1 -c "jsub -J arr[1-2] sleep 1000"
+    ${jobid8}    getJobId    ${job8}
+    runCommand    su user1 -c "jctrl stop ${jobid4} ${jobid6}"
+    checkJobStatus    ${jobid1}    DONE
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    SSUSP
+    checkJobStatus    ${jobid4}    USUSP
+    checkJobStatus    ${jobid5}    RUN
+    checkJobStatus    ${jobid6}    PSUSP
+    checkJobStatus    ${jobid7}    PEND
+    checkJobStatus    ${jobid8}[1]    PEND
+    checkJobStatus    ${jobid8}[2]    PEND
+    ${string3}    runCommand    su user1 -c "jjobs -m rhela1 ${jobid1} ${jobid2} ${jobid3} ${jobid4} ${jobid5} ${jobid6} ${jobid7} ${jobid8}[1] ${jobid8}[2]"
+    log    ${string3}
+    Should Match Regexp    ${string3}    \n${jobid1}\\s+
+    Should Match Regexp    ${string3}    \n${jobid2}\\s+
+    Should Match Regexp    ${string3}    \n${jobid3}\\s+
+    Should Match Regexp    ${string3}    \n${jobid4}\\s+
+    Should Match Regexp    ${string3}    \n${jobid5}\\s+
+    Should Match Regexp    ${string3}    \n${jobid6}\\s+
+    Should Match Regexp    ${string3}    \n${jobid7}\\s+
+    Should Match Regexp    ${string3}    \n${jobid8}\\[1-2\\]\\s+
+    ${string4}    runCommand    su user1 -c "jjobs -m noxwfhost ${jobid1} ${jobid2} ${jobid3} ${jobid4} ${jobid5} ${jobid6} ${jobid7} ${jobid8}[1] ${jobid8}[2]"
+    log    ${string4}
+    Should Be Equal    ${string4}    noxwfhost: Bad host name, host group name or cluster name
+    [Teardown]    killJob
+
+case104.(106)jjobs -q 所有状态的作业（分两种情况，一种指定的队列存在，另一种指定的队列不存在）
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub sleep 1"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid2}    RUN
+    runCommand    jctrl kill ${jobid2}
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid1}    DONE
+    ${job3}    querySubmitInfo    su user1 -c "jsub -q q1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    RUN
+    ${job5}    querySubmitInfo    su user1 -c "jsub \ -q q3 sleep 1000"
+    ${jobid5}    getJobId    ${job5}
+    ${job6}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid6}    getJobId    ${job6}
+    ${job7}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid7}    getJobId    ${job7}
+    ${job8}    querySubmitInfo    su user1 -c "jsub -J arr[1-2] sleep 1000"
+    ${jobid8}    getJobId    ${job8}
+    runCommand    su user1 -c "jctrl stop ${jobid4} ${jobid6}"
+    checkJobStatus    ${jobid1}    DONE
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    SSUSP
+    checkJobStatus    ${jobid4}    USUSP
+    checkJobStatus    ${jobid5}    RUN
+    checkJobStatus    ${jobid6}    PSUSP
+    checkJobStatus    ${jobid7}    PEND
+    checkJobStatus    ${jobid8}[1]    PEND
+    checkJobStatus    ${jobid8}[2]    PEND
+    ${string3}    runCommand    su user1 -c "jjobs -q q1 ${jobid1} ${jobid2} ${jobid3} ${jobid4} ${jobid5} ${jobid6} ${jobid7} ${jobid8}[1] ${jobid8}[2]"
+    log    ${string3}
+    Should Match Regexp    ${string3}    \n${jobid1}\\s+
+    Should Match Regexp    ${string3}    \n${jobid2}\\s+
+    Should Match Regexp    ${string3}    \n${jobid3}\\s+
+    Should Match Regexp    ${string3}    \n${jobid4}\\s+
+    Should Match Regexp    ${string3}    \n${jobid5}\\s+
+    Should Match Regexp    ${string3}    \n${jobid6}\\s+
+    Should Match Regexp    ${string3}    \n${jobid7}\\s+
+    Should Match Regexp    ${string3}    \n${jobid8}\\[1-2\\]\\s+
+    ${string4}    runCommand    su user1 -c "jjobs -q noxwfque ${jobid1} ${jobid2} ${jobid3} ${jobid4} ${jobid5} ${jobid6} ${jobid7} ${jobid8}[1] ${jobid8}[2]"
+    log    ${string4}
+    Should Be Equal    ${string4}    noxwfque: No such queue
+    [Teardown]    killJob
+
+case105.(107)jjobs -u 所有状态的作业（分两种情况，一种指定的用户存在，另一种指定的用户不存在）
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub sleep 1"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid2}    RUN
+    runCommand    jctrl kill ${jobid2}
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid1}    DONE
+    ${job3}    querySubmitInfo    su user1 -c "jsub -q q1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    RUN
+    ${job5}    querySubmitInfo    su user1 -c "jsub \ -q q3 sleep 1000"
+    ${jobid5}    getJobId    ${job5}
+    ${job6}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid6}    getJobId    ${job6}
+    ${job7}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid7}    getJobId    ${job7}
+    ${job8}    querySubmitInfo    su user1 -c "jsub -J arr[1-2] sleep 1000"
+    ${jobid8}    getJobId    ${job8}
+    runCommand    su user1 -c "jctrl stop ${jobid4} ${jobid6}"
+    checkJobStatus    ${jobid1}    DONE
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    SSUSP
+    checkJobStatus    ${jobid4}    USUSP
+    checkJobStatus    ${jobid5}    RUN
+    checkJobStatus    ${jobid6}    PSUSP
+    checkJobStatus    ${jobid7}    PEND
+    checkJobStatus    ${jobid8}[1]    PEND
+    checkJobStatus    ${jobid8}[2]    PEND
+    ${string3}    runCommand    su user1 -c "jjobs -u user1 ${jobid1} ${jobid2} ${jobid3} ${jobid4} ${jobid5} ${jobid6} ${jobid7} ${jobid8}[1] ${jobid8}[2]"
+    log    ${string3}
+    Should Match Regexp    ${string3}    \n${jobid1}\\s+
+    Should Match Regexp    ${string3}    \n${jobid2}\\s+
+    Should Match Regexp    ${string3}    \n${jobid3}\\s+
+    Should Match Regexp    ${string3}    \n${jobid4}\\s+
+    Should Match Regexp    ${string3}    \n${jobid5}\\s+
+    Should Match Regexp    ${string3}    \n${jobid6}\\s+
+    Should Match Regexp    ${string3}    \n${jobid7}\\s+
+    Should Match Regexp    ${string3}    \n${jobid8}\\[1-2\\]\\s+
+    ${string4}    runCommand    su user1 -c "jjobs -u usernoxwf ${jobid1} ${jobid2} ${jobid3} ${jobid4} ${jobid5} ${jobid6} ${jobid7} ${jobid8}[1] ${jobid8}[2]"
+    log    ${string4}
+    Should Match Regexp    ${string4}    \n${jobid1}\\s+
+    Should Match Regexp    ${string4}    \n${jobid2}\\s+
+    Should Match Regexp    ${string4}    \n${jobid3}\\s+
+    Should Match Regexp    ${string4}    \n${jobid4}\\s+
+    Should Match Regexp    ${string4}    \n${jobid5}\\s+
+    Should Match Regexp    ${string4}    \n${jobid6}\\s+
+    Should Match Regexp    ${string4}    \n${jobid7}\\s+
+    Should Match Regexp    ${string4}    \n${jobid8}\\[1-2\\]\\s+
+    [Teardown]    killJob
+
+case106.(108)jjobs -P 所有状态的作业
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub sleep 1"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid2}    RUN
+    runCommand    jctrl kill ${jobid2}
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid1}    DONE
+    ${job3}    querySubmitInfo    su user1 -c "jsub -q q1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    RUN
+    ${job5}    querySubmitInfo    su user1 -c "jsub \ -q q3 sleep 1000"
+    ${jobid5}    getJobId    ${job5}
+    ${job6}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid6}    getJobId    ${job6}
+    ${job7}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid7}    getJobId    ${job7}
+    ${job8}    querySubmitInfo    su user1 -c "jsub -J arr[1-2] sleep 1000"
+    ${jobid8}    getJobId    ${job8}
+    runCommand    su user1 -c "jctrl stop ${jobid4} ${jobid6}"
+    checkJobStatus    ${jobid1}    DONE
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    SSUSP
+    checkJobStatus    ${jobid4}    USUSP
+    checkJobStatus    ${jobid5}    RUN
+    checkJobStatus    ${jobid6}    PSUSP
+    checkJobStatus    ${jobid7}    PEND
+    checkJobStatus    ${jobid8}[1]    PEND
+    checkJobStatus    ${jobid8}[2]    PEND
+    ${string3}    runCommand    su user1 -c "jjobs -P p1 ${jobid1} ${jobid2} ${jobid3} ${jobid4} ${jobid5} ${jobid6} ${jobid7} ${jobid8}[1] ${jobid8}[2]"
+    log    ${string3}
+    Should Match Regexp    ${string3}    \n${jobid1}\\s+
+    Should Match Regexp    ${string3}    \n${jobid2}\\s+
+    Should Match Regexp    ${string3}    \n${jobid3}\\s+
+    Should Match Regexp    ${string3}    \n${jobid4}\\s+
+    Should Match Regexp    ${string3}    \n${jobid5}\\s+
+    Should Match Regexp    ${string3}    \n${jobid6}\\s+
+    Should Match Regexp    ${string3}    \n${jobid7}\\s+
+    Should Match Regexp    ${string3}    \n${jobid8}\\[1-2\\]\\s+
+    [Teardown]    killJob
+
+case107.(109)jjobs -J所有状态的作业
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub sleep 1"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid2}    RUN
+    runCommand    jctrl kill ${jobid2}
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid1}    DONE
+    ${job3}    querySubmitInfo    su user1 -c "jsub -q q1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    RUN
+    ${job5}    querySubmitInfo    su user1 -c "jsub \ -q q3 sleep 1000"
+    ${jobid5}    getJobId    ${job5}
+    ${job6}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid6}    getJobId    ${job6}
+    ${job7}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid7}    getJobId    ${job7}
+    ${job8}    querySubmitInfo    su user1 -c "jsub -J arr[1-2] sleep 1000"
+    ${jobid8}    getJobId    ${job8}
+    runCommand    su user1 -c "jctrl stop ${jobid4} ${jobid6}"
+    checkJobStatus    ${jobid1}    DONE
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    SSUSP
+    checkJobStatus    ${jobid4}    USUSP
+    checkJobStatus    ${jobid5}    RUN
+    checkJobStatus    ${jobid6}    PSUSP
+    checkJobStatus    ${jobid7}    PEND
+    checkJobStatus    ${jobid8}[1]    PEND
+    checkJobStatus    ${jobid8}[2]    PEND
+    ${string3}    runCommand    su user1 -c "jjobs -J j1 ${jobid1} ${jobid2} ${jobid3} ${jobid4} ${jobid5} ${jobid6} ${jobid7} ${jobid8}[1] ${jobid8}[2]"
+    log    ${string3}
+    Should Match Regexp    ${string3}    \n${jobid1}\\s+
+    Should Match Regexp    ${string3}    \n${jobid2}\\s+
+    Should Match Regexp    ${string3}    \n${jobid3}\\s+
+    Should Match Regexp    ${string3}    \n${jobid4}\\s+
+    Should Match Regexp    ${string3}    \n${jobid5}\\s+
+    Should Match Regexp    ${string3}    \n${jobid6}\\s+
+    Should Match Regexp    ${string3}    \n${jobid7}\\s+
+    Should Match Regexp    ${string3}    \n${jobid8}\\[1-2\\]\\s+
+    [Teardown]    killJob
+
+case108.(110)jjobs 指定存在的jobid 和不存在的jobid
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub sleep 1"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid2}    RUN
+    runCommand    jctrl kill ${jobid2}
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid1}    DONE
+    ${job3}    querySubmitInfo    su user1 -c "jsub -q q1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    RUN
+    ${job5}    querySubmitInfo    su user1 -c "jsub \ -q q3 sleep 1000"
+    ${jobid5}    getJobId    ${job5}
+    ${job6}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid6}    getJobId    ${job6}
+    ${job7}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid7}    getJobId    ${job7}
+    ${job8}    querySubmitInfo    su user1 -c "jsub -J arr[1-2] sleep 1000"
+    ${jobid8}    getJobId    ${job8}
+    runCommand    su user1 -c "jctrl stop ${jobid4} ${jobid6}"
+    checkJobStatus    ${jobid1}    DONE
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    SSUSP
+    checkJobStatus    ${jobid4}    USUSP
+    checkJobStatus    ${jobid5}    RUN
+    checkJobStatus    ${jobid6}    PSUSP
+    checkJobStatus    ${jobid7}    PEND
+    checkJobStatus    ${jobid8}[1]    PEND
+    checkJobStatus    ${jobid8}[2]    PEND
+    ${string3}    runCommand    su user1 -c "jjobs -J j1 ${jobid1} ${jobid2} ${jobid3} ${jobid4} ${jobid5} ${jobid6} ${jobid7} ${jobid8}[1] ${jobid8}[2] 100000000000 1000000000"
+    log    ${string3}
+    Should Match Regexp    ${string3}    \n${jobid1}\\s+
+    Should Match Regexp    ${string3}    \n${jobid2}\\s+
+    Should Match Regexp    ${string3}    \n${jobid3}\\s+
+    Should Match Regexp    ${string3}    \n${jobid4}\\s+
+    Should Match Regexp    ${string3}    \n${jobid5}\\s+
+    Should Match Regexp    ${string3}    \n${jobid6}\\s+
+    Should Match Regexp    ${string3}    \n${jobid7}\\s+
+    Should Match Regexp    ${string3}    \n${jobid8}\\[1-2\\]\\s+
+    Should Not Match Regexp    ${string3}    \n100000000000\\s+
+    Should Not Match Regexp    ${string3}    \n1000000000\\s+
+    [Teardown]    killJob

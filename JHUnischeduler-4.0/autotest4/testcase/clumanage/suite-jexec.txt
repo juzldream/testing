@@ -1,0 +1,66 @@
+*** Settings ***
+Suite Setup       preSuite    spooler/conf/conf-jhosts
+Suite Teardown    postSuite
+Library           /apps/autotest4/lib/clusterKeyword.py
+Library           /apps/autotest4/lib/clusterLib.py
+Library           /apps/autotest4/lib/common.py
+Library           /apps/autotest4/lib/hostKeyword.py
+Library           /apps/autotest4/lib/hostLib.py
+Library           /apps/autotest4/lib/hostsConfLib.py
+Library           /apps/autotest4/lib/jobKeyword.py
+Library           /apps/autotest4/lib/jobLib.py
+Library           /apps/autotest4/lib/myUtils.py
+Library           /apps/autotest4/lib/OperatingSystem.py
+Library           /apps/autotest4/lib/queueKeyword.py
+Library           /apps/autotest4/lib/queueLib.py
+Library           /apps/autotest4/lib/paramsConfLib.py
+Library           /apps/autotest4/lib/queuesConfLib.py
+Library           /apps/autotest4/lib/retry.py
+Library           /apps/autotest4/lib/schedulerConfLib.py
+Library           /apps/autotest4/lib/userGroupKeyword.py
+Library           /apps/autotest4/lib/userGroupLib.py
+Library           /apps/autotest4/lib/userKeyword.py
+Library           /apps/autotest4/lib/usersConfLib.py
+Library           /apps/autotest4/lib/userLib.py
+
+*** Test Cases ***
+case1.jexec -h
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file}    Set Variable    ${filedir}/spooler/input/jexec-help.txt
+    log    ${file}
+    ${jexechelp}    runCommand    jexec -h
+    log    ${jexechelp}
+    ${helpfile}    Get File    ${file}
+    log    ${helpfile}
+    Should Be Equal    ${jexechelp}    ${helpfile}
+
+case2.bug12147jexec -V
+    [Tags]    p2
+    [Setup]    readyTest
+    ${version}    checkjhdsVersion    jexec -V
+
+case3.jexec -u
+    [Tags]    p1
+    [Setup]    readyTest
+    ${jhinfo}    runCommand    jexec -u user1 -m rhelb whoami
+    log    ${jhinfo}
+    Should Be Equal    ${jhinfo}    user1
+    ${userlocal}    runCommand    whoami
+    log    ${userlocal}
+    ${jhinfo1}    runCommand    jexec -u $USER -m rhelb whoami
+    log    ${jhinfo1}
+    Should Be Equal    ${jhinfo1}    ${userlocal}
+    [Teardown]    killJob
+
+case4.jexec -t unfinished
+    [Tags]    p1
+    [Setup]    readyTest
+    ${time1}    runCommand    date \ +"%H:%M:%S"
+    log    ${time1}
+    ${jhinfo}    run    jexec -t 5 -m rhelb sleep 300
+    log    ${jhinfo}
+    ${time2}    runCommand    date \ +"%H:%M:%S"
+    log    ${time2}
+    [Teardown]    killJob

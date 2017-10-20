@@ -1,0 +1,5 @@
+#!/bin/sh
+. $JH_SUB_PARM_FILE
+exec 1>&2
+echo 'TESTB="testbbb"'>$JH_SUB_MODIFY_ENVFILE
+echo 'TESTA="testaaa"'>>$JH_SUB_MODIFY_ENVFILE
