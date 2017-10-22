@@ -11,11 +11,12 @@ Robot Framework 环境配置
 
 
 5. 启动 ride 编辑器
+
 	- 双击 `E:\tools\Python\Python27\Scripts\ride.Py` 文件
-	- Win + R -> cmd -> python -> from robotide import main - > main()
-    	- Win + R -> cmd -> ride.py
+	- `Win + R -> cmd -> python -> from robotide import main - > main()`
+	- `Win + R -> cmd -> ride.py`
 	- 支持bat文件，bat 文件内容：python -c "from robotide import main;main()"
-    	- 将ride.py创建快捷方式到桌面  
+	- 将ride.py创建快捷方式到桌面  
 
 
 6. selenium2library安装
