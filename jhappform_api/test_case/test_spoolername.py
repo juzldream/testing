@@ -13,26 +13,26 @@ import main
 
 
 
-class TestDesktopids(unittest.TestCase):
-    """测试 appform 根据桌面id列表查询桌面列表 case："""
+class TestSpoolername(unittest.TestCase):
+    """测试 appform 根据数据目录名称查询数据目录列表 case："""
 
     def setUp(self):
-        print("开始测试根据桌面id列表查询桌面列表【desktopsbyid api】 ...")
+        print("开始测试根据数据目录名称查询数据目录列表【spoolersbyname api】 ...")
 
     def tearDown(self):
-        print("【desktopsbyid api】 访问的URL地址为：")
+        print("【spoolersbyname api】 访问的URL地址为：")
         print(self.url)
-        print("【desktopsbyid api】 测试数据为：")
+        print("【spoolersbyname api】 测试数据为：")
         print(self.data)
-        print("【desktopsbyid api】 测试返回值：")
+        print("【spoolersbyname api】 测试返回值：")
         print(self.result)
-        print("【desktopsbyid api】 测试结束...")
+        print("【spoolersbyname api】 测试结束...")
 
 
     def actions(self, arg1,arg2,arg3):
-        self.url = arg3[0] + "desktopsbyid?ids=" + arg1 + "&token=" + arg3[1]
+        self.url = arg3[0] + "spoolersbyname?name=" + arg1 + "&token=" + arg3[1]
         self.result = Tools().access_web(self.url)
-        self.data = "期望值:" + arg2 + "\n桌面ID号：" + arg1 
+        self.data = "期望值:" + arg2 + "\n作业名称：" + arg1 
         if arg2 == "1":    
             self.assertEqual(self.result['result'], 'success', msg = self.result['message'] )
         else:
@@ -54,13 +54,13 @@ def generateTestCases(cases):
     for i in range(lenth):
         cas = cases[0][i]['name'] 
         ext = str(cases[0][i]['expect'])
-        idn = cases[0][i]['ids']
-        arglists.append((idn, ext, cases[1], cas))
+        nam = cases[0][i]['sopplername']
+        arglists.append((nam, ext, cases[1], cas))
     for args in arglists:
-        setattr(TestDesktopids, 'test_desktopids_{0}_{1}{1}_{3}'.format(args[0], args[1], args[2], args[3]), TestDesktopids.getTestFunc(*args) )
+        setattr(TestSpoolername, 'test_spoolername_{0}_{1}{1}_{3}'.format(args[0], args[1], args[2], args[3]), TestSpoolername.getTestFunc(*args) )
 
 
-generateTestCases(main.get_test_data(type='desktopids'))
+generateTestCases(main.get_test_data(type='sopplername'))
 
 
 

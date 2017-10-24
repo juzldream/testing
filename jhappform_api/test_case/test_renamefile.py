@@ -63,7 +63,7 @@ def generateTestCases(cases):
         arglists.append((ofa, nfa, ext, cases[1], cas))
 
     for args in arglists:
-        setattr(TestRenamefile, 'test_renamefile_{0}_{1}_{2}{2}_{4}'.format(args[0], args[1], args[2], args[3], args[4]), TestRenamefile.getTestFunc(*args) )
+        setattr(TestRenamefile, 'test_renamefile_{2}{2}{2}{2}_{4}'.format(args[0], args[1], args[2], args[3], args[4]), TestRenamefile.getTestFunc(*args) )
 
 generateTestCases(main.get_test_data(type='renamefile'))
 
