@@ -1,4 +1,5 @@
-Robot Framework 环境配置
+## Robot Framework 环境配置
+### windows 10 系统
 
 1. Python 安装  2.7
 2. wxPython 安装 (wxPython2.8-win32-unicode-2.8.12.1-py27.exe)
@@ -30,5 +31,63 @@ Robot Framework 环境配置
      解压放到 ：`C:\Windows\System32 `目录下
 
 
+### CentOS 7 系统
 
+1. 修改主机名
+	- `hostnamectl set-hostname testplan`
 
+2. 安装pip
+	- `yum -y install epel-release`
+	- `yum install python-pip`
+	- `pip install --upgrade pip`
+
+3. 安装ipython
+	- `yum install gcc libffi-devel python-devel openssl-devel`
+	- `pip install ipython`
+
+4. 安装selenium
+
+	- `pip install selenium`
+
+5. 安装RobotFramework
+
+	- `yum install wxPython`
+	- `pip install robotframework `
+	- `pip install robotframework-ride`
+	- `pip install robotframework-selenium2library`
+
+6. 安装PhantomJS
+
+	[phantomjs下载地址](http://npm.taobao.org/dist/phantomjs/)
+	- `tar -zxvf phantomjs-2.1.1-linux-x86_64.tar.bz2`
+	- `export PHANTOMJS_HOME = /PATH/phantomjs-2.1.1/bin`
+
+7. 测试脚本
+
+	```
+	In [1]: from selenium import webdriver
+
+	In [2]: driver = webdriver.PhantomJS()
+
+	In [4]: driver.get('http://www.baidu.com')
+
+	In [5]: print driver.title
+	百度一下，你就知道
+
+	In [6]: driver.find_element_by_css_selector('#kw').send_keys('selenium')
+
+	In [7]: driver.get_screenshot_as_file('/apps/baidu_index.png')
+	Out[7]: True
+
+	In [9]: driver.find_element_by_css_selector('#su').click()
+
+	In [10]: print driver.title
+	selenium_百度搜索
+
+	In [11]: driver.get_screenshot_as_file('/apps/search_selenium.png')
+	    ...: 
+	Out[11]: True
+
+	In [12]: driver.close()
+
+	```
