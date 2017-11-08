@@ -1,0 +1,9 @@
+-+
+-DCCI
+-D_IDA_XL
+-DWINNT
+-IC:\Users\rzhou\Desktop\resapi
+-IE:\test\LoadRunner\include
+-ec:\users\rzhou\desktop\resapi\\logfile.log
+c:\users\rzhou\desktop\resapi\\combined_resapi.c
+c:\users\rzhou\desktop\resapi\\pre_cci.c

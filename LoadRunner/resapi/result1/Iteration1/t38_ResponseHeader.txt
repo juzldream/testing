@@ -1,0 +1,15 @@
+HTTP/1.1 200 OK
+Server: Apache-Coyote/1.1
+X-Atmosphere-first-request: true
+X-Atmosphere-tracking-id: f69eb283-cd92-4d97-89a2-069dcfce4b22
+Expires: Thu, 01 Jan 1970 00:00:00 GMT
+Cache-Control: no-cache
+Pragma: no-cache
+Cache-Control: no-store
+Set-Cookie: JSESSIONID=6A5F7DE2FAC77B01F058E99662EE7475; Path=/appform/; HttpOnly
+Content-Type: text/html;charset=UTF-8
+Transfer-Encoding: chunked
+Content-Encoding: gzip
+Vary: Accept-Encoding
+Date: Wed, 15 Mar 2017 06:43:47 GMT
+

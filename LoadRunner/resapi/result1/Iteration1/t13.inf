@@ -1,0 +1,13 @@
+[t13]
+SnapshotXmlFile=snapshot_13.xml
+ContentType=text/html
+StepName=Rest Request: GET: {uurl}/copyfile?sour...
+Total=1
+FileName1=t13.html
+RequestHeaderFile=t13_RequestHeader.txt
+ResponseHeaderFile=t13_ResponseHeader.txt
+RawStepEndTime=1489560227414
+RawStepName=GET: {uurl}/copyfile?sour...
+RequestBodyFile=t13_RequestBody.txt
+RawStepStartTime=1489560227344
+URL1=http://192.168.149.131:8080/appform/ws/copyfile?source_file_name=/apps/doc/http.jmx&target_file_name=/apps/jhappform/spoolers/cop&token=5593C3BE599B55BBB8B8ED18B9817545445B5D69C7BAA46EEAE948791D7AFD8066C49C89199580BD460A381305F1F6AFE8D3E669AA2ADA5B6FF8798B95BF243FA36CD8D4D299A75D77F4EC18E5909F310915A19660E8A7B95B2A9D758B4EB2AD

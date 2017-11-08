@@ -1,0 +1,13 @@
+[t16]
+SnapshotXmlFile=snapshot_16.xml
+ContentType=text/html
+StepName=Rest Request: GET: {uurl}/desktop/sha...
+Total=1
+FileName1=t16.html
+RequestHeaderFile=t16_RequestHeader.txt
+ResponseHeaderFile=t16_ResponseHeader.txt
+RawStepEndTime=1489560227481
+RawStepName=GET: {uurl}/desktop/sha...
+RequestBodyFile=t16_RequestBody.txt
+RawStepStartTime=1489560227457
+URL1=http://192.168.149.131:8080/appform/ws/desktop/share?id=4901475279913&observer=user1，user2&token=5593C3BE599B55BBB8B8ED18B9817545445B5D69C7BAA46EEAE948791D7AFD8066C49C89199580BD460A381305F1F6AFE8D3E669AA2ADA5B6FF8798B95BF243FA36CD8D4D299A75D77F4EC18E5909F310915A19660E8A7B95B2A9D758B4EB2AD

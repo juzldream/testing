@@ -1,0 +1,14 @@
+[T1]
+Indent=0
+EventType=StartRepLog
+Type=HTML
+NodeName=Incompatibility Error
+IconIndex=1
+Status=Done
+Iteration=1
+ReplayId=2
+BottomFile=InstallNewReport.html
+TopFile=
+[General]
+Total=1
+Title=Incompatibility Error

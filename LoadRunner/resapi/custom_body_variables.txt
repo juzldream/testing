@@ -1,0 +1,5 @@
+/*************************************************************
+// This file contains the variable name assigned to
+// the body sections recorded for web_custom_request function.
+**************************************************************/
+

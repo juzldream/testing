@@ -1,0 +1,13 @@
+[t1]
+SnapshotXmlFile=snapshot_1.xml
+ContentType=text/html
+StepName=Rest Request: GET: {uurl}/login?username=jhadmin&p...
+Total=1
+FileName1=t1.html
+RequestHeaderFile=t1_RequestHeader.txt
+ResponseHeaderFile=t1_ResponseHeader.txt
+RawStepEndTime=1489560225513
+RawStepName=GET: {uurl}/login?username=jhadmin&p...
+RequestBodyFile=t1_RequestBody.txt
+RawStepStartTime=1489560225289
+URL1=http://192.168.149.131:8080/appform/ws/login?username=jhadmin&password=Juzl150702

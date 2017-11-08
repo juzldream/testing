@@ -1,0 +1,7 @@
+GET /appform/ws/jobsbystatus/exit?token={apitoken%20} HTTP/1.1
+User-Agent: Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; Trident/6.0)
+Accept-Encoding: gzip, deflate
+Accept: */*
+Connection: Keep-Alive
+Host: 192.168.149.131:8080
+

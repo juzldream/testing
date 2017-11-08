@@ -1,0 +1,13 @@
+[t34]
+SnapshotXmlFile=snapshot_34.xml
+ContentType=text/html
+StepName=Rest Request: GET: {uurl}/jobsbystatu...
+Total=1
+FileName1=t34.html
+RequestHeaderFile=t34_RequestHeader.txt
+ResponseHeaderFile=t34_ResponseHeader.txt
+RawStepEndTime=1489560229409
+RawStepName=GET: {uurl}/jobsbystatu...
+RequestBodyFile=t34_RequestBody.txt
+RawStepStartTime=1489560229389
+URL1=http://192.168.149.131:8080/appform/ws/jobsbystatus/exit?token={apitoken }
