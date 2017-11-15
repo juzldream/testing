@@ -1,0 +1,208 @@
+*** Settings ***
+Suite Setup       preSuite    spooler/conf/conf-exclusive
+Suite Teardown    postSuite
+Library           /apps/autotest4/lib/clusterKeyword.py
+Library           /apps/autotest4/lib/clusterLib.py
+Library           /apps/autotest4/lib/common.py
+Library           /apps/autotest4/lib/hostKeyword.py
+Library           /apps/autotest4/lib/hostLib.py
+Library           /apps/autotest4/lib/hostsConfLib.py
+Library           /apps/autotest4/lib/jobKeyword.py
+Library           /apps/autotest4/lib/jobLib.py
+Library           /apps/autotest4/lib/myUtils.py
+Library           /apps/autotest4/lib/OperatingSystem.py
+Library           /apps/autotest4/lib/queueKeyword.py
+Library           /apps/autotest4/lib/queueLib.py
+Library           /apps/autotest4/lib/paramsConfLib.py
+Library           /apps/autotest4/lib/queuesConfLib.py
+Library           /apps/autotest4/lib/retry.py
+Library           /apps/autotest4/lib/schedulerConfLib.py
+Library           /apps/autotest4/lib/userGroupKeyword.py
+Library           /apps/autotest4/lib/userGroupLib.py
+Library           /apps/autotest4/lib/userKeyword.py
+Library           /apps/autotest4/lib/usersConfLib.py
+Library           /apps/autotest4/lib/userLib.py
+
+*** Test Cases ***
+case1.测试提交不同作业到独占队列，指定-x和不指定-x
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su jhadmin -c "jsub -q clu1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su jhadmin -c "jsub -q clu1 -x sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    ${host1}    getAndCheckJobExecHost    ${jobid1}
+    ${host2}    getAndCheckJobExecHost    ${jobid2}
+    checkHostStatus    ${host1}    closed_Full
+    checkHostStatus    ${host2}    closed_Excl
+    [Teardown]    killJob
+
+case2.独占作业不会派发到有作业的节点上
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHost    rhela1    3 \ ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${localhost}    RUN    hostname
+    ${job1}    querySubmitInfo    su jhadmin -c "jsub -m ${localhost} sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${job2}    querySubmitInfo    su jhadmin -c "jsub -n 2 -q clu1 -x sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkHostStatus    ${localhost}    ok
+    sleep    3
+    checkJobStatus    ${jobid2}    PEND
+    ${job22}    queryJobInfo    ${jobid2}
+    ${reason}    getJobPndRsn    ${job22}
+    log    ${reason}
+    Should Contain    ${reason}    Job's requirement for exclusive execution not satisfied: 1 host;
+    Should Contain    ${reason}    Not enough job slot(s): 1 host;
+    [Teardown]    modHostInfo    rhela1= 1 ()
+
+case3.独占式作业跨节点独占多个节点
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHost    rhela1    \ 2 ()
+    addOrModifyHost    rhelb    \ 2 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su jhadmin -c "jsub -n 2 -R "span[ptile=1]" -x -q clu1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${job2}    querySubmitInfo    su jhadmin -c "jsub sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    @{host1}    getAndCheckJobExecHost    ${jobid1}
+    checkHostStatus    @{host1}[0]    closed_Excl
+    checkHostStatus    @{host1}[1]    closed_Excl
+    sleep    2
+    checkJobStatus    ${jobid2}    PEND
+    ${job22}    queryJobInfo    ${jobid2}
+    ${reason}    getJobPndRsn    ${job22}
+    log    ${reason}
+    should contain    ${reason}    Closed by running an exclusive job:
+    [Teardown]    modHostInfo    rhela1= 1 ()    rhelb= 1 ()
+
+case4.bug11793提交独占作业后，在作业正在执行时，重启service。
+    [Tags]    p1    bug
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su jhadmin -c "jsub -n 2 -R "span[ptile=1]" -x -q clu1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    @{host1}    getAndCheckJobExecHost    ${jobid1}
+    checkHostStatus    @{host1}[0]    closed_Excl
+    checkHostStatus    @{host1}[1]    closed_Excl
+    jserviceRestartAll
+    checkHostStatus    @{host1}[0]    closed_Excl
+    checkHostStatus    @{host1}[1]    closed_Excl
+    checkJobStatus    ${jobid1}    RUN
+    [Teardown]    killJob
+
+case5.bug11793提交独占作业后，在作业执行结束后，reconfig集群。
+    [Tags]    p1    bug
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su jhadmin -c "jsub -n 2 -R "span[ptile=1]" -x -q clu1 sleep 10"
+    ${jobid1}    getJobId    ${job1}
+    @{host1}    getAndCheckJobExecHost    ${jobid1}
+    checkHostStatus    @{host1}[0]    closed_Excl
+    checkHostStatus    @{host1}[1]    closed_Excl
+    checkJobStatus    ${jobid1}    DONE
+    @{host1}    getAndCheckJobExecHost    ${jobid1}
+    checkHostStatus    @{host1}[0]    ok
+    checkHostStatus    @{host1}[1]    ok
+    jadminJhdsSched
+    checkClusterStatus
+    runCommand    jctrl kill -u all 0
+    [Teardown]    killJob
+
+case6.独占队列中配置抢占调度。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su jhadmin -c "jsub -x -q clulow1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su jhadmin -c "jsub -x -q clulow1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    ${host1}    getAndCheckJobExecHost    ${jobid1}
+    checkHostStatus    ${host1}    closed_Excl
+    ${host2}    getAndCheckJobExecHost    ${jobid2}
+    checkHostStatus    ${host2}    closed_Excl
+    ${job3}    querySubmitInfo    su jhadmin -c "jsub -x -q cluhigh1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su jhadmin -c "jsub -x -q cluhigh1 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    sleep    3
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    ${job33}    queryJobInfo    ${jobid3}
+    ${reason}    getJobPndRsn    ${job33}
+    log    ${reason}
+    Should Contain    ${reason}    Closed by running an exclusive job:
+    ${job44}    queryJobInfo    ${jobid4}
+    ${reason1}    getJobPndRsn    ${job44}
+    log    ${reason1}
+    Should Contain    ${reason1}    Closed by running an exclusive job:
+    [Teardown]    killJob
+
+case7.将一个独占作业执行jctrl requeue
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su jhadmin -c "jsub -x -q clu1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${job2}    querySubmitInfo    su jhadmin -c "jsub -n 2 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${host1}    getAndCheckJobExecHost    ${jobid1}
+    checkHostStatus    ${host1}    closed_Excl
+    sleep    2
+    runCommand    jctrl requeue ${jobid1}
+    checkJobStatus    ${jobid1}    PEND
+    checkJobStatus    ${jobid2}    RUN
+    runCommand    su jhadmin -c "jctrl kill ${jobid2}"
+    checkJobStatus    ${jobid1}    RUN
+    ${host2}    getAndCheckJobExecHost    ${jobid1}
+    checkHostStatus    ${host2}    closed_Excl
+    [Teardown]    killJob
+
+case8.将一个独占作业执行jctrl start
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su jhadmin -c "jsub sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su jhadmin -c "jsub sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid1}    RUN
+    ${job3}    querySubmitInfo    su jhadmin -c "jsub -x -q clu1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su jhadmin -c "jsub sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    ${localhost}    RUN    hostname
+    runCommand    jctrl start -m ${localhost} ${jobid3}
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    PEND
+    ${host1}    getAndCheckJobExecHost    ${jobid3}
+    checkHostStatus    ${host1}    closed_Excl
+    sleep    2
+    ${job44}    queryJobInfo    ${jobid4}
+    ${reason1}    getJobPndRsn    ${job44}
+    log    ${reason1}
+    Should Contain    ${reason1}    Closed by running an exclusive job: 1 host;
+    Should Contain    ${reason1}    Job slot limit reached: 1 host;
+    [Teardown]    killJob
+
+case9.独占作业结束后，节点正常恢复。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su jhadmin -c "jsub -n 2 -R "span[ptile=1]" -x -q clu1 sleep 10"
+    ${jobid1}    getJobId    ${job1}
+    @{host1}    getAndCheckJobExecHost    ${jobid1}
+    checkHostStatus    @{host1}[0]    closed_Excl
+    checkHostStatus    @{host1}[1]    closed_Excl
+    checkJobStatus    ${jobid1}    DONE
+    @{host1}    getAndCheckJobExecHost    ${jobid1}
+    checkHostStatus    @{host1}[0]    ok
+    checkHostStatus    @{host1}[1]    ok
+    [Teardown]    killJob

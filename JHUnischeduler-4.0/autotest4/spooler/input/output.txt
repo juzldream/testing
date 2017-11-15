@@ -1,0 +1,30 @@
+Sender: jhscheduler System <jhadmin@rhela1>
+Subject: Job 27324: <whoami> Done
+
+Job <whoami> was submitted from host <rhela1> by user <jhadmin>.
+Job was executed on host(s) <rhela1>, in queue <normal>, as user <jhadmin>.
+</apps/users//jhadmin> was used as the home directory.
+</apps/autotestpackage/autotestproject> was used as the working directory.
+Started at Wed Aug 17 12:51:45 2016
+Results reported at Wed Aug 17 12:51:50 2016
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+whoami
+------------------------------------------------------------
+
+Successfully completed.
+
+Resource usage summary:
+
+    CPU time   :      0.01 sec.
+    Max Memory :         1 MB
+    Max Swap   :        17 MB
+
+    Max Processes  :         1
+
+The output (if any) follows:
+
+jhadmin

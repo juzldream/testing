@@ -1,0 +1,228 @@
+*** Settings ***
+Suite Setup       preSuite    spooler/conf/conf-jhosts
+Suite Teardown    postSuite
+Library           /apps/autotest4/lib/clusterKeyword.py
+Library           /apps/autotest4/lib/clusterLib.py
+Library           /apps/autotest4/lib/common.py
+Library           /apps/autotest4/lib/hostKeyword.py
+Library           /apps/autotest4/lib/hostLib.py
+Library           /apps/autotest4/lib/hostsConfLib.py
+Library           /apps/autotest4/lib/jobKeyword.py
+Library           /apps/autotest4/lib/jobLib.py
+Library           /apps/autotest4/lib/myUtils.py
+Library           /apps/autotest4/lib/OperatingSystem.py
+Library           /apps/autotest4/lib/queueKeyword.py
+Library           /apps/autotest4/lib/queueLib.py
+Library           /apps/autotest4/lib/paramsConfLib.py
+Library           /apps/autotest4/lib/queuesConfLib.py
+Library           /apps/autotest4/lib/retry.py
+Library           /apps/autotest4/lib/schedulerConfLib.py
+Library           /apps/autotest4/lib/userGroupKeyword.py
+Library           /apps/autotest4/lib/userGroupLib.py
+Library           /apps/autotest4/lib/userKeyword.py
+Library           /apps/autotest4/lib/usersConfLib.py
+Library           /apps/autotest4/lib/userLib.py
+
+*** Test Cases ***
+case1.jhosts
+    [Tags]    p1
+    [Setup]    readyTest
+    ${hostinfo}    runCommand    jhosts
+    log    ${hostinfo}
+    Should Match Regexp    ${hostinfo}    HOST_NAME\\s+STATUS\\s+JL/U\\s+MAX\\s+NJOBS\\s+RUN\\s+SSUSP\\s+USUSP\\s+RSV
+    Should Match Regexp    ${hostinfo}    rhela1\\s+ok\\s+-\\s+1\\s+0\\s+0\\s+0\\s+0\\s+0
+    Should Match Regexp    ${hostinfo}    rhelb\\s+ok\\s+-\\s+1\\s+0\\s+0\\s+0\\s+0\\s+0
+    [Teardown]    killJob
+
+case2.jhosts -w
+    [Tags]    p1
+    [Setup]    readyTest
+    ${hostinfo}    runCommand    jhosts -w
+    log    ${hostinfo}
+    Should Match Regexp    ${hostinfo}    HOST_NAME\\s+STATUS\\s+JL/U\\s+MAX\\s+NJOBS\\s+RUN\\s+SSUSP\\s+USUSP\\s+RSV
+    Should Match Regexp    ${hostinfo}    rhela1\\s+ok\\s+-\\s+1\\s+0\\s+0\\s+0\\s+0\\s+0
+    Should Match Regexp    ${hostinfo}    rhelb\\s+ok\\s+-\\s+1\\s+0\\s+0\\s+0\\s+0\\s+0
+    [Teardown]    killJob
+
+case3.jhosts host
+    [Tags]    p1
+    [Setup]    readyTest
+    ${hostinfo}    runCommand    jhosts rhela1
+    log    ${hostinfo}
+    Should Match Regexp    ${hostinfo}    HOST_NAME\\s+STATUS\\s+JL/U\\s+MAX\\s+NJOBS\\s+RUN\\s+SSUSP\\s+USUSP\\s+RSV
+    Should Match Regexp    ${hostinfo}    rhela1\\s+ok\\s+-\\s+1\\s+0\\s+0\\s+0\\s+0\\s+0
+    Should Not Match Regexp    ${hostinfo}    rhelb\\s+ok\\s+-\\s+1\\s+0\\s+0\\s+0\\s+0\\s+0
+    ${hostinfo1}    runCommand    jhosts rhela1 rhelb
+    log    ${hostinfo1}
+    Should Match Regexp    ${hostinfo1}    HOST_NAME\\s+STATUS\\s+JL/U\\s+MAX\\s+NJOBS\\s+RUN\\s+SSUSP\\s+USUSP\\s+RSV
+    Should Match Regexp    ${hostinfo1}    rhela1\\s+ok\\s+-\\s+1\\s+0\\s+0\\s+0\\s+0\\s+0
+    Should Match Regexp    ${hostinfo1}    rhelb\\s+ok\\s+-\\s+1\\s+0\\s+0\\s+0\\s+0\\s+0
+    [Teardown]    killJob
+
+case4.jhosts hostgroup
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHostGroup    group0    (rhelb)
+    addOrModifyHostGroup    group1    (rhela1 rhelb)
+    jadminJhdsSched
+    checkClusterStatus
+    ${hostinfo}    runCommand    jhosts group0
+    log    ${hostinfo}
+    Should Match Regexp    ${hostinfo}    HOST_NAME\\s+STATUS\\s+JL/U\\s+MAX\\s+NJOBS\\s+RUN\\s+SSUSP\\s+USUSP\\s+RSV
+    Should Not Match Regexp    ${hostinfo}    rhela1\\s+ok\\s+-\\s+1\\s+0\\s+0\\s+0\\s+0\\s+0
+    Should Match Regexp    ${hostinfo}    rhelb\\s+ok\\s+-\\s+1\\s+0\\s+0\\s+0\\s+0\\s+0
+    ${hostinfo1}    runCommand    jhosts group1
+    log    ${hostinfo1}
+    Should Match Regexp    ${hostinfo1}    HOST_NAME\\s+STATUS\\s+JL/U\\s+MAX\\s+NJOBS\\s+RUN\\s+SSUSP\\s+USUSP\\s+RSV
+    Should Match Regexp    ${hostinfo1}    rhela1\\s+ok\\s+-\\s+1\\s+0\\s+0\\s+0\\s+0\\s+0
+    Should Match Regexp    ${hostinfo1}    rhelb\\s+ok\\s+-\\s+1\\s+0\\s+0\\s+0\\s+0\\s+0
+    [Teardown]    delHostGroup    group0,group1
+
+case5.提示信息需要确定jhosts指定不存在的节点或节点组
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHostGroup    group0    (rhelb)
+    addOrModifyHostGroup    group1    (rhela1 rhelb)
+    jadminJhdsSched
+    checkClusterStatus
+    ${hostinfo}    runCommand    jhosts hostno
+    log    ${hostinfo}
+    Should Be Equal    ${hostinfo}    hostno: Bad host name
+    ${hostinfo1}    runCommand    jhosts groupno
+    log    ${hostinfo1}
+    Should Be Equal    ${hostinfo1}    groupno: Bad host name
+    [Teardown]    delHostGroup    group0,group1
+
+case6.jhosts stat
+    [Tags]    p1
+    [Setup]    readyTest
+    ${hostinfo}    runCommand    jhosts stat
+    log    ${hostinfo}
+    Should Match Regexp    ${hostinfo}    HOST_NAME \ \ \ status \ \ r15s \ r1m \ r15m \ \ ut \ \ pg \ \ ls \ \ it \ \ \ \ \ tmp \ \ \ \ swap \ \ \ \ \ mem
+    Should Match Regexp    ${hostinfo}    rhela1\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)
+    Should Match Regexp    ${hostinfo}    rhelb\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)
+    [Teardown]    killJob
+
+case7.jhosts stat host
+    [Tags]    p1
+    [Setup]    readyTest
+    ${hostinfo}    runCommand    jhosts stat rhela1
+    log    ${hostinfo}
+    Should Match Regexp    ${hostinfo}    HOST_NAME \ \ \ status \ \ r15s \ r1m \ r15m \ \ ut \ \ pg \ \ ls \ \ it \ \ \ \ \ tmp \ \ \ \ swap \ \ \ \ \ mem
+    Should Match Regexp    ${hostinfo}    rhela1\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)
+    Should Not Match Regexp    ${hostinfo}    rhelb\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)
+    ${hostinfo1}    runCommand    jhosts stat rhela1 rhelb
+    log    ${hostinfo1}
+    Should Match Regexp    ${hostinfo1}    HOST_NAME \ \ \ status \ \ r15s \ r1m \ r15m \ \ ut \ \ pg \ \ ls \ \ it \ \ \ \ \ tmp \ \ \ \ swap \ \ \ \ \ mem
+    Should Match Regexp    ${hostinfo1}    rhela1\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)
+    Should Match Regexp    ${hostinfo1}    rhelb\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)
+    [Teardown]    killJob
+
+case8.提示信息需要确定jhosts stat 指定一个不存在的节点
+    [Tags]    p1
+    [Setup]    readyTest
+    ${hostinfo}    runCommand    jhosts stat hostno
+    log    ${hostinfo}
+    Should Contain    ${hostinfo}    hostno: Bad host name
+    [Teardown]    killJob
+
+case9.jhosts attrib
+    [Tags]    p1
+    [Setup]    readyTest
+    ${hostinfo}    runCommand    jhosts attrib
+    log    ${hostinfo}
+    Should Contain    ${hostinfo}    HOST_NAME \ \ \ type \ \ \ \ model \ \ \ ncpus \ \ maxmem \ \ maxswp nsocket ncore nthread RESOURCES
+    Should Match Regexp    ${hostinfo}    rhela1\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)
+    Should Match Regexp    ${hostinfo}    rhelb\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)
+    [Teardown]    killJob
+
+case10.jhosts attrib host
+    [Tags]    p1
+    [Setup]    readyTest
+    ${hostinfo}    runCommand    jhosts attrib rhelb
+    log    ${hostinfo}
+    Should Contain    ${hostinfo}    HOST_NAME \ \ \ type \ \ \ \ model \ \ \ ncpus \ \ maxmem \ \ maxswp nsocket ncore nthread RESOURCES
+    Should Not Match Regexp    ${hostinfo}    rhela1\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)
+    Should Match Regexp    ${hostinfo}    rhelb\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)
+    ${hostinfo1}    runCommand    jhosts attrib rhelb rhela1
+    log    ${hostinfo1}
+    Should Contain    ${hostinfo1}    HOST_NAME \ \ \ type \ \ \ \ model \ \ \ ncpus \ \ maxmem \ \ maxswp nsocket ncore nthread RESOURCES
+    Should Match Regexp    ${hostinfo1}    rhela1\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)
+    Should Match Regexp    ${hostinfo1}    rhelb\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)\\s+(.*)
+    [Teardown]    killJob
+
+case11.提示信息需要确定jhosts attrib 指定一个不存在的节点
+    [Tags]    p1
+    [Setup]    readyTest
+    ${hostinfo}    runCommand    jhosts attrib hostno
+    log    ${hostinfo}
+    Should Contain    ${hostinfo}    hostno: Bad host name
+    [Teardown]    killJob
+
+case12.jhosts -R内置资源
+    [Tags]    p1    docker-not-run
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file0}    Set Variable    ${filedir}/spooler/input/pi.sh
+    usedUt    rhela1    ${file0}    90%
+    ${ut1}    checkUt    rhela1
+    log    ${ut1}
+    ${symbola}    compareUt    ${ut1}    50%
+    log    ${symbola}
+    ${info}    runCommand    jhosts -R "select[ut>0.5]"
+    Run Keyword If    '${symbola}'=='True'    Should Contain    ${info}    rhela1
+    ...    ELSE    Should Not Contain    ${info}    rhela1
+    ${ut}    checkUt    rhelb
+    log    ${ut}
+    ${symbol}    compareUt    ${ut}    50%
+    log    ${symbol}
+    ${info}    runCommand    jhosts -R "select[ut>0.5]"
+    Run Keyword If    '${symbol}'=='True'    Should Contain    ${info}    rhelb
+    ...    ELSE    Should Not Contain    ${info}    rhelb
+    killUt    ${file0}
+    [Teardown]    killUtProc    pi.sh
+
+case14.jhosts -R动态非共享资源
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${inputdir}    Set Variable    ${filedir}/spooler/input/res3
+    ${sbindir}    getSbinPath
+    Copy File    ${inputdir}    ${sbindir}/res3
+    jadminJhdsSched
+    checkClusterStatus
+    checkHostResTotal    rhela1    res3    3
+    checkHostResTotal    rhelb    res3    0
+    ${info}    runCommand    jhosts -l
+    log    ${info}
+    ${host}    runCommand    su jhadmin -c 'jhosts -R "res3>1"'
+    Should Contain    ${host}    rhela1
+    Should Not Contain    ${host}    rhelb
+    Remove File    ${sbindir}/res3
+    [Teardown]    killJob
+
+case15.jhosts -R指定一个不存在的资源
+    [Tags]    p1
+    [Setup]    readyTest
+    ${info}    runCommand    jhosts -R "select[aa>0.8]"
+    Should Contain    ${info}    Bad resource requirement syntax
+    [Teardown]    killJob
+
+case16.jhosts -s
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${inputdir}    Set Variable    ${filedir}/spooler/input/res3
+    ${sbindir}    getSbinPath
+    Copy File    ${inputdir}    ${sbindir}/res3
+    jadminJhdsSched
+    checkClusterStatus
+    checkStatShareResTotal    res1    3
+    checkStatShareResTotal    res4    16
+    ${hostinfo}    runCommand    jhosts -s
+    log    ${hostinfo}
+    Should Contain    ${hostinfo}    RESOURCE \ \ \ \ \ \ \ TOTAL \ \ \ \ \ \ \ RESERVED \ \ \ \ INTERVAL \ \ \ \ \ \ \ \ \ \ \ \ LOCATION
+    Should Match Regexp    ${hostinfo}    res1\\s+3\\s+0\\s+15\\s+all
+    Should Match Regexp    ${hostinfo}    res4\\s+16\\s+0\\s+0\\s+all
+    Remove File    ${sbindir}/res3
+    [Teardown]    killJob

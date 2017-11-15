@@ -1,0 +1,24 @@
+usage: jmod [-h] [-V] [-q queue_name ... | -qn] [-m "host_name[+[pref_level]]
+            | host_group[+[pref_level]]..." | -mn]
+            [-n min_processors[,max_processors] | -nn]
+            [jobId | jobId[index_list]]
+
+description: modifies the options of a previously submitted job
+
+positional arguments:
+  [ jobId | jobId[index_list] ]
+                        modifies the job or modifies the job arrays
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -V                    print JH UniScheduler release version and exit
+  -q queue_name ...     modifies the job specified executive queues
+  -qn                   cancels the job specified executive queues
+  -m "host_name[+[pref_level]] | host_group[+[pref_level]]..."
+                        modifies the job specified executive hosts
+  -mn                   cancels the job specified executive hosts
+  -n min_processors[,max_processors]
+                        modifies the job specified minimum and maximum numbers
+                        of processors
+  -nn                   cancels the job specified minimum and maximum numbers
+                        of processors

@@ -1,0 +1,348 @@
+*** Settings ***
+Suite Setup       preSuite    spooler/conf/conf-single-node-policy
+Suite Teardown    postSuite
+Library           /apps/autotest4/lib/clusterKeyword.py
+Library           /apps/autotest4/lib/clusterLib.py
+Library           /apps/autotest4/lib/common.py
+Library           /apps/autotest4/lib/hostKeyword.py
+Library           /apps/autotest4/lib/hostLib.py
+Library           /apps/autotest4/lib/hostsConfLib.py
+Library           /apps/autotest4/lib/jobKeyword.py
+Library           /apps/autotest4/lib/jobLib.py
+Library           /apps/autotest4/lib/myUtils.py
+Library           /apps/autotest4/lib/OperatingSystem.py
+Library           /apps/autotest4/lib/queueKeyword.py
+Library           /apps/autotest4/lib/queueLib.py
+Library           /apps/autotest4/lib/paramsConfLib.py
+Library           /apps/autotest4/lib/queuesConfLib.py
+Library           /apps/autotest4/lib/retry.py
+Library           /apps/autotest4/lib/schedulerConfLib.py
+Library           /apps/autotest4/lib/userGroupKeyword.py
+Library           /apps/autotest4/lib/userGroupLib.py
+Library           /apps/autotest4/lib/userKeyword.py
+Library           /apps/autotest4/lib/usersConfLib.py
+Library           /apps/autotest4/lib/userLib.py
+
+*** Test Cases ***
+case1.当节点的slots满足作业需求时
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file0}    Set Variable    ${filedir}/spooler/input/pi.sh
+    ${file}    normalPath    ${file0}
+    addOrModifyHost    rhela1    2 ()
+    addOrModifyHost    rhelb    3 ()
+    jadminJhdsSched
+    checkClusterStatus
+    usedUt    rhela1    ${file}    80%
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${host1}    getAndCheckJobExecHost    ${jobid1}
+    Should Be Equal    ${host1}    rhela1
+    runCommand    su user1 -c "jctrl kill ${jobid1}"
+    checkClusterStatus
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 3 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${host2}    getAndCheckJobExecHost    ${jobid2}
+    Should Be Equal    ${host2}    rhelb
+    killDefault
+    [Teardown]    modHostInfo    rhela1=1 ()    rhelb=1 ()
+
+case2.当集群单个节点的slots大于或者小于作业请求的slots，没有正好等于作业请求slots时。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file0}    Set Variable    ${filedir}/spooler/input/pi.sh
+    ${file}    normalPath    ${file0}
+    addOrModifyHost    rhela1    5 ()
+    addOrModifyHost    rhelb    2 ()
+    jadminJhdsSched
+    checkClusterStatus
+    usedUt    rhela1    ${file}    80%
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 4 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${host1}    getAndCheckJobExecHost    ${jobid1}
+    Should Be Equal    ${host1}    rhela1
+    killDefault
+    [Teardown]    modHostInfo    rhela1=1 ()    rhelb=1 ()
+
+case3.当节点的slots都不满足作业请求，作业需要跨节点时。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file0}    Set Variable    ${filedir}/spooler/input/pi.sh
+    ${file}    normalPath    ${file0}
+    addOrModifyHost    rhela1    5 ()
+    addOrModifyHost    rhelb    4 ()
+    jadminJhdsSched
+    checkClusterStatus
+    usedUt    rhela1    ${file}    80%
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 7 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${proc}    getAndCheckJobUsedProc    ${jobid1}
+    log    ${proc}
+    Should Contain    ${proc}    7 Processors
+    Should Contain    ${proc}    5*rhela1
+    Should Contain    ${proc}    2*rhelb
+    killDefault
+    [Teardown]    modHostInfo    rhela1=1 ()    rhelb=1 ()
+
+case4.当节点剩余的slots满足作业要求时。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file0}    Set Variable    ${filedir}/spooler/input/pi.sh
+    ${file}    normalPath    ${file0}
+    addOrModifyHost    rhela1    5 ()
+    addOrModifyHost    rhelb    2 ()
+    jadminJhdsSched
+    checkClusterStatus
+    usedUt    rhela1    ${file}    80%
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 4 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${host1}    getAndCheckJobExecHost    ${jobid1}
+    Should Be Equal    ${host1}    rhela1
+    ${job2}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${host2}    getAndCheckJobExecHost    ${jobid2}
+    Should Be Equal    ${host2}    rhela1
+    killDefault
+    [Teardown]    modHostInfo    rhela1=1 ()    rhelb=1 ()
+
+case5.当集群单个节点的slots均大于作业请求的slots时，选择slots最接近作业请求的节点。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file0}    Set Variable    ${filedir}/spooler/input/pi.sh
+    ${file}    normalPath    ${file0}
+    addOrModifyHost    rhela1    4 ()
+    addOrModifyHost    rhelb    5 ()
+    jadminJhdsSched
+    checkClusterStatus
+    usedUt    rhela1    ${file}    80%
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${host1}    getAndCheckJobExecHost    ${jobid1}
+    Should Be Equal    ${host1}    rhela1
+    killDefault
+    [Teardown]    modHostInfo    rhela1=1 ()    rhelb=1 ()
+
+case6.当有两个节点的slots同时满足作业的请求时，按照ut排序。
+    [Tags]    p1    bug-random    docker-not-run
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file0}    Set Variable    ${filedir}/spooler/input/pi.sh
+    ${file}    normalPath    ${file0}
+    addOrModifyHost    rhela1    2 ()
+    addOrModifyHost    rhelb    5 ()
+    jadminJhdsSched
+    checkClusterStatus
+    usedUt    rhela1    ${file}    80%
+    ${infoxxx}    runCommand    su jhadmin -c "jhosts -l"
+    log    ${infoxxx}
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 3 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${host1}    getAndCheckJobExecHost    ${jobid1}
+    Should Be Equal    ${host1}    rhelb
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${host2}    getAndCheckJobExecHost    ${jobid2}
+    Should Be Equal    ${host2}    rhelb
+    killDefault
+    [Teardown]    modHostInfo    rhela1=1 ()    rhelb=1 ()
+
+case7.单节点优先和span（单节点优先不生效，按照ut选择节点）
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file0}    Set Variable    ${filedir}/spooler/input/pi.sh
+    ${file}    normalPath    ${file0}
+    addOrModifyHost    rhela1    2 ()
+    addOrModifyHost    rhelb    5 ()
+    jadminJhdsSched
+    checkClusterStatus
+    usedUt    rhela1    ${file}    80%
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 4 -R "span[ptile=2]" sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${proc}    getAndCheckJobUsedProc    ${jobid1}
+    log    ${proc}
+    Should Contain    ${proc}    4 Processors
+    Should Contain    ${proc}    2*rhela1
+    Should Contain    ${proc}    2*rhelb
+    killDefault
+    [Teardown]    modHostInfo    rhela1=1 ()    rhelb=1 ()
+
+case8.单节点优先和span[hosts=1](单节点优先生效)
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file0}    Set Variable    ${filedir}/spooler/input/pi.sh
+    ${file}    normalPath    ${file0}
+    addOrModifyHost    rhela1    3 ()
+    addOrModifyHost    rhelb    4 ()
+    jadminJhdsSched
+    checkClusterStatus
+    usedUt    rhela1    ${file}    80%
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 -R "span[hosts=1]" sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${host1}    getAndCheckJobExecHost    ${jobid1}
+    Should Be Equal    ${host1}    rhela1
+    killDefault
+    [Teardown]    modHostInfo    rhela1=1 ()    rhelb=1 ()
+
+case9.当作业指定节点组时。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file0}    Set Variable    ${filedir}/spooler/input/pi.sh
+    ${file}    normalPath    ${file0}
+    addOrModifyHostGroup    group0    (rhelb rhela1)
+    addOrModifyHost    rhela1    2 ()
+    addOrModifyHost    rhelb    3 ()
+    jadminJhdsSched
+    checkClusterStatus
+    usedUt    rhela1    ${file}    80%
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${host1}    getAndCheckJobExecHost    ${jobid1}
+    Should Be Equal    ${host1}    rhela1
+    killDefault
+    [Teardown]    delHostGroupAndHost    group0    rhela1=1 ()    rhelb=1 ()
+
+case10.当作业指定节点的优先级时。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file0}    Set Variable    ${filedir}/spooler/input/pi.sh
+    ${file}    normalPath    ${file0}
+    addOrModifyHost    rhela1    3 ()
+    addOrModifyHost    rhelb    2 ()
+    jadminJhdsSched
+    checkClusterStatus
+    usedUt    rhela1    ${file}    80%
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 -m "rhela1+10" sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${host1}    getAndCheckJobExecHost    ${jobid1}
+    Should Be Equal    ${host1}    rhela1
+    killDefault
+    [Teardown]    modHostInfo    rhela1=1 ()    rhelb=1 ()
+
+case11.当作业指定host+优先级相同时，单节点优先生效。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file0}    Set Variable    ${filedir}/spooler/input/pi.sh
+    ${file}    normalPath    ${file0}
+    addOrModifyHost    rhela1    3 ()
+    addOrModifyHost    rhelb    2 ()
+    jadminJhdsSched
+    checkClusterStatus
+    usedUt    rhela1    ${file}    80%
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 -m 'rhela1+100 rhelb+100' sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${host1}    getAndCheckJobExecHost    ${jobid1}
+    Should Be Equal    ${host1}    rhelb
+    killDefault
+    [Teardown]    modHostInfo    rhela1=1 ()    rhelb=1 ()
+
+case12.当指定group+优先级时。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file0}    Set Variable    ${filedir}/spooler/input/pi.sh
+    ${file}    normalPath    ${file0}
+    addOrModifyHostGroup    group0    (rhelb rhela1)
+    addOrModifyHost    rhela1    2 ()
+    addOrModifyHost    rhelb    3 ()
+    jadminJhdsSched
+    checkClusterStatus
+    usedUt    rhela1    ${file}    80%
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 -m 'group0+100' sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${host1}    getAndCheckJobExecHost    ${jobid1}
+    Should Be Equal    ${host1}    rhela1
+    killDefault
+    [Teardown]    delHostGroupAndHost    group0    rhela1=1 ()    rhelb=1 ()
+
+case13.当指定~host时。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file0}    Set Variable    ${filedir}/spooler/input/pi.sh
+    ${file}    normalPath    ${file0}
+    addOrModifyHost    rhela1    3 ()
+    addOrModifyHost    rhelb    2 ()
+    jadminJhdsSched
+    checkClusterStatus
+    usedUt    rhela1    ${file}    80%
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 -m ~rhelb sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${host1}    getAndCheckJobExecHost    ${jobid1}
+    Should Be Equal    ${host1}    rhela1
+    killDefault
+    [Teardown]    modHostInfo    rhela1=1 ()    rhelb=1 ()
+
+case14.当队列中配置节点。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file0}    Set Variable    ${filedir}/spooler/input/pi.sh
+    ${file}    normalPath    ${file0}
+    addOrModifyHost    rhela1    2 ()
+    addOrModifyHost    rhelb    3 ()
+    jadminJhdsSched
+    checkClusterStatus
+    usedUt    rhela1    ${file}    80%
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 -q test1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${host1}    getAndCheckJobExecHost    ${jobid1}
+    Should Be Equal    ${host1}    rhela1
+    killDefault
+    [Teardown]    modHostInfo    rhela1=1 ()    rhelb=1 ()
+
+case15.开启单节点优先调度，resreq的span串case。
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHost    rhela1    8 ()
+    addOrModifyHost    rhelb    5 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 6 -R 'span[ptile=3]' sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    @{host1}    getAndCheckJobExecHost    ${jobid1}
+    ${string1}=    catenate    @{host1}
+    Should Contain    ${string1}    rhela1
+    Should Contain    ${string1}    rhelb
+    [Teardown]    modHostInfo    rhela1=1 ()    rhelb=1 ()
+
+case16.行为待讨论，队列中配置order[mem],并配置单节点优先，当mem最大的节点slots不满足作业请求时，会跨节点。
+    [Tags]    p1    docker-not-run
+    [Setup]    readyTest
+    addOrModifyHost    rhela1    2 ()
+    addOrModifyHost    rhelb    3 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${hostinfo}    runCommand    jhosts -l
+    log    ${hostinfo}
+    ${host0}    ${host00}    compareMem    rhela1    rhelb
+    log    ${host0}
+    log    ${host00}
+    ${job1}    querySubmitInfo    su jhadmin -c 'jsub -n 2 -q testreq1 sleep 1000'
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${host3}    getAndCheckJobExecHost    ${jobid1}
+    Should Be Equal    ${host3}    ${host0}
+    sleep    3
+    ${killinfo}    runCommand    su jhadmin -c "jctrl kill ${jobid1}"
+    log    ${killinfo}
+    sleep    5
+    ${hostinfo}    runCommand    jhosts -l
+    log    ${hostinfo}
+    ${host0}    ${host00}    compareMem    rhela1    rhelb
+    ${job2}    querySubmitInfo    su jhadmin -c 'jsub -n 3 -q testreq1 sleep 1000'
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid2}    RUN
+    ${host4}    getAndCheckJobUsedProc    ${jobid2}
+    Should Contain    ${host4}    2*${host0}
+    Should Contain    ${host4}    ${host00}
+    [Teardown]    modHostInfo    rhela1=1 ()    rhelb=1 ()

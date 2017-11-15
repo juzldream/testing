@@ -1,0 +1,34 @@
+RESOURCE    TYPE      BUILTIN  ORDER  RELEASE  INTERVAL  DESCRIPTION
+maxmem      numeric   true     Desc   N              15  Maximum memory (Mbytes)
+mem         numeric   true     Desc   N              15  Available memory (Mbytes)
+maxswap     numeric   true     N/A    N              15  Maximum swap space (Mbytes)
+swap        numeric   true     Desc   N              15  Available swap space (Mbytes) (alias: swap)
+bytesread   numeric   true     Asc    N              15  Data read from disk I/O bytes per second
+byteswrite  numeric   true     Asc    N              15  Data write to disk I/O bytes per second
+bytessent   numeric   true     Asc    N              15  Data send to net I/O bytes per second
+bytesrecv   numeric   true     Asc    N              15  Data recv from net I/O bytes per second
+type        string    true     N/A    N              15  Host type
+r15m        numeric   true     Asc    Y              15  15-minute CPU run queue length
+r5m         numeric   true     Asc    Y              15  5-minute CPU run queue length
+r1m         numeric   true     Asc    Y              15  1-minute CPU run queue length
+ut          numeric   true     Asc    Y              15  1-minute CPU utilization (0.0 to 1.0)
+users       numeric   true     Asc    N              15  login user counts
+cores       numeric   true     Desc   N              15  Number of CPU cores
+cpus        numeric   true     Desc   N              15  Number of CPUs
+model       string    true     N/A    N              15  Host model
+boottime    string    true     N/A    N              15  System boot time
+ip          string    true     N/A    N              15  Host IP list
+slots       numeric   true     Desc   N               0  Physical cpu count
+uname       string    true     N/A    N              15  System name
+io          numeric   true     Asc    N              15  Disk IO rate (Kbytes/second)
+r15s        numeric   true     Asc    Y              15  15-second CPU run queue length
+ls          numeric   true     Asc    N              15  Number of login sessions (alias: login)
+it          numeric   true     Asc    N              15  Idle time (minutes) (alias: idle)
+tmp         numeric   true     Desc   N              15  Disk space in /tmp (Mbytes)
+maxtmp      numeric   true     Desc   N              15  Maximum /tmp space (Mbytes)
+rexpri      numeric   true     Desc   N              15  Remote execution priority
+ndisk       numeric   true     Desc   N               0  Number of local disks
+pg          numeric   true     Desc   N              15  Paging rate (pages/second)
+cs          boolean   false    N/A    N               0  Compute server
+res1        numeric   false    N/A    N              15  res1
+res2        numeric   false    N/A    N               0  res2

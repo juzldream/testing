@@ -1,0 +1,55 @@
+*** Settings ***
+Suite Setup       preSuite    spooler/conf/conf-runlimit
+Suite Teardown    postSuite
+Library           /apps/autotest4/lib/clusterKeyword.py
+Library           /apps/autotest4/lib/clusterLib.py
+Library           /apps/autotest4/lib/common.py
+Library           /apps/autotest4/lib/hostKeyword.py
+Library           /apps/autotest4/lib/hostLib.py
+Library           /apps/autotest4/lib/hostsConfLib.py
+Library           /apps/autotest4/lib/jobKeyword.py
+Library           /apps/autotest4/lib/jobLib.py
+Library           /apps/autotest4/lib/myUtils.py
+Library           /apps/autotest4/lib/OperatingSystem.py
+Library           /apps/autotest4/lib/queueKeyword.py
+Library           /apps/autotest4/lib/queueLib.py
+Library           /apps/autotest4/lib/paramsConfLib.py
+Library           /apps/autotest4/lib/queuesConfLib.py
+Library           /apps/autotest4/lib/retry.py
+Library           /apps/autotest4/lib/schedulerConfLib.py
+Library           /apps/autotest4/lib/userGroupKeyword.py
+Library           /apps/autotest4/lib/userGroupLib.py
+Library           /apps/autotest4/lib/userKeyword.py
+Library           /apps/autotest4/lib/usersConfLib.py
+Library           /apps/autotest4/lib/userLib.py
+Library           /apps/autotest4/lib/jhistKeyword.py
+Library           /apps/autotest4/lib/jhistKeyword.py
+
+*** Test Cases ***
+case1.在queues.conf文件中配置RUNLIMIT=1，当作业的执行时间超出1min时，作业将会被终止。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su jhadmin -c "jsub -q runlimit1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    EXIT    80
+    ${job1}    queryJobInfo    ${jobid1}
+    ${exitcode}    getJobExitCode    ${job1}
+    ${exitcode1}    getJobExitCodeHist    ${jobid1}
+    ${time1}    getJobRunTimeHIst    ${jobid1}
+    log    ${time1}
+    shouldAlmostEqual    ${time1}    60    30
+    [Teardown]    killJob
+
+case2.当queues.conf文件配置两个限制RUNLIMIT=1 3，当作业的运行时间超出1min时，作业将被终止。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su jhadmin -c "jsub -q runlimit2 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    EXIT    80
+    ${job1}    queryJobInfo    ${jobid1}
+    ${exitcode}    getJobExitCode    ${job1}
+    ${exitcode1}    getJobExitCodeHist    ${jobid1}
+    ${time1}    getJobRunTimeHist    ${jobid1}
+    log    ${time1}
+    shouldAlmostEqual    ${time1}    60    30
+    [Teardown]    killJob

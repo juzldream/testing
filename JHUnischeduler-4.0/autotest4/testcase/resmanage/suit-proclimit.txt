@@ -1,0 +1,272 @@
+*** Settings ***
+Suite Setup       preSuite    spooler/conf/conf-proclimit
+Suite Teardown    postSuite
+Library           /apps/autotest4/lib/clusterKeyword.py
+Library           /apps/autotest4/lib/clusterLib.py
+Library           /apps/autotest4/lib/common.py
+Library           /apps/autotest4/lib/hostKeyword.py
+Library           /apps/autotest4/lib/hostLib.py
+Library           /apps/autotest4/lib/hostsConfLib.py
+Library           /apps/autotest4/lib/jobKeyword.py
+Library           /apps/autotest4/lib/jobLib.py
+Library           /apps/autotest4/lib/myUtils.py
+Library           /apps/autotest4/lib/OperatingSystem.py
+Library           /apps/autotest4/lib/queueKeyword.py
+Library           /apps/autotest4/lib/queueLib.py
+Library           /apps/autotest4/lib/paramsConfLib.py
+Library           /apps/autotest4/lib/queuesConfLib.py
+Library           /apps/autotest4/lib/retry.py
+Library           /apps/autotest4/lib/schedulerConfLib.py
+Library           /apps/autotest4/lib/userGroupKeyword.py
+Library           /apps/autotest4/lib/userGroupLib.py
+Library           /apps/autotest4/lib/userKeyword.py
+Library           /apps/autotest4/lib/usersConfLib.py
+Library           /apps/autotest4/lib/userLib.py
+
+*** Test Cases ***
+case1.集群中有10个slots，队列配置PROCLIMIT=3，向队列提交-n 2,5的作业。
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHost    rhela1    9 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${queinfo}    runCommand    jqueues -l
+    log    ${queinfo}
+    ${job1}    querySubmitInfo    su jhadmin -c "jsub -n 2,5 -q low1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    sleep    2
+    ${joba}    queryJobInfo    ${jobid1}
+    ${proc1}    getJobUsedProc    ${joba}
+    log    ${proc1}
+    Should Contain    ${proc1}    3 Processors
+    [Teardown]    modHostInfo    rhela1=1 ()
+
+case2.集群中有2个slots，队列配置PROCLIMIT=3，向队列提交-n 2,5的作业。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su jhadmin -c "jsub -n 2,5 -q low1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    sleep    2
+    ${joba}    queryJobInfo    ${jobid1}
+    ${proc1}    getJobUsedProc    ${joba}
+    log    ${proc1}
+    Should Contain    ${proc1}    2 Processors
+    [Teardown]    killJob
+
+case3.当集群剩余slots为3个时。
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHost    rhela1    9 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job0}    querySubmitInfo    su jhadmin -c "jsub -n 7 sleep 1000"
+    ${jobid0}    getJobId    ${job0}
+    checkJobStatus    ${jobid0}    RUN
+    ${job1}    querySubmitInfo    su jhadmin -c "jsub \ -q low2 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    sleep    3
+    checkJobStatus    ${jobid1}    PEND
+    runCommand    su jhadmin -c "jctrl kill ${jobid0}"
+    checkJobStatus    ${jobid1}    RUN
+    sleep    2
+    ${joba}    queryJobInfo    ${jobid1}
+    ${proc1}    getJobUsedProc    ${joba}
+    log    ${proc1}
+    Should Contain    ${proc1}    6 Processors
+    [Teardown]    modHostInfo    rhela1=1 ()
+
+case4.当集群只有3个slots时。
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHost    rhela1    2 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su jhadmin -c "jsub \ -q low2 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    sleep    3
+    checkJobStatus    ${jobid1}    PEND
+    ${joba}    queryJobInfo    ${jobid1}
+    ${proc1}    getJobPndRsn    ${joba}
+    log    ${proc1}
+    Should Contain    ${proc1}    Not enough job slot(s):
+    [Teardown]    modHostInfo    rhela1=1 ()
+
+case5.队列中配置PROCLIMIT=4 6 9，向队列提交-n 3的作业。
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHost    rhela1    9 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${subinfo}    RUN    su jhadmin -c "jsub -n 3 -q low2 sleep 1000"
+    log    ${subinfo}
+    Should Be Equal    ${subinfo}    low2: Too few processors requested. Job not submitted
+    [Teardown]    modHostInfo    rhela1=1 ()
+
+case6.队列中配置PROCLIMIT=4 6 9，向队列提交-n 10的作业。
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHost    rhela1    9 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${subinfo}    RUN    su jhadmin -c "jsub -n 10 -q low2 sleep 1000"
+    log    ${subinfo}
+    Should Be Equal    ${subinfo}    low2: Too many processors requested. Job not submitted
+    [Teardown]    modHostInfo    rhela1=1 ()
+
+case7.队列中配置PROCLIMIT=4 6 9，向队列提交-n 9的作业,然后执行jmod -n 5,7。
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHost    rhela1    9 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su jhadmin -c "jsub -n 2 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${job2}    querySubmitInfo    su jhadmin -c "jsub -n 9 -q low2 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid2}    PEND
+    sleep    2
+    runCommand    su jhadmin -c "jmod -n 5,7 ${jobid2}"
+    checkJobStatus    ${jobid2}    RUN
+    ${joba}    queryJobInfo    ${jobid2}
+    ${proc}    getJobUsedProc    ${joba}
+    log    ${proc}
+    Should Contain    ${proc}    7 Processors
+    [Teardown]    modHostInfo    rhela1=1 ()
+
+case8.bug11875重启集群后，作业会不会正常工作。
+    [Tags]    p1    bug
+    [Setup]    readyTest
+    addOrModifyHost    rhela1    6 ()
+    addOrModifyHost    rhelb    7 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su jhadmin -c "jsub -n 1,2 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${job2}    querySubmitInfo    su jhadmin -c "jsub -q low2 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su jhadmin -c "jsub -q low2 -n 2,8 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su jhadmin -c "jsub -q low2 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    PEND
+    sleep    5
+    ${joba}    queryJobInfo    ${jobid1}
+    ${proc1}    getJobUsedProc    ${joba}
+    log    ${proc1}
+    Should Contain    ${proc1}    2 Processors
+    ${jobb}    queryJobInfo    ${jobid2}
+    ${proc2}    getJobUsedProc    ${jobb}
+    log    ${proc2}
+    Should Contain    ${proc2}    6 Processors
+    ${jobc}    queryJobInfo    ${jobid3}
+    ${proc3}    getJobUsedProc    ${jobc}
+    log    ${proc3}
+    Should Contain    ${proc3}    5 Processors
+    jserviceRestartAll
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    PEND
+    sleep    5
+    ${joba}    queryJobInfo    ${jobid1}
+    ${proc1}    getJobUsedProc    ${joba}
+    log    ${proc1}
+    Should Contain    ${proc1}    2 Processors
+    ${jobb}    queryJobInfo    ${jobid2}
+    ${proc2}    getJobUsedProc    ${jobb}
+    log    ${proc2}
+    Should Contain    ${proc2}    6 Processors
+    ${jobc}    queryJobInfo    ${jobid3}
+    ${proc3}    getJobUsedProc    ${jobc}
+    log    ${proc3}
+    Should Contain    ${proc3}    5 Processors
+    [Teardown]    modHostInfo    rhela1=1 ()    rhelb=1 ()
+
+case9.将PROCLIMIT修改，并使配置生效后，查看PROCLIMIT行为。
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHost    rhela1    9 ()
+    ${qinfo}    getString    PRIORITY=10\nPROCLIMIT=2 4
+    addOrModifyQueue    low3    ${qinfo}
+    ${qinfo1}    getString    PRIORITY=10\nPROCLIMIT=2 5
+    addOrModifyQueue    low4    ${qinfo1}
+    jadminJhdsSched
+    checkClusterStatus
+    ${que1}    runCommand    jqueues -l low3 low4
+    log    ${que1}
+    ${job1}    querySubmitInfo    su jhadmin -c "jsub sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${job2}    querySubmitInfo    su jhadmin -c "jsub -q low3 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su jhadmin -c "jsub -q low3 -n 3 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    ${job4}    querySubmitInfo    su jhadmin -c "jsub -q low4 -n 5 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    sleep    2
+    checkJobStatus    ${jobid4}    PEND
+    ${joba}    queryJobInfo    ${jobid1}
+    ${proc1}    getJobUsedProc    ${joba}
+    log    ${proc1}
+    ${jobb}    queryJobInfo    ${jobid2}
+    ${proc2}    getJobUsedProc    ${jobb}
+    log    ${proc2}
+    Should Contain    ${proc2}    2 Processors
+    ${jobc}    queryJobInfo    ${jobid3}
+    ${proc3}    getJobUsedProc    ${jobc}
+    log    ${proc3}
+    Should Contain    ${proc3}    3 Processors
+    ${qinfo2}    getString    PRIORITY=10\n
+    addOrModifyQueue    low3    ${qinfo2}
+    ${qinfo3}    getString    PRIORITY=10\nPROCLIMIT=3 4
+    addOrModifyQueue    low4    ${qinfo3}
+    jadminJhdsSched
+    sleep    2
+    ${que2}    runCommand    jqueues -l low3 low4
+    log    ${que2}
+    runCommand    su jhadmin -c "jctrl kill ${jobid1}"
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    RUN
+    ${jobb}    queryJobInfo    ${jobid2}
+    ${proc2}    getJobUsedProc    ${jobb}
+    log    ${proc2}
+    Should Contain    ${proc2}    2 Processors
+    ${jobc}    queryJobInfo    ${jobid3}
+    ${proc3}    getJobUsedProc    ${jobc}
+    log    ${proc3}
+    Should Contain    ${proc3}    3 Processors
+    ${info}    RUN    jjobs -l ${jobid4}
+    log    ${info}
+    ${jobd}    queryJobInfo    ${jobid4}
+    ${proc4}    getJobUsedProc    ${jobd}
+    log    ${proc4}
+    Should Contain    ${proc4}    5 Processors
+    runCommand    su jhadmin -c "jctrl kill -u all 0"
+    ${job11}    querySubmitInfo    su jhadmin -c "jsub -q low3 sleep 1000"
+    ${jobid11}    getJobId    ${job11}
+    checkJobStatus    ${jobid11}    RUN
+    ${job21}    querySubmitInfo    su jhadmin -c "jsub -q low4 sleep 1000"
+    ${jobid21}    getJobId    ${job21}
+    checkJobStatus    ${jobid21}    RUN
+    ${jobe}    queryJobInfo    ${jobid11}
+    ${proc11}    getJobUsedProc    ${jobe}
+    log    ${proc11}
+    Should Not Contain    ${proc11}    Processors
+    ${jobf}    queryJobInfo    ${jobid21}
+    ${proc21}    getJobUsedProc    ${jobf}
+    log    ${proc21}
+    Should Contain    ${proc21}    3 Processors
+    ${subinfo2}    RUN    su jhadmin -c "jsub -q low4 -n 5 sleep 1000"
+    log    ${subinfo2}
+    Should Contain    ${subinfo2}    low4: Too many processors requested. Job not submitted
+    [Teardown]    modHostInfo    rhela1=1 ()    rhelb=1 ()

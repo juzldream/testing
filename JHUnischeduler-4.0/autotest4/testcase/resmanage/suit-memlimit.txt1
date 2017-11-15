@@ -1,0 +1,73 @@
+*** Settings ***
+Suite Setup       preSuite    spooler/conf/conf-memlimit
+Suite Teardown    postSuite
+Library           /apps/autotest4/lib/clusterKeyword.py
+Library           /apps/autotest4/lib/clusterLib.py
+Library           /apps/autotest4/lib/common.py
+Library           /apps/autotest4/lib/hostKeyword.py
+Library           /apps/autotest4/lib/hostLib.py
+Library           /apps/autotest4/lib/hostsConfLib.py
+Library           /apps/autotest4/lib/jobKeyword.py
+Library           /apps/autotest4/lib/jobLib.py
+Library           /apps/autotest4/lib/myUtils.py
+Library           /apps/autotest4/lib/OperatingSystem.py
+Library           /apps/autotest4/lib/queueKeyword.py
+Library           /apps/autotest4/lib/queueLib.py
+Library           /apps/autotest4/lib/paramsConfLib.py
+Library           /apps/autotest4/lib/queuesConfLib.py
+Library           /apps/autotest4/lib/retry.py
+Library           /apps/autotest4/lib/schedulerConfLib.py
+Library           /apps/autotest4/lib/userGroupKeyword.py
+Library           /apps/autotest4/lib/userGroupLib.py
+Library           /apps/autotest4/lib/userKeyword.py
+Library           /apps/autotest4/lib/usersConfLib.py
+Library           /apps/autotest4/lib/userLib.py
+Library           /apps/autotest4/lib/jhistKeyword.py
+
+*** Test Cases ***
+case1.11026unifinished测试memlimit的最小值和最大值。
+    [Tags]    p1    bug    unfinished
+    [Setup]    readyTest
+    ${info1}    runCommand    su jhadmin -c "jqueues -l memlimit"
+    log    ${info1}
+    Should Match Regexp    ${info1}    Max.MemLimit\\s*=\\s*2047T
+    [Teardown]    killJob
+
+case2.unfinished在queues.conf文件中配置MEMLIMIT=1024，当作业使用的mem超出1024KB时，作业将会被终止。
+    [Tags]    p1    bug    unfinished
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file0}    Set Variable    ${filedir}/spooler/input/testMlock
+    ${file}    normalPath    ${file0}
+    ${job1}    querySubmitInfo    su jhadmin -c "jsub -q memlimit1 ${file}"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    EXIT    120
+    ${job1}    queryJobInfo    ${jobid1}
+    ${exitcode}    getJobExitCode    ${job1}
+    Should Be Equal    ${exitcode}    143
+    ${exitcode1}    getJobExitCodeHist    ${jobid1}
+    Should Be Equal    ${exitcode1}    143
+    killDefault
+    [Teardown]    killUtProc    testMlock
+
+case3.在queues.conf文件中配置MEMLIMIT=1024，当作业使用的mem不超过1024KB时，作业将会执行完成。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su jhadmin -c "jsub -q memlimit1 sleep 20"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    DONE    60
+    [Teardown]    killJob
+
+case4.bug11022 unfinished在queues.conf文件中配置MEMLIMIT=10240 1024,即最大值配置小于默认值配置，那么队列的最大和默认限制都是1024kb。
+    [Tags]    p1    bug    unfinished
+    [Setup]    readyTest
+    ${qinfo}    getString    PRIORITY=20\nMEMLIMIT=10240 1024
+    addOrModifyQueue    memlimitx    ${qinfo}
+    ${infox}    runCommand    echo y|jadmin schedreconfig
+    log    ${infox}
+    Should Contain    ${infox}    maximum limit <1024> is lower than default limit <10240>
+    checkClusterStatus
+    ${info1}    runCommand    su jhadmin -c "jqueues -l memlimitx"
+    log    ${info1}
+    Should Match Regexp    ${info1}
+    [Teardown]    killJob

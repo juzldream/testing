@@ -1,0 +1,41 @@
+*** Settings ***
+Suite Setup       preSuite    spooler/conf/conf-jparams
+Suite Teardown    postSuite
+Library           /apps/autotest4/lib/clusterKeyword.py
+Library           /apps/autotest4/lib/clusterLib.py
+Library           /apps/autotest4/lib/common.py
+Library           /apps/autotest4/lib/hostKeyword.py
+Library           /apps/autotest4/lib/hostLib.py
+Library           /apps/autotest4/lib/hostsConfLib.py
+Library           /apps/autotest4/lib/jobKeyword.py
+Library           /apps/autotest4/lib/jobLib.py
+Library           /apps/autotest4/lib/myUtils.py
+Library           /apps/autotest4/lib/OperatingSystem.py
+Library           /apps/autotest4/lib/queueKeyword.py
+Library           /apps/autotest4/lib/queueLib.py
+Library           /apps/autotest4/lib/paramsConfLib.py
+Library           /apps/autotest4/lib/queuesConfLib.py
+Library           /apps/autotest4/lib/retry.py
+Library           /apps/autotest4/lib/schedulerConfLib.py
+Library           /apps/autotest4/lib/userGroupKeyword.py
+Library           /apps/autotest4/lib/userGroupLib.py
+Library           /apps/autotest4/lib/userKeyword.py
+Library           /apps/autotest4/lib/usersConfLib.py
+Library           /apps/autotest4/lib/userLib.py
+
+*** Test Cases ***
+case1.jparams
+    [Tags]    p1
+    [Setup]    readyTest
+    ${paraminfo}    runCommand    jparams
+    log    ${paraminfo}
+    Should Match Regexp    ${paraminfo}    Parameter:\\n\\s+Default Queue = normal\\n\\s+Default Project = default\\n\\s+Resource Updating Interval = 5 seconds
+    [Teardown]    killJob
+
+case2.jparams -l
+    [Tags]    p1
+    [Setup]    readyTest
+    ${paraminfo}    runCommand    jparams -l
+    log    ${paraminfo}
+    Should Match Regexp    ${paraminfo}    System default queues for automatic queue selection:\\n\\s+DEFAULT_QUEUE = normal\\n\\nThe amount of time during which finished jobs are kept in core:\\n\\s+CLEAN_PERIOD = 172800 \\(seconds\\)\\n\\nThe maximum events file size:\\n\\s+MAX_EVENTS_FILE_SIZE = 200 \\(M\\)\\n\\nThe default project assigned to jobs:\\n\\s+DEFAULT_PROJECT = default\\n\\nThe maximum number of jobs in a job array:\\n\\s+MAX_JOB_ARRAY_SIZE = 1000\\n\\nThe Maximum JobId defined in the system:\\n\\s+MAX_JOB_ID = 999999\\n\\nResource update interval for the cluster:\\n\\s+RESOURCE_UPDATE_INTERVAL = 5\\n\\nJob agent heartbeat update interval:\\n\\s+JOB_AGENT_HEARTBEAT_INTERVAL = 5\\n\\nJob agent load thresholds update interval:\\n\\s+JOB_AGENT_LOAD_THRESHOLDS_INTERVAL = 10\\n\\nJob agent resource usage update interval:\\n\\s+JOB_AGENT_RUSAGE_INTERVAL = 10\\n\\nJob agent status update interval:\\n\\s+JOB_AGENT_STATUS_INTERVAL = 5\\n\\nDisable maximum dispatch the job to a single node:\\n\\s+SINGLE_NODE_POLICY = n
+    [Teardown]    killJob

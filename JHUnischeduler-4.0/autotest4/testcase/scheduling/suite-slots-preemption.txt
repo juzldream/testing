@@ -1,0 +1,688 @@
+*** Settings ***
+Suite Setup       preSuite    spooler/conf/conf-slots-preemption
+Suite Teardown    postSuite
+Library           /apps/autotest4/lib/clusterKeyword.py
+Library           /apps/autotest4/lib/clusterLib.py
+Library           /apps/autotest4/lib/common.py
+Library           /apps/autotest4/lib/hostKeyword.py
+Library           /apps/autotest4/lib/hostLib.py
+Library           /apps/autotest4/lib/hostsConfLib.py
+Library           /apps/autotest4/lib/jobKeyword.py
+Library           /apps/autotest4/lib/jobLib.py
+Library           /apps/autotest4/lib/myUtils.py
+Library           /apps/autotest4/lib/OperatingSystem.py
+Library           /apps/autotest4/lib/queueKeyword.py
+Library           /apps/autotest4/lib/queueLib.py
+Library           /apps/autotest4/lib/paramsConfLib.py
+Library           /apps/autotest4/lib/queuesConfLib.py
+Library           /apps/autotest4/lib/retry.py
+Library           /apps/autotest4/lib/schedulerConfLib.py
+Library           /apps/autotest4/lib/userGroupKeyword.py
+Library           /apps/autotest4/lib/userGroupLib.py
+Library           /apps/autotest4/lib/userKeyword.py
+Library           /apps/autotest4/lib/usersConfLib.py
+Library           /apps/autotest4/lib/userLib.py
+
+*** Test Cases ***
+case1.抢占策略时否影响节点级MXJ。
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHost    rhelb    2 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 3 -q prelow1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${job2}    querySubmitInfo    su user1 -c "jsub -q prehigh1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    SSUSP
+    checkJobStatus    ${jobid2}    RUN
+    ${joba}    queryJobInfo    ${jobid1}
+    ${info1}    getJobSpndRsn    ${joba}
+    log    ${info1}
+    Should Be Equal    ${info1}    The job was preempted by a higher priority job;
+    [Teardown]    modHostInfo    rhelb=1 ()
+
+case2.bug10282高优先级作业抢占低优先级作业，抢占释放的多余的slots只能被高优先级抢占作业使用。
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHost    rhelb    2 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 3 -q prelow1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${job2}    querySubmitInfo    su user1 -c "jsub -q prehigh1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    SSUSP
+    checkJobStatus    ${jobid2}    RUN
+    ${job3}    querySubmitInfo    su user1 -c "jsub -n 1 -q q1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user1 -c "jsub -n 1 -q prehigh1 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    checkJobStatus    ${jobid1}    SSUSP
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid4}    RUN
+    checkJobStatus    ${jobid3}    PEND
+    ${joba}    queryJobInfo    ${jobid3}
+    ${info1}    getJobPndRsn    ${joba}
+    log    ${info1}
+    Should Be Equal    ${info1}    Job slot limit reached: 2 hosts;
+    [Teardown]    modHostInfo    rhelb=1 ()
+
+case3.高优先级作业抢占低优先级作业，根据作业span[ptile]强求抢占。
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHost    rhelb    5 ()
+    addOrModifyHost    rhela1    5 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 5 -m rhela1 -q prelow1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 5 -m rhelb -q prelow1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    ${job3}    querySubmitInfo    su user1 -c "jsub -n 3 -q prehigh1 -R 'span[ptile=2]' sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid1}    SSUSP
+    checkJobStatus    ${jobid2}    SSUSP
+    checkJobStatus    ${jobid3}    RUN
+    ${joba}    queryJobInfo    ${jobid1}
+    ${info1}    getJobSpndRsn    ${joba}
+    log    ${info1}
+    Should Be Equal    ${info1}    The job was preempted by a higher priority job;
+    ${jobb}    queryJobInfo    ${jobid2}
+    ${info2}    getJobSpndRsn    ${jobb}
+    log    ${info2}
+    Should Be Equal    ${info2}    The job was preempted by a higher priority job;
+    [Teardown]    modHostInfo    rhelb=1 ()    rhela1=1 ()
+
+case4.xwf高优先级作业抢占低优先级作业，根据作业span[ptile]请求抢占。
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHost    rhelb    5 ()
+    addOrModifyHost    rhela1    5 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 5 -m rhela1 -q prelow1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 2 -m rhelb -q prelow1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    ${job3}    querySubmitInfo    su user1 -c "jsub -n 3 -q prehigh1 -R "span[ptile=2]" sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid1}    SSUSP
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    ${joba}    queryJobInfo    ${jobid1}
+    ${info1}    getJobSpndRsn    ${joba}
+    log    ${info1}
+    Should Be Equal    ${info1}    The job was preempted by a higher priority job;
+    [Teardown]    modHostInfo    rhelb=1 ()    rhela1=1 ()
+
+case5.高优先级作业抢占低优先级作业，根据作业span[hosts=1]请求抢占。
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHost    rhelb    5 ()
+    addOrModifyHost    rhela1    5 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 5 -m rhela1 -q prelow1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 3 -m rhelb -q prelow1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    ${job3}    querySubmitInfo    su user1 -c "jsub -n 3 -q prehigh1 -R "span[hosts=1]" sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    SSUSP
+    checkJobStatus    ${jobid3}    RUN
+    ${joba}    queryJobInfo    ${jobid2}
+    ${info1}    getJobSpndRsn    ${joba}
+    log    ${info1}
+    Should Be Equal    ${info1}    The job was preempted by a higher priority job;
+    [Teardown]    modHostInfo    rhelb=1 ()    rhela1=1 ()
+
+case6.高优先级作业抢占低优先级作业，根据作业span[hosts=1]请求抢占,当不满足时，不抢占。
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHost    rhelb    5 ()
+    addOrModifyHost    rhela1    4 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 4 -m rhela1 -q prelow1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 3 -m rhelb sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    ${job3}    querySubmitInfo    su user1 -c "jsub -n 5 -q prehigh1 -R "span[hosts=1]" sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    PEND
+    sleep    2
+    ${joba}    queryJobInfo    ${jobid3}
+    ${info1}    getJobPndRsn    ${joba}
+    log    ${info1}
+    Should Be Equal    ${info1}    Not enough processors to meet the job's spanning requirement: 2 hosts;
+    [Teardown]    modHostInfo    rhelb=1 ()    rhela1=1 ()
+
+case7.当有多个低优先级作业，高优先级作业抢占时，根据作业的提交时间抢占（jobid从大到小）
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHost    rhelb    2 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -q prelow1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su jhadmin -c "jsub -q prelow1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user2 -c "jsub -q prelow1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    ${job4}    querySubmitInfo    su user2 -c "jsub -q prehigh1 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    SSUSP
+    checkJobStatus    ${jobid4}    RUN
+    ${joba}    queryJobInfo    ${jobid3}
+    ${info1}    getJobSpndRsn    ${joba}
+    log    ${info1}
+    Should Be Equal    ${info1}    The job was preempted by a higher priority job;
+    [Teardown]    modHostInfo    rhelb=1 ()
+
+case8.当优先级相同时不抢占。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub -q high1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su jhadmin -c "jsub -q prehigh1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    ${job3}    querySubmitInfo    su user2 -c "jsub -q prehigh1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    PEND
+    sleep    2
+    ${joba}    queryJobInfo    ${jobid3}
+    ${info1}    getJobPndRsn    ${joba}
+    log    ${info1}
+    Should Be Equal    ${info1}    Job slot limit reached: 2 hosts;
+    [Teardown]    killJob
+
+case9.高优先级队列作业抢占所有低优先级的被抢占作业扔无法运行时，不抢占。
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHost    rhela1    5 ()
+    addOrModifyHost    rhelb    5 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 -q prelow1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su jhadmin -c "jsub -n 3 -q prelow1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user2 -c "jsub -n 3 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    ${job4}    querySubmitInfo    su user2 -c "jsub -n 8 -q prehigh1 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    PEND
+    sleep    2
+    ${joba}    queryJobInfo    ${jobid4}
+    ${info1}    getJobPndRsn    ${joba}
+    log    ${info1}
+    Should Contain    ${info1}    Not enough job slot(s): 1 host;
+    Should Contain    ${info1}    Job slot limit reached: 1 host;
+    [Teardown]    modHostInfo    rhela1=1()    rhelb=1 ()
+
+case10.高优先级抢占所有低优先级的作业并使用集群中空余的slots。
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHost    rhela1    5 ()
+    addOrModifyHost    rhelb    5 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 -q prelow1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su jhadmin -c "jsub -n 3 -q prelow1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user2 -c "jsub -n 3 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    ${job4}    querySubmitInfo    su user2 -c "jsub -n 7 -q prehigh1 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    checkJobStatus    ${jobid1}    SSUSP
+    checkJobStatus    ${jobid2}    SSUSP
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    RUN
+    sleep    2
+    ${joba}    queryJobInfo    ${jobid1}
+    ${info1}    getJobSpndRsn    ${joba}
+    log    ${info1}
+    Should Contain    ${info1}    The job was preempted by a higher priority job;
+    ${jobb}    queryJobInfo    ${jobid2}
+    ${info2}    getJobSpndRsn    ${jobb}
+    log    ${info2}
+    Should Be Equal    ${info2}    The job was preempted by a higher priority job;
+    [Teardown]    modHostInfo    rhela1=1()    rhelb=1 ()
+
+case11.高优先级抢占队列提交的作业，无法抢占低优先级的普通作业，不抢占。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub -q q2 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -q q2 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    ${job3}    querySubmitInfo    su user1 -c "jsub -q prehigh1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    PEND
+    sleep    2
+    ${joba}    queryJobInfo    ${jobid3}
+    ${info1}    getJobPndRsn    ${joba}
+    log    ${info1}
+    Should Be Equal    ${info1}    Job slot limit reached: 2 hosts;
+    [Teardown]    killJob
+
+case12.当同时有低优先级作业和中等优先级作业时，且集群中无可用slosts，应该先抢占低优先级的作业。
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHost    rhela1    3 ()
+    addOrModifyHost    rhelb    4 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 3 -q prelow1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su jhadmin -c "jsub -n 4 -q premid1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    ${job3}    querySubmitInfo    su user2 -c "jsub -n 2 -q prehigh1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid1}    SSUSP
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    sleep    2
+    ${joba}    queryJobInfo    ${jobid1}
+    ${info1}    getJobSpndRsn    ${joba}
+    log    ${info1}
+    Should Be Equal    ${info1}    The job was preempted by a higher priority job;
+    [Teardown]    modHostInfo    rhela1=1()    rhelb=1 ()
+
+case13.当同时有低优先级作业和中等优先级作业时，且集群中有可用slosts，应该先使用的可用的然后抢占低优先级的作业。
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHost    rhela1    3 ()
+    addOrModifyHost    rhelb    4 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 3 -m rhela1 -q prelow1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${job2}    querySubmitInfo    su jhadmin -c "jsub -n 2 -q premid1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid2}    RUN
+    ${job3}    querySubmitInfo    su user2 -c "jsub -n 4 -q prehigh1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid1}    SSUSP
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    sleep    2
+    ${joba}    queryJobInfo    ${jobid1}
+    ${info1}    getJobSpndRsn    ${joba}
+    log    ${info1}
+    Should Be Equal    ${info1}    The job was preempted by a higher priority job;
+    [Teardown]    modHostInfo    rhela1=1()    rhelb=1 ()
+
+case14.当同时有低优先级作业和中等优先级作业时，且集群中有可用slosts，当指定span[hosts=1]是，只抢占低优先级作业，且不跨节点。
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHost    rhela1    3 ()
+    addOrModifyHost    rhelb    4 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 3 -m rhela1 -q prelow1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${job2}    querySubmitInfo    su jhadmin -c "jsub -n 2 -q premid1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid2}    RUN
+    ${job3}    querySubmitInfo    su user2 -c "jsub -n 3 -R "span[hosts=1]" -q prehigh1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid1}    SSUSP
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    sleep    2
+    ${joba}    queryJobInfo    ${jobid1}
+    ${info1}    getJobSpndRsn    ${joba}
+    log    ${info1}
+    Should Be Equal    ${info1}    The job was preempted by a higher priority job;
+    [Teardown]    modHostInfo    rhela1=1()    rhelb=1 ()
+
+case15.jctrl start 的bug。jctrl start的作业不能被抢占。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${job2}    querySubmitInfo    su user2 -c "jsub -n 2 -q prelow1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    sleep    2
+    runCommand    su jhadmin -c "jctrl start -m 'rhela1 rhelb' ${jobid2}"
+    checkJobStatus    ${jobid2}    RUN
+    ${job3}    querySubmitInfo    su user2 -c "jsub -n 2 -q prehigh1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    PEND
+    sleep    2
+    ${joba}    queryJobInfo    ${jobid3}
+    ${info1}    getJobPndRsn    ${joba}
+    log    ${info1}
+    Should contain    ${info1}    Job slot limit reached:
+    [Teardown]    modHostInfo    rhela1=1()    rhelb=1 ()
+
+case16.当低优先级作业被抢占后恢复，当对应高优先级队列的作业释放slots。多次抢占和恢复。
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHost    rhela1    3 ()
+    addOrModifyHost    rhelb    2 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 3 -q prelow1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${job2}    querySubmitInfo    su jhadmin -c "jsub -n 2 -q prelow1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    ${job3}    querySubmitInfo    su user2 -c "jsub -n 5 -q premid1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid1}    SSUSP
+    checkJobStatus    ${jobid2}    SSUSP
+    checkJobStatus    ${jobid3}    RUN
+    sleep    2
+    ${joba}    queryJobInfo    ${jobid1}
+    ${info1}    getJobSpndRsn    ${joba}
+    log    ${info1}
+    Should Be Equal    ${info1}    The job was preempted by a higher priority job;
+    ${jobb}    queryJobInfo    ${jobid2}
+    ${info2}    getJobSpndRsn    ${jobb}
+    log    ${info2}
+    Should Be Equal    ${info2}    The job was preempted by a higher priority job;
+    ${job4}    querySubmitInfo    su user2 -c "jsub -n 5 -q prehigh1 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    checkJobStatus    ${jobid1}    SSUSP
+    checkJobStatus    ${jobid2}    SSUSP
+    checkJobStatus    ${jobid3}    SSUSP
+    checkJobStatus    ${jobid4}    RUN
+    sleep    2
+    ${jobc}    queryJobInfo    ${jobid3}
+    ${info3}    getJobSpndRsn    ${jobc}
+    log    ${info1}
+    Should Be Equal    ${info1}    The job was preempted by a higher priority job;
+    runCommand    su jhadmin -c "jctrl kill ${jobid4}"
+    checkJobStatus    ${jobid1}    SSUSP
+    checkJobStatus    ${jobid2}    SSUSP
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    EXIT
+    ${jobd}    queryJobInfo    ${jobid1}
+    ${info4}    getJobSpndRsn    ${jobd}
+    log    ${info4}
+    Should Be Equal    ${info4}    The job was preempted by a higher priority job;
+    ${jobe}    queryJobInfo    ${jobid2}
+    ${info5}    getJobSpndRsn    ${jobe}
+    log    ${info5}
+    Should Be Equal    ${info5}    The job was preempted by a higher priority job;
+    runCommand    su jhadmin -c "jctrl kill ${jobid3}"
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    EXIT
+    checkJobStatus    ${jobid4}    EXIT
+    [Teardown]    modHostInfo    rhela1=1()    rhelb=1 ()
+
+case17.当低优先级作业被抢占后恢复，当对应高优先级队列的作业释放slots。
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHost    rhela1    3 ()
+    addOrModifyHost    rhelb    3 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 3 -q prelow1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${job2}    querySubmitInfo    su jhadmin -c "jsub -n 3 -q prelow1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    ${job3}    querySubmitInfo    su user2 -c "jsub -n 4 -q premid1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid1}    SSUSP
+    checkJobStatus    ${jobid2}    SSUSP
+    checkJobStatus    ${jobid3}    RUN
+    sleep    2
+    ${joba}    queryJobInfo    ${jobid1}
+    ${info1}    getJobSpndRsn    ${joba}
+    log    ${info1}
+    Should Be Equal    ${info1}    The job was preempted by a higher priority job;
+    ${jobb}    queryJobInfo    ${jobid2}
+    ${info2}    getJobSpndRsn    ${jobb}
+    log    ${info2}
+    Should Be Equal    ${info2}    The job was preempted by a higher priority job;
+    ${job4}    querySubmitInfo    su user2 -c "jsub -n 2 -q prehigh1 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    checkJobStatus    ${jobid1}    SSUSP
+    checkJobStatus    ${jobid2}    SSUSP
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    RUN
+    runCommand    su jhadmin -c "jctrl kill ${jobid4}"
+    sleep    3
+    checkJobStatus    ${jobid1}    SSUSP
+    checkJobStatus    ${jobid2}    SSUSP
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    EXIT
+    [Teardown]    modHostInfo    rhela1=1()    rhelb=1 ()
+
+case18.抢占策略是否影响队列级UJOB_LIMIT,ssusp计算到slots limit。
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHost    rhelb    3 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 3 -q prelow1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 2 -q qhigh1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    ${job3}    querySubmitInfo    su user1 -c "jsub -n 2 -q qhigh1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid1}    SSUSP
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    PEND
+    sleep    2
+    ${joba}    queryJobInfo    ${jobid1}
+    ${info1}    getJobSpndRsn    ${joba}
+    log    ${info1}
+    Should Be Equal    ${info1}    The job was preempted by a higher priority job;
+    ${jobb}    queryJobInfo    ${jobid3}
+    ${info2}    getJobPndRsn    ${jobb}
+    log    ${info2}
+    Should Be Equal    ${info2}    User has reached the per-user job slot limit of the queue;
+    [Teardown]    modHostInfo    rhela1=1()    rhelb=1 ()
+
+case19.数组作业的抢占。
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHost    rhelb    2 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 3 -q prelow1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${job2}    querySubmitInfo    su user1 -c "jsub -J job[1-3] -q qhigh1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    SSUSP
+    checkJobStatus    ${jobid2}[1]    RUN
+    checkJobStatus    ${jobid2}[2]    RUN
+    checkJobStatus    ${jobid2}[3]    PEND
+    sleep    2
+    ${joba}    queryJobInfo    ${jobid1}
+    ${info1}    getJobSpndRsn    ${joba}
+    log    ${info1}
+    Should Be Equal    ${info1}    The job was preempted by a higher priority job;
+    ${jobb}    queryJobInfo    ${jobid2}[3]
+    ${info2}    getJobPndRsn    ${jobb}
+    log    ${info2}
+    Should Be Equal    ${info2}    User has reached the per-user job slot limit of the queue;
+    [Teardown]    modHostInfo    rhelb=1 ()
+
+case20.jsub -m指定运行节点，preemption调度等是否正确抢占。
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHost    rhela1    3 ()
+    addOrModifyHost    rhelb    3 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 3 -m rhelb -q prelow1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 3 -q prelow1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    ${job3}    querySubmitInfo    su user1 -c "jsub -n 3 -q premid1 -m rhelb sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid1}    SSUSP
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    ${joba}    queryJobInfo    ${jobid1}
+    ${info1}    getJobSpndRsn    ${joba}
+    log    ${info1}
+    Should Be Equal    ${info1}    The job was preempted by a higher priority job;
+    [Teardown]    modHostInfo    rhelb=1 ()
+
+case21.jsub -m指定运行节点不满足时，不抢占。
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHost    rhela1    3 ()
+    addOrModifyHost    rhelb    3 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -m rhelb sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 5 -q prelow1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    ${job3}    querySubmitInfo    su user1 -c "jsub -n 3 -q premid1 -m rhelb sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    PEND
+    sleep    2
+    ${joba}    queryJobInfo    ${jobid3}
+    ${info1}    getJobPndRsn    ${joba}
+    log    ${info1}
+    Should Be Equal    ${info1}    Job slot limit reached: 1 host;
+    [Teardown]    modHostInfo    rhelb=1 ()
+
+case22.jsub -m "host1+2 host2+1"指定运行节点，preemption是否正常工作。
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHost    rhela1    3 ()
+    addOrModifyHost    rhelb    3 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 3 -m rhelb -q prelow1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 3 -q prehigh1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    ${job3}    querySubmitInfo    su user1 -c "jsub -n 3 -q prehigh1 -m 'rhelb+20 rhela1+1' sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid1}    SSUSP
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    [Teardown]    modHostInfo    rhelb=1 ()
+
+case23.jsub -m group指定运行节点组，preemption是否正常工作。
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHost    rhela1    3 ()
+    addOrModifyHost    rhelb    3 ()
+    addOrModifyHostGroup    group0    (rhela1)
+    addOrModifyHostGroup    group1    (rhelb)
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 3 -m rhelb -q premid1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 3 -q prelow1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    ${job3}    querySubmitInfo    su user1 -c "jsub -n 3 -q prehigh1 -m group1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid1}    SSUSP
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    sleep    2
+    ${joba}    queryJobInfo    ${jobid1}
+    ${info1}    getJobSpndRsn    ${joba}
+    log    ${info1}
+    Should Be Equal    ${info1}    The job was preempted by a higher priority job;
+    [Teardown]    delHostGroupAndHost    group0,group1    rhela1=1 ()    rhelb=1 ()
+
+case24.jhist高优先级作业抢占低优先级作业
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub \ -q prelow1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub \ -q prelow1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    ${job3}    querySubmitInfo    su user1 -c "jsub -n 2 -q prehigh1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid1}    SSUSP
+    checkJobStatus    ${jobid2}    SSUSP
+    checkJobStatus    ${jobid3}    RUN
+    ${joba}    queryJobInfo    ${jobid1}
+    ${info1}    getJobSpndRsn    ${joba}
+    log    ${info1}
+    Should Be Equal    ${info1}    The job was preempted by a higher priority job;
+    ${jobb}    queryJobInfo    ${jobid2}
+    ${info2}    getJobSpndRsn    ${jobb}
+    log    ${info2}
+    Should Be Equal    ${info2}    The job was preempted by a higher priority job;
+    ${hist1}    RUN    su jhadmin -c "jhist -l ${jobid1}"
+    log    ${hist1}
+    ${hist2}    RUN    su jhadmin -c "jhist -l ${jobid2}"
+    log    ${hist2}
+    Should Contain    ${hist1}    Suspended: The job was preempted by a higher priority job;
+    Should Contain    ${hist2}    Suspended: The job was preempted by a higher priority job;
+    [Teardown]    killJob

@@ -22,6 +22,7 @@ class TestPing(unittest.TestCase):
     def actions(self, arg1, arg2, arg3):
         self.url = arg3[0] + "ping?token=" + arg1 
         self.result = Tools().access_web(self.url) 
+        self.data = "期望值:" + arg2 + "\ntoken值为：" + arg1 
         if arg2 == "1":    
             self.assertEqual(self.result['result'], "success", msg = "token值不正确，appform 资源不可用！")
         else:
@@ -36,6 +37,8 @@ class TestPing(unittest.TestCase):
     def tearDown(self):
         print("【ping api】 访问的URL地址为：")
         print(self.url)
+        print("【ping api】 测试数据为：")
+        print(self.data)
         print("【ping api】 测试返回值：")
         print(self.result)
         print("【ping api】 测试结束...")

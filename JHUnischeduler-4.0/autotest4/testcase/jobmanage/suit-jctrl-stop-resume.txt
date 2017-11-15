@@ -1,0 +1,3335 @@
+*** Settings ***
+Suite Setup       preSuite    spooler/conf/conf-jctrl-stop-resume
+Suite Teardown    postSuite
+Library           /apps/autotest4/lib/clusterKeyword.py
+Library           /apps/autotest4/lib/clusterLib.py
+Library           /apps/autotest4/lib/common.py
+Library           /apps/autotest4/lib/hostKeyword.py
+Library           /apps/autotest4/lib/hostLib.py
+Library           /apps/autotest4/lib/hostsConfLib.py
+Library           /apps/autotest4/lib/jobKeyword.py
+Library           /apps/autotest4/lib/jobLib.py
+Library           /apps/autotest4/lib/myUtils.py
+Library           /apps/autotest4/lib/OperatingSystem.py
+Library           /apps/autotest4/lib/queueKeyword.py
+Library           /apps/autotest4/lib/queueLib.py
+Library           /apps/autotest4/lib/paramsConfLib.py
+Library           /apps/autotest4/lib/queuesConfLib.py
+Library           /apps/autotest4/lib/retry.py
+Library           /apps/autotest4/lib/schedulerConfLib.py
+Library           /apps/autotest4/lib/userGroupKeyword.py
+Library           /apps/autotest4/lib/userGroupLib.py
+Library           /apps/autotest4/lib/userKeyword.py
+Library           /apps/autotest4/lib/usersConfLib.py
+Library           /apps/autotest4/lib/userLib.py
+
+*** Test Cases ***
+case1.jctrl stop/resume不指定任何选型时。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    addOrModifyHost    rhela1    2 ()
+    addOrModifyHost    rhelb    3 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${file}    Set Variable    ${filedir}/spooler/input/jctrl.sh
+    ${job1}    querySubmitInfo    su user1 -c "jsub ${file}"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub ${file}"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user2 -c "jsub ${file}"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user2 -c "jsub ${file}"
+    ${jobid4}    getJobId    ${job4}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    RUN
+    sleep    5
+    ${stop1}    runCommand    su user2 -c "jctrl stop"
+    Should Contain    ${stop1}    jctrl stop: error: too few arguments
+    Should Contain    ${stop1}    usage: jctrl stop
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    RUN
+    ${stop2}    runCommand    su user1 -c "jctrl stop"
+    Should Contain    ${stop2}    jctrl stop: error: too few arguments
+    Should Contain    ${stop2}    usage: jctrl stop
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    RUN
+    ${resume1}    runCommand    su user2 -c "jctrl resume"
+    log    ${resume1}
+    Should Contain    ${resume1}    jctrl resume: error: too few arguments
+    Should Contain    ${resume1}    usage: jctrl resume
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    RUN
+    ${resume2}    runCommand    su user1 -c "jctrl resume"
+    log    ${resume2}
+    Should Contain    ${resume2}    jctrl resume: error: too few arguments
+    Should Contain    ${resume2}    usage: jctrl resume
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    RUN
+    runCommand    su jhadmin -c "jctrl kill -u all 0"
+    Remove Files    ${filedir}/spooler/output/*.txt
+    [Teardown]    modHostInfo    rhela1=1 ()    rhelb=1 ()
+
+case2.jctrl stop/resume 0可以挂起/恢复该用户的所有作业。
+    [Tags]    p1    long-time
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    addOrModifyHost    rhela1    2 ()
+    addOrModifyHost    rhelb    3 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${file}    Set Variable    ${filedir}/spooler/input/jctrl.sh
+    ${job1}    querySubmitInfo    su user1 -c "jsub ${file}"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub ${file}"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user2 -c "jsub ${file}"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user2 -c "jsub ${file}"
+    ${jobid4}    getJobId    ${job4}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    RUN
+    sleep    2
+    runCommand    su user1 -c "jctrl stop 0"
+    checkJobStatus    ${jobid1}    USUSP
+    checkJobStatus    ${jobid2}    USUSP
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    RUN
+    ${job11}    queryjobinfo    ${jobid1}
+    ${reason1}    getjobspndrsn    ${job11}
+    log    ${reason1}
+    sleep    1
+    should contain    ${reason1}    The job was suspended by user;
+    ${job22}    queryjobinfo    ${jobid2}
+    ${reason2}    getjobspndrsn    ${job22}
+    log    ${reason2}
+    should contain    ${reason2}    The job was suspended by user;
+    ${outputdir1}    Set Variable    ${filedir}/spooler/output/jobout${jobid1}.txt
+    ${result1}    Get File    ${outputdir1}
+    log    ${result1}
+    ${size1}    Get File Size    ${outputdir1}
+    log    ${size1}
+    sleep    3
+    ${result2}    Get File    ${outputdir1}
+    log    ${result2}
+    ${size2}    Get File Size    ${outputdir1}
+    log    ${size2}
+    Should Be Equal As Integers    ${size1}    ${size2}
+    ${outputdir2}    Set Variable    ${filedir}/spooler/output/jobout${jobid2}.txt
+    ${result3}    Get File    ${outputdir2}
+    log    ${result3}
+    ${size3}    Get File Size    ${outputdir2}
+    log    ${size3}
+    sleep    3
+    ${result4}    Get File    ${outputdir2}
+    log    ${result4}
+    ${size4}    Get File Size    ${outputdir2}
+    log    ${size4}
+    Should Be Equal As Integers    ${size3}    ${size4}
+    runCommand    su user1 -c "jctrl resume 0"
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    RUN
+    ${outputdir3}    Set Variable    ${filedir}/spooler/output/jobout${jobid1}.txt
+    ${result5}    Get File    ${outputdir3}
+    log    ${result5}
+    ${size5}    Get File Size    ${outputdir3}
+    log    ${size5}
+    sleep    3
+    ${result6}    Get File    ${outputdir3}
+    log    ${result6}
+    ${size6}    Get File Size    ${outputdir3}
+    log    ${size6}
+    Should Not Be Equal As Integers    ${size5}    ${size6}
+    ${outputdir4}    Set Variable    ${filedir}/spooler/output/jobout${jobid2}.txt
+    ${result7}    Get File    ${outputdir4}
+    log    ${result7}
+    ${size7}    Get File Size    ${outputdir4}
+    log    ${size7}
+    sleep    3
+    ${result8}    Get File    ${outputdir4}
+    log    ${result8}
+    ${size8}    Get File Size    ${outputdir4}
+    log    ${size8}
+    Should Not Be Equal As Integers    ${size7}    ${size8}
+    runCommand    su jhadmin -c "jctrl kill -u all 0"
+    Remove Files    ${filedir}/spooler/output/*.txt
+    [Teardown]    modHostInfo    rhela1=1 ()    rhelb=1 ()
+
+case3.jctrl stop/resume 0挂起/恢复指定的jobid。
+    [Tags]    p1    long-time
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    addOrModifyHost    rhela1    2 ()
+    addOrModifyHost    rhelb    3 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${file}    Set Variable    ${filedir}/spooler/input/jctrl.sh
+    ${job1}    querySubmitInfo    su user1 -c "jsub ${file}"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub ${file}"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user2 -c "jsub ${file}"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user2 -c "jsub ${file}"
+    ${jobid4}    getJobId    ${job4}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    RUN
+    sleep    5
+    runCommand    su user2 -c "jctrl stop ${jobid3}"
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    USUSP
+    checkJobStatus    ${jobid4}    RUN
+    ${job33}    queryjobinfo    ${jobid3}
+    ${reason3}    getjobspndrsn    ${job33}
+    log    ${reason3}
+    should contain    ${reason3}    The job was suspended by user;
+    ${outputdir1}    Set Variable    ${filedir}/spooler/output/jobout${jobid3}.txt
+    ${result1}    Get File    ${outputdir1}
+    log    ${result1}
+    ${size1}    Get File Size    ${outputdir1}
+    log    ${size1}
+    sleep    3
+    ${result2}    Get File    ${outputdir1}
+    log    ${result2}
+    ${size2}    Get File Size    ${outputdir1}
+    log    ${size2}
+    Should Be Equal As Integers    ${size1}    ${size2}
+    runCommand    su user2 -c "jctrl resume ${jobid3}"
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    RUN
+    ${outputdir3}    Set Variable    ${filedir}/spooler/output/jobout${jobid3}.txt
+    ${result5}    Get File    ${outputdir3}
+    log    ${result5}
+    ${size5}    Get File Size    ${outputdir3}
+    log    ${size5}
+    sleep    3
+    ${result6}    Get File    ${outputdir3}
+    log    ${result6}
+    ${size6}    Get File Size    ${outputdir3}
+    log    ${size6}
+    Should Not Be Equal As Integers    ${size5}    ${size6}
+    Remove Files    ${filedir}/spooler/output/*.txt
+    [Teardown]    modHostInfo    rhela1=1 ()    rhelb=1 ()
+
+case4.jctrl stop/resume -m hostname 0挂起/恢复指定节点上的所有作业。
+    [Tags]    p1    long-time
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    addOrModifyHost    rhela1    2 ()
+    addOrModifyHost    rhelb    3 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${file}    Set Variable    ${filedir}/spooler/input/jctrl.sh
+    ${job1}    querySubmitInfo    su user1 -c "jsub -m rhelb ${file}"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -m rhela1 ${file}"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub -m rhela1 ${file}"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    sleep    5
+    runCommand    su user1 -c "jctrl stop -m rhela1 0"
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    USUSP
+    checkJobStatus    ${jobid3}    USUSP
+    ${job22}    queryjobinfo    ${jobid2}
+    ${reason2}    getjobspndrsn    ${job22}
+    log    ${reason2}
+    should contain    ${reason2}    The job was suspended by user;
+    ${job33}    queryjobinfo    ${jobid3}
+    ${reason3}    getjobspndrsn    ${job33}
+    log    ${reason3}
+    should contain    ${reason3}    The job was suspended by user;
+    ${outputdir1}    Set Variable    ${filedir}/spooler/output/jobout${jobid2}.txt
+    ${size1}    Get File Size    ${outputdir1}
+    log    ${size1}
+    sleep    3
+    ${size2}    Get File Size    ${outputdir1}
+    log    ${size2}
+    Should Be Equal As Integers    ${size1}    ${size2}
+    ${outputdir2}    Set Variable    ${filedir}/spooler/output/jobout${jobid3}.txt
+    ${size3}    Get File Size    ${outputdir2}
+    log    ${size3}
+    sleep    3
+    ${size4}    Get File Size    ${outputdir2}
+    log    ${size4}
+    Should Be Equal As Integers    ${size3}    ${size4}
+    runCommand    su user1 -c "jctrl resume -m rhela1 0"
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    ${outputdir3}    Set Variable    ${filedir}/spooler/output/jobout${jobid2}.txt
+    ${size5}    Get File Size    ${outputdir3}
+    log    ${size5}
+    sleep    3
+    ${size6}    Get File Size    ${outputdir3}
+    log    ${size6}
+    Should Not Be Equal As Integers    ${size5}    ${size6}
+    ${outputdir4}    Set Variable    ${filedir}/spooler/output/jobout${jobid3}.txt
+    ${size7}    Get File Size    ${outputdir4}
+    log    ${size7}
+    sleep    3
+    ${size8}    Get File Size    ${outputdir4}
+    log    ${size8}
+    Should Not Be Equal As Integers    ${size7}    ${size8}
+    runCommand    su jhadmin -c "jctrl kill -u all 0"
+    Remove Files    ${filedir}/spooler/output/*.txt
+    [Teardown]    modHostInfo    rhela1=1 ()    rhelb=1 ()
+
+case5.jctrl stop/resume -q quename 0挂起/恢复指定队列上的所有作业。
+    [Tags]    p1    long-time
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    addOrModifyHost    rhela1    2 ()
+    addOrModifyHost    rhelb    3 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${file}    Set Variable    ${filedir}/spooler/input/jctrl.sh
+    ${job1}    querySubmitInfo    su user1 -c "jsub -q q1 ${file}"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -q q2 ${file}"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub -q q2 ${file}"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    sleep    5
+    runCommand    su user1 -c "jctrl stop -q q2 0"
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    USUSP
+    checkJobStatus    ${jobid3}    USUSP
+    ${job22}    queryjobinfo    ${jobid2}
+    ${reason2}    getjobspndrsn    ${job22}
+    log    ${reason2}
+    should contain    ${reason2}    The job was suspended by user;
+    ${job33}    queryjobinfo    ${jobid3}
+    ${reason3}    getjobspndrsn    ${job33}
+    log    ${reason3}
+    should contain    ${reason3}    The job was suspended by user;
+    ${outputdir1}    Set Variable    ${filedir}/spooler/output/jobout${jobid2}.txt
+    ${size1}    Get File Size    ${outputdir1}
+    log    ${size1}
+    sleep    3
+    ${size2}    Get File Size    ${outputdir1}
+    log    ${size2}
+    Should Be Equal As Integers    ${size1}    ${size2}
+    ${outputdir2}    Set Variable    ${filedir}/spooler/output/jobout${jobid3}.txt
+    ${size3}    Get File Size    ${outputdir2}
+    log    ${size3}
+    sleep    3
+    ${size4}    Get File Size    ${outputdir2}
+    log    ${size4}
+    Should Be Equal As Integers    ${size3}    ${size4}
+    runCommand    su user1 -c "jctrl resume -q q2 0"
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    ${outputdir3}    Set Variable    ${filedir}/spooler/output/jobout${jobid2}.txt
+    ${size5}    Get File Size    ${outputdir3}
+    log    ${size5}
+    sleep    3
+    ${size6}    Get File Size    ${outputdir3}
+    log    ${size6}
+    Should Not Be Equal As Integers    ${size5}    ${size6}
+    ${outputdir4}    Set Variable    ${filedir}/spooler/output/jobout${jobid3}.txt
+    ${size7}    Get File Size    ${outputdir4}
+    log    ${size7}
+    sleep    3
+    ${size8}    Get File Size    ${outputdir4}
+    log    ${size8}
+    Should Not Be Equal As Integers    ${size7}    ${size8}
+    runCommand    su jhadmin -c "jctrl kill -u all 0"
+    Remove Files    ${filedir}/spooler/output/*.txt
+    [Teardown]    modHostInfo    rhela1=1 ()    rhelb=1 ()
+
+case6.jctrl stop/resume -u username 0挂起/恢复指定用户上的所有作业。
+    [Tags]    p1    long-time
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    addOrModifyHost    rhela1    2 ()
+    addOrModifyHost    rhelb    3 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${file}    Set Variable    ${filedir}/spooler/input/jctrl.sh
+    ${job1}    querySubmitInfo    su user2 -c "jsub ${file}"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub ${file}"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub ${file}"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    sleep    5
+    runCommand    su user1 -c "jctrl stop -u user1 0"
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    USUSP
+    checkJobStatus    ${jobid3}    USUSP
+    ${job22}    queryJobInfo    ${jobid2}
+    ${reason2}    getJobSpndRsn    ${job22}
+    log    ${reason2}
+    Should Contain    ${reason2}    The job was suspended by user;
+    ${job33}    queryJobInfo    ${jobid3}
+    ${reason3}    getJobSpndRsn    ${job33}
+    log    ${reason3}
+    Should Contain    ${reason3}    The job was suspended by user;
+    ${outputdir1}    Set Variable    ${filedir}/spooler/output/jobout${jobid2}.txt
+    ${size1}    Get File Size    ${outputdir1}
+    log    ${size1}
+    sleep    3
+    ${size2}    Get File Size    ${outputdir1}
+    log    ${size2}
+    Should Be Equal As Integers    ${size1}    ${size2}
+    ${outputdir2}    Set Variable    ${filedir}/spooler/output/jobout${jobid3}.txt
+    ${size3}    Get File Size    ${outputdir2}
+    log    ${size3}
+    sleep    3
+    ${size4}    Get File Size    ${outputdir2}
+    log    ${size4}
+    Should Be Equal As Integers    ${size3}    ${size4}
+    runCommand    su user1 -c "jctrl resume -u user1 0"
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    ${outputdir3}    Set Variable    ${filedir}/spooler/output/jobout${jobid2}.txt
+    ${size5}    Get File Size    ${outputdir3}
+    log    ${size5}
+    sleep    3
+    ${size6}    Get File Size    ${outputdir3}
+    log    ${size6}
+    Should Not Be Equal As Integers    ${size5}    ${size6}
+    ${outputdir4}    Set Variable    ${filedir}/spooler/output/jobout${jobid3}.txt
+    ${size7}    Get File Size    ${outputdir4}
+    log    ${size7}
+    sleep    3
+    ${size8}    Get File Size    ${outputdir4}
+    log    ${size8}
+    Should Not Be Equal As Integers    ${size7}    ${size8}
+    runCommand    su jhadmin -c "jctrl kill -u all 0"
+    Remove Files    ${filedir}/spooler/output/*.txt
+    [Teardown]    modHostInfo    rhela1=1 ()    rhelb=1 ()
+
+case7.jctrl stop/resueme -u all 0，普通用户只能暂停/恢复本人作业，暂停/恢复其他用户的作业时会打印提示。
+    [Tags]    long-time    low
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    addOrModifyHost    rhela1    2 ()
+    addOrModifyHost    rhelb    3 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${file}    Set Variable    ${filedir}/spooler/input/jctrl.sh
+    ${job1}    querySubmitInfo    su user2 -c "jsub ${file}"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub ${file}"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub ${file}"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    sleep    5
+    ${info1}    runCommand    su user1 -c "jctrl stop -u all 0"
+    log    ${info1}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    USUSP
+    checkJobStatus    ${jobid3}    USUSP
+    ${job22}    queryJobInfo    ${jobid2}
+    ${reason2}    getJobSpndRsn    ${job22}
+    log    ${reason2}
+    Should Contain    ${reason2}    The job was suspended by user;
+    ${job33}    queryJobInfo    ${jobid3}
+    ${reason3}    getJobSpndRsn    ${job33}
+    log    ${reason3}
+    Should Contain    ${reason3}    The job was suspended by user;
+    ${outputdir1}    Set Variable    ${filedir}/spooler/output/jobout${jobid2}.txt
+    ${size1}    Get File Size    ${outputdir1}
+    log    ${size1}
+    sleep    3
+    ${size2}    Get File Size    ${outputdir1}
+    log    ${size2}
+    Should Be Equal As Integers    ${size1}    ${size2}
+    ${outputdir2}    Set Variable    ${filedir}/spooler/output/jobout${jobid3}.txt
+    ${size3}    Get File Size    ${outputdir2}
+    log    ${size3}
+    sleep    3
+    ${size4}    Get File Size    ${outputdir2}
+    log    ${size4}
+    Should Be Equal As Integers    ${size3}    ${size4}
+    ${info1}    runCommand    su user1 -c "jctrl resume -u all 0"
+    log    ${info1}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    ${outputdir3}    Set Variable    ${filedir}/spooler/output/jobout${jobid2}.txt
+    ${size5}    Get File Size    ${outputdir3}
+    log    ${size5}
+    sleep    3
+    ${size6}    Get File Size    ${outputdir3}
+    log    ${size6}
+    Should Not Be Equal As Integers    ${size5}    ${size6}
+    ${outputdir4}    Set Variable    ${filedir}/spooler/output/jobout${jobid3}.txt
+    ${size7}    Get File Size    ${outputdir4}
+    log    ${size7}
+    sleep    3
+    ${size8}    Get File Size    ${outputdir4}
+    log    ${size8}
+    Should Not Be Equal As Integers    ${size7}    ${size8}
+    runCommand    su jhadmin -c "jctrl kill -u all 0"
+    Remove Files    ${filedir}/spooler/output/*.txt
+    [Teardown]    modHostInfo    rhela1=1 ()    rhelb=1 ()
+
+case8.bug issue jctrl stop/resume指定-u all。
+    [Tags]    p1    long-time
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    addOrModifyHost    rhela1    2 ()
+    addOrModifyHost    rhelb    3 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${file}    Set Variable    ${filedir}/spooler/input/jctrl.sh
+    ${job1}    querySubmitInfo    su user1 -c "jsub ${file}"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub ${file}"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub ${file}"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user1 -c "jsub ${file}"
+    ${jobid4}    getJobId    ${job4}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    RUN
+    sleep    3
+    ${stop1}    runCommand    su jhadmin -c "jctrl stop -u all"
+    log    ${stop1}
+    Should Contain    ${stop1}    jctrl stop: error: too few arguments
+    Should Contain    ${stop1}    usage: jctrl stop
+    ${resume1}    runCommand    su jhadmin -c "jctrl resume -u all"
+    log    ${resume1}
+    Should Contain    ${resume1}    jctrl resume: error: too few arguments
+    Should Contain    ${resume1}    usage: jctrl resume
+    runCommand    su jhadmin -c "jctrl kill -u all 0"
+    Remove Files    ${filedir}/spooler/output/*.txt
+    [Teardown]    modHostInfo    rhela1=1 ()    rhelb=1 ()
+
+case9.jctrl stop/resume -J jobname 0挂起/恢复指定作业名的所有作业。
+    [Tags]    p1    long-time
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    addOrModifyHost    rhela1    2 ()
+    addOrModifyHost    rhelb    3 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${file}    Set Variable    ${filedir}/spooler/input/jctrl.sh
+    ${job1}    querySubmitInfo    su user1 -c "jsub -J "jobtest3" ${file}"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -J "jobtest4" ${file}"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub -J "jobtest4" ${file}"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user1 -c "jsub -J "jobtest5" ${file}"
+    ${jobid4}    getJobId    ${job4}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    RUN
+    sleep    5
+    runCommand    su user1 -c "jctrl stop -J "jobtest4" 0"
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    USUSP
+    checkJobStatus    ${jobid3}    USUSP
+    checkJobStatus    ${jobid4}    RUN
+    ${job22}    queryjobinfo    ${jobid2}
+    ${reason2}    getjobspndrsn    ${job22}
+    log    ${reason2}
+    should contain    ${reason2}    The job was suspended by user;
+    ${job33}    queryjobinfo    ${jobid3}
+    ${reason3}    getjobspndrsn    ${job33}
+    log    ${reason3}
+    should contain    ${reason3}    The job was suspended by user;
+    ${outputdir1}    Set Variable    ${filedir}/spooler/output/jobout${jobid2}.txt
+    ${size1}    Get File Size    ${outputdir1}
+    log    ${size1}
+    sleep    3
+    ${size2}    Get File Size    ${outputdir1}
+    log    ${size2}
+    Should Be Equal As Integers    ${size1}    ${size2}
+    ${outputdir2}    Set Variable    ${filedir}/spooler/output/jobout${jobid3}.txt
+    ${size3}    Get File Size    ${outputdir2}
+    log    ${size3}
+    sleep    3
+    ${size4}    Get File Size    ${outputdir2}
+    log    ${size4}
+    Should Be Equal As Integers    ${size3}    ${size4}
+    runCommand    su user1 -c "jctrl resume -J "jobtest4" 0"
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    RUN
+    ${outputdir3}    Set Variable    ${filedir}/spooler/output/jobout${jobid2}.txt
+    ${size5}    Get File Size    ${outputdir3}
+    log    ${size5}
+    sleep    3
+    ${size6}    Get File Size    ${outputdir3}
+    log    ${size6}
+    Should Not Be Equal As Integers    ${size5}    ${size6}
+    ${outputdir4}    Set Variable    ${filedir}/spooler/output/jobout${jobid3}.txt
+    ${size7}    Get File Size    ${outputdir4}
+    log    ${size7}
+    sleep    3
+    ${size8}    Get File Size    ${outputdir4}
+    log    ${size8}
+    Should Not Be Equal As Integers    ${size7}    ${size8}
+    runCommand    su jhadmin -c "jctrl kill -u all 0"
+    Remove Files    ${filedir}/spooler/output/*.txt
+    [Teardown]    modHostInfo    rhela1=1 ()    rhelb=1 ()
+
+case10.jctrl stop/resume -J指定数组名。
+    [Tags]    p1    long-time
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    addOrModifyHost    rhela1    2 ()
+    addOrModifyHost    rhelb    3 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${file}    Set Variable    ${filedir}/spooler/input/jctrl.sh
+    ${job1}    querySubmitInfo    su user1 -c "jsub -J "a[1-2]" ${file}"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -J "b[1-3]" ${file}"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}[1]    RUN
+    checkJobStatus    ${jobid1}[2]    RUN
+    checkJobStatus    ${jobid2}[1]    RUN
+    checkJobStatus    ${jobid2}[2]    RUN
+    checkJobStatus    ${jobid2}[3]    RUN
+    sleep    5
+    ${stop1}    runCommand    su user1 -c "jctrl stop -J b "
+    Should Contain    ${stop1}    jctrl stop: error: too few arguments
+    Should Contain    ${stop1}    usage: jctrl stop
+    checkJobStatus    ${jobid1}[1]    RUN
+    checkJobStatus    ${jobid1}[2]    RUN
+    checkJobStatus    ${jobid2}[1]    RUN
+    checkJobStatus    ${jobid2}[2]    RUN
+    checkJobStatus    ${jobid2}[3]    RUN
+    ${resume1}    runCommand    su user1 -c "jctrl resume -J b "
+    Should Contain    ${resume1}    jctrl resume: error: too few arguments
+    Should Contain    ${resume1}    usage: jctrl resume
+    checkJobStatus    ${jobid1}[1]    RUN
+    checkJobStatus    ${jobid1}[2]    RUN
+    checkJobStatus    ${jobid2}[1]    RUN
+    checkJobStatus    ${jobid2}[2]    RUN
+    checkJobStatus    ${jobid2}[3]    RUN
+    runCommand    su jhadmin -c "jctrl kill -u all 0"
+    Remove Files    ${filedir}/spooler/output/*.txt
+    [Teardown]    modHostInfo    rhela1=1 ()    rhelb=1 ()
+
+case11.jctrl stop/resume可以暂停/恢复指定jobid的整个数组的作业。
+    [Tags]    p1    long-time
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    addOrModifyHost    rhela1    2 ()
+    addOrModifyHost    rhelb    3 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${file}    Set Variable    ${filedir}/spooler/input/jctrl.sh
+    ${job1}    querySubmitInfo    su user1 -c "jsub -J "a[1-2]" ${file}"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -J "b[1-3]" ${file}"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}[1]    RUN
+    checkJobStatus    ${jobid1}[2]    RUN
+    checkJobStatus    ${jobid2}[1]    RUN
+    checkJobStatus    ${jobid2}[2]    RUN
+    checkJobStatus    ${jobid2}[3]    RUN
+    sleep    5
+    runCommand    su user1 -c "jctrl stop ${jobid1}"
+    checkJobStatus    ${jobid1}[1]    USUSP
+    checkJobStatus    ${jobid1}[2]    USUSP
+    checkJobStatus    ${jobid2}[1]    RUN
+    checkJobStatus    ${jobid2}[2]    RUN
+    checkJobStatus    ${jobid2}[3]    RUN
+    ${job22}    queryjobinfo    ${jobid1}[1]
+    ${reason2}    getjobspndrsn    ${job22}
+    log    ${reason2}
+    should contain    ${reason2}    The job was suspended by user;
+    ${job33}    queryjobinfo    ${jobid1}[2]
+    ${reason3}    getjobspndrsn    ${job33}
+    log    ${reason3}
+    should contain    ${reason3}    The job was suspended by user;
+    ${outputdir1}    Set Variable    ${filedir}/spooler/output/jobout${jobid1}[1].txt
+    ${size1}    Get File Size    ${outputdir1}
+    log    ${size1}
+    sleep    3
+    ${size2}    Get File Size    ${outputdir1}
+    log    ${size2}
+    Should Be Equal As Integers    ${size1}    ${size2}
+    ${outputdir2}    Set Variable    ${filedir}/spooler/output/jobout${jobid1}[2].txt
+    ${size3}    Get File Size    ${outputdir2}
+    log    ${size3}
+    sleep    3
+    ${size4}    Get File Size    ${outputdir2}
+    log    ${size4}
+    Should Be Equal As Integers    ${size3}    ${size4}
+    runCommand    su user1 -c "jctrl resume ${jobid1}"
+    checkJobStatus    ${jobid1}[1]    RUN
+    checkJobStatus    ${jobid1}[2]    RUN
+    checkJobStatus    ${jobid2}[1]    RUN
+    checkJobStatus    ${jobid2}[2]    RUN
+    checkJobStatus    ${jobid2}[3]    RUN
+    ${outputdir3}    Set Variable    ${filedir}/spooler/output/jobout${jobid2}[2].txt
+    ${size5}    Get File Size    ${outputdir3}
+    log    ${size5}
+    sleep    3
+    ${size6}    Get File Size    ${outputdir3}
+    log    ${size6}
+    Should Not Be Equal As Integers    ${size5}    ${size6}
+    ${outputdir4}    Set Variable    ${filedir}/spooler/output/jobout${jobid2}[2].txt
+    ${size7}    Get File Size    ${outputdir4}
+    log    ${size7}
+    sleep    3
+    ${size8}    Get File Size    ${outputdir4}
+    log    ${size8}
+    Should Not Be Equal As Integers    ${size7}    ${size8}
+    runCommand    su jhadmin -c "jctrl kill -u all 0"
+    Remove Files    ${filedir}/spooler/output/*.txt
+    [Teardown]    modHostInfo    rhela1=1 ()    rhelb=1 ()
+
+case12.ususp/ssusp的作业被requeue后，然后stop/resume.
+    [Tags]    p1    long-time
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file}    Set Variable    ${filedir}/spooler/input/jctrl.sh
+    ${job1}    querySubmitInfo    su user1 -c "jsub -q prelow ${file}"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub ${file}"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    sleep    2
+    runCommand    su user1 -c "jctrl stop ${jobid2}"
+    ${job3}    querySubmitInfo    su user1 -c "jsub -q prehigh ${file}"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid1}    SSUSP
+    checkJobStatus    ${jobid2}    USUSP
+    checkJobStatus    ${jobid3}    RUN
+    ${outputdir1}    Set Variable    ${filedir}/spooler/output/jobout${jobid1}.txt
+    ${size1}    Get File Size    ${outputdir1}
+    log    ${size1}
+    sleep    3
+    ${size2}    Get File Size    ${outputdir1}
+    log    ${size2}
+    Should Be Equal As Integers    ${size1}    ${size2}
+    ${outputdir2}    Set Variable    ${filedir}/spooler/output/jobout${jobid2}.txt
+    ${size3}    Get File Size    ${outputdir2}
+    log    ${size3}
+    sleep    3
+    ${size4}    Get File Size    ${outputdir2}
+    log    ${size4}
+    Should Be Equal As Integers    ${size3}    ${size4}
+    runCommand    su user1 -c "jctrl requeue ${jobid1} ${jobid2} ${jobid3}"
+    sleep    2
+    runCommand    su user1 -c "jctrl kill ${jobid3}"
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN    120
+    runCommand    su user1 -c "jctrl stop -u all 0"
+    ${outputdir1}    Set Variable    ${filedir}/spooler/output/jobout${jobid1}.txt
+    ${size1}    Get File Size    ${outputdir1}
+    log    ${size1}
+    sleep    3
+    ${size2}    Get File Size    ${outputdir1}
+    log    ${size2}
+    Should Be Equal As Integers    ${size1}    ${size2}
+    ${outputdir2}    Set Variable    ${filedir}/spooler/output/jobout${jobid2}.txt
+    ${size3}    Get File Size    ${outputdir2}
+    log    ${size3}
+    sleep    3
+    ${size4}    Get File Size    ${outputdir2}
+    log    ${size4}
+    Should Be Equal As Integers    ${size3}    ${size4}
+    runCommand    su user1 -c "jctrl resume -u all 0"
+    ${outputdir3}    Set Variable    ${filedir}/spooler/output/jobout${jobid1}.txt
+    ${size5}    Get File Size    ${outputdir3}
+    log    ${size5}
+    sleep    3
+    ${size6}    Get File Size    ${outputdir3}
+    log    ${size6}
+    Should Not Be Equal As Integers    ${size5}    ${size6}
+    ${outputdir4}    Set Variable    ${filedir}/spooler/output/jobout${jobid2}.txt
+    ${size7}    Get File Size    ${outputdir4}
+    log    ${size7}
+    sleep    3
+    ${size8}    Get File Size    ${outputdir4}
+    log    ${size8}
+    Should Not Be Equal As Integers    ${size7}    ${size8}
+    runCommand    su jhadmin -c "jctrl kill -u all 0"
+    Remove Files    ${filedir}/spooler/output/*.txt
+    [Teardown]    killJob
+
+case13.jhist显示 jctrl stop/resume/kill控制作业的信息。
+    [Tags]    p1    long-time
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    checkClusterStatus
+    ${file}    Set Variable    ${filedir}/spooler/input/jctrl.sh
+    ${job1}    querySubmitInfo    su user1 -c "jsub \ ${file}"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -J "a[1-2]" ${file}"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub \ ${file}"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}[1]    RUN
+    checkJobStatus    ${jobid2}[2]    PEND
+    checkJobStatus    ${jobid3}    PEND
+    sleep    5
+    ${stopinfo}    runCommand    su user1 -c "jctrl stop \ ${jobid1} ${jobid2} ${jobid3}"
+    log    ${stopinfo}
+    checkJobStatus    ${jobid1}    USUSP
+    checkJobStatus    ${jobid2}[1]    USUSP
+    checkJobStatus    ${jobid2}[2]    PSUSP
+    checkJobStatus    ${jobid3}    PSUSP
+    ${outputdir0}    Set Variable    ${filedir}/spooler/output/jobout${jobid1}.txt
+    ${size0}    Get File Size    ${outputdir0}
+    log    ${size0}
+    sleep    3
+    ${size00}    Get File Size    ${outputdir0}
+    log    ${size00}
+    Should Be Equal As Integers    ${size0}    ${size00}
+    ${outputdir1}    Set Variable    ${filedir}/spooler/output/jobout${jobid2}[1].txt
+    ${size1}    Get File Size    ${outputdir1}
+    log    ${size1}
+    sleep    3
+    ${size2}    Get File Size    ${outputdir1}
+    log    ${size2}
+    Should Be Equal As Integers    ${size1}    ${size2}
+    ${resumeinfo}    runCommand    su user1 -c "jctrl resume ${jobid1} ${jobid2} ${jobid3}"
+    log    ${resumeinfo}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}[1]    RUN
+    checkJobStatus    ${jobid2}[2]    PEND
+    checkJobStatus    ${jobid3}    PEND
+    ${outputdir3}    Set Variable    ${filedir}/spooler/output/jobout${jobid1}.txt
+    ${size5}    Get File Size    ${outputdir3}
+    log    ${size5}
+    sleep    3
+    ${size6}    Get File Size    ${outputdir3}
+    log    ${size6}
+    Should Not Be Equal As Integers    ${size5}    ${size6}
+    ${outputdir4}    Set Variable    ${filedir}/spooler/output/jobout${jobid2}[1].txt
+    ${size7}    Get File Size    ${outputdir4}
+    log    ${size7}
+    sleep    3
+    ${size8}    Get File Size    ${outputdir4}
+    log    ${size8}
+    Should Not Be Equal As Integers    ${size7}    ${size8}
+    ${killinfo}    runCommand    su jhadmin -c "jctrl kill -u all 0"
+    log    ${killinfo}
+    ${hist1}    runCommand    su jhadmin -c "jhist -l ${jobid1}"
+    log    ${hist1}
+    Should Match Regexp    ${hist1}    Signal <SIGSTOP> requested by user or administrator <user1\\n\\s*>;
+    Should Match Regexp    ${hist1}    Signal <SIGCONT> requested by user or administrator <user1\\n\\s*>;
+    Should Match Regexp    ${hist1}    Signal <SIGKILL> requested by user or administrator <jhadm\\n\\s*in>;
+    Should Match Regexp    ${hist1}    Suspended by the user or administrator;
+    ${hist2}    runCommand    su jhadmin -c "jhist -l ${jobid2}[1]"
+    log    ${hist2}
+    Should Match Regexp    ${hist2}    Signal <SIGSTOP> requested by user or administrator <user1\\n\\s*>;
+    Should Match Regexp    ${hist2}    Signal <SIGCONT> requested by user or administrator <user1\\n\\s*>;
+    Should Match Regexp    ${hist2}    Signal <SIGKILL> requested by user or administrator <jhadm\\n\\s*in>;
+    Should Match Regexp    ${hist2}    Suspended by the user or administrator;
+    ${hist3}    runCommand    su jhadmin -c "jhist -l ${jobid2}[2]"
+    log    ${hist3}
+    Should Match Regexp    ${hist3}    Signal <SIGSTOP> requested by user or administrator <user1\\n\\s*>;
+    Should Match Regexp    ${hist3}    Signal <SIGCONT> requested by user or administrator <user1\\n\\s*>;
+    Should Match Regexp    ${hist3}    Signal <SIGKILL> requested by user or administrator <jhadm\\n\\s*in>;
+    Should Match Regexp    ${hist3}    Suspended by the user or administrator while pending;
+    ${hist4}    runCommand    su jhadmin -c "jhist -l ${jobid3}"
+    log    ${hist4}
+    Should Match Regexp    ${hist4}    Signal <SIGSTOP> requested by user or administrator <user1\\n\\s*>;
+    Should Match Regexp    ${hist4}    Signal <SIGCONT> requested by user or administrator <user1\\n\\s*>;
+    Should Match Regexp    ${hist4}    Signal <SIGKILL> requested by user or administrator <jhadm\\n\\s*in>;
+    Should Match Regexp    ${hist4}    Suspended by the user or administrator while pending;
+    Remove Files    ${filedir}/spooler/output/*.txt
+    [Teardown]    killJob
+
+case14.jctrl stop -h
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file}    Set Variable    ${filedir}/spooler/input/stop-help.txt
+    log    ${file}
+    ${stophelp}    runCommand    jctrl stop -h
+    log    ${stophelp}
+    ${stopfile}    Get File    ${file}
+    log    ${stopfile}
+    Should Be Equal    ${stophelp}    ${stopfile}
+    [Teardown]
+
+case15.jctrl resume -h
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file}    Set Variable    ${filedir}/spooler/input/resume-help.txt
+    log    ${file}
+    ${resumehelp}    runCommand    jctrl resume -h
+    log    ${resumehelp}
+    ${resumefile}    Get File    ${file}
+    log    ${resumefile}
+    Should Be Equal    ${resumehelp}    ${resumefile}
+    [Teardown]
+
+case16.jctrl -V
+    [Tags]    p1
+    [Setup]    readyTest
+    ${version}    checkVersion    jctrl -V
+    [Teardown]
+
+case17.(5)jctrl stop/resume指定作业的jobid不存在时，会打印提示信息。
+    [Tags]    p1
+    [Setup]    CheckClusterStatus
+    ${stopinfo}    runCommand    su user1 -c "jctrl stop 100000000"
+    log    ${stopinfo}
+    ${resumeinfo}    runCommand    su user1 -c "jctrl resume 100000000"
+    log    ${resumeinfo}
+    Should Be Equal    ${stopinfo}    Job <100000000> : No matching job found
+    Should Be Equal    ${resumeinfo}    Job <100000000> : No matching job found
+    [Teardown]    CheckClusterStatus
+
+case18.(6)jctrl stop/resume -m host，不加0选项。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    addOrModifyHost    rhela1    2 ()
+    addOrModifyHost    rhelb    3 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${file}    Set Variable    ${filedir}/spooler/input/jctrl.sh
+    ${job1}    querySubmitInfo    su user1 -c "jsub -m rhela1 ${file}"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -m rhela1 ${file}"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub -m rhelb ${file}"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user1 -c "jsub -m rhelb ${file}"
+    ${jobid4}    getJobId    ${job4}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    RUN
+    sleep    5
+    ${stop1}    runCommand    su user1 -c "jctrl stop -m rhela1"
+    Should Contain    ${stop1}    jctrl stop: error: too few arguments
+    Should Contain    ${stop1}    usage: jctrl stop
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    RUN
+    ${resume1}    runCommand    su user1 -c "jctrl resume -m rhela1 "
+    log    ${resume1}
+    Should Contain    ${resume1}    jctrl resume: error: too few arguments
+    Should Contain    ${resume1}    usage: jctrl resume
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    RUN
+    runCommand    su jhadmin -c "jctrl kill -u all 0"
+    Remove Files    ${filedir}/spooler/output/*.txt
+    [Teardown]    modHostInfo    rhela1=1 ()    rhelb=1 ()
+
+case19.(7)jctrl stop/resume -m host指定的节点上没有作业。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${job1}    querySubmitInfo    su user1 -c "jsub -m rhela1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    sleep    5
+    ${stop1}    runCommand    su user1 -c "jctrl stop -m rhelb \ 0"
+    Should Be Equal    ${stop1}    No unfinished job found
+    runCommand    su jhadmin -c "jctrl kill -u all 0"
+    Remove Files    ${filedir}/spooler/output/*.txt
+    [Teardown]    modHostInfo    rhela1=1 ()    rhelb=1 ()
+
+case20.(9)jctrl stop/resume -m 指定节点组，不加0。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    addOrModifyHost    rhelb    2 ()
+    addOrModifyHostGroup    group1    (rhelb)
+    addOrModifyHostGroup    group2    (rhela1)
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -m group1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -m group1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub -m group2 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    ${stopinfo}    runCommand    su user1 -c "jctrl stop -m group1"
+    log    ${stopinfo}
+    Should Contain    ${stopinfo}    jctrl stop: error: too few arguments
+    Should Contain    ${stopinfo}    usage: jctrl stop
+    ${resumeinfo}    runCommand    su user1 -c "jctrl resume -m group1"
+    log    ${resumeinfo}
+    Should Contain    ${resumeinfo}    jctrl resume: error: too few arguments
+    Should Contain    ${resumeinfo}    usage: jctrl resume
+    runCommand    su jhadmin -c "jctrl kill -u all 0"
+    Remove Files    ${filedir}/spooler/output/*.txt
+    [Teardown]    delHostGroupAndHost    group2,group1    rhelb= 1 ()
+
+case21.(10)jctrl stop -m指定节点组，不加0.
+    [Tags]    p2
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    addOrModifyHost    rhela1    2 ()
+    addOrModifyHost    rhelb    3 ()
+    addOrModifyHostGroup    group1    (rhelb rhela1)
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -m rhela1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -m rhela1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub -m rhelb sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user1 -c "jsub -m rhelb sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    RUN
+    ${stopinfo}    runCommand    su user1 -c "jctrl stop -m group1"
+    log    ${stopinfo}
+    Should Contain    ${stopinfo}    jctrl stop: error: too few arguments
+    Should Contain    ${stopinfo}    usage: jctrl stop
+    ${resumeinfo}    runCommand    su user1 -c "jctrl resume -m group1"
+    log    ${resumeinfo}
+    Should Contain    ${resumeinfo}    jctrl resume: error: too few arguments
+    Should Contain    ${resumeinfo}    usage: jctrl resume
+    runCommand    su jhadmin -c "jctrl kill -u all 0"
+    Remove Files    ${filedir}/spooler/output/*.txt
+    [Teardown]    delHostGroupAndHost    group1    rhela1= 1 ()    rhelb=1 ()
+
+case22.(11)jctrl stop/resume -m指定的节点组上没有作业。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    addOrModifyHost    rhelb    2 ()
+    addOrModifyHostGroup    group1    (rhelb)
+    addOrModifyHostGroup    group2    (rhela1)
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -m group1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${stopinfo}    runCommand    su user1 -c "jctrl stop -m group2 0"
+    log    ${stopinfo}
+    Should Be Equal    ${stopinfo}    No unfinished job found
+    ${resumeinfo}    runCommand    su user1 -c "jctrl resume -m group2 0"
+    log    ${resumeinfo}
+    Should Be Equal    ${resumeinfo}    No unfinished job found
+    runCommand    su jhadmin -c "jctrl kill -u all 0"
+    Remove Files    ${filedir}/spooler/output/*.txt
+    [Teardown]    delHostGroupAndHost    group2,group1    rhelb= 1 ()
+
+case23.(12)jctrl stop/resume -m hostgroup 0，挂起/恢复节点组上的所有作业。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file}    Set Variable    ${filedir}/spooler/input/jctrl.sh
+    addOrModifyHost    rhela1    2 ()
+    addOrModifyHostGroup    group1    (rhelb)
+    addOrModifyHostGroup    group2    (rhela1)
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -m group1 ${file}"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -m group2 ${file}"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub -m group2 ${file}"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    ${stopinfo}    runCommand    su user1 -c "jctrl stop -m group2 0"
+    log    ${stopinfo}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    USUSP
+    checkJobStatus    ${jobid3}    USUSP
+    ${job22}    queryJobInfo    ${jobid2}
+    ${reason2}    getJobSpndRsn    ${job22}
+    log    ${reason2}
+    Should Contain    ${reason2}    The job was suspended by user;
+    ${job33}    queryJobInfo    ${jobid3}
+    ${reason3}    getJobSpndRsn    ${job33}
+    log    ${reason3}
+    Should Contain    ${reason3}    The job was suspended by user;
+    ${outputdir1}    Set Variable    ${filedir}/spooler/output/jobout${jobid2}.txt
+    ${size1}    Get File Size    ${outputdir1}
+    log    ${size1}
+    sleep    3
+    ${size2}    Get File Size    ${outputdir1}
+    log    ${size2}
+    Should Be Equal As Integers    ${size1}    ${size2}
+    ${outputdir2}    Set Variable    ${filedir}/spooler/output/jobout${jobid3}.txt
+    ${size3}    Get File Size    ${outputdir2}
+    log    ${size3}
+    sleep    3
+    ${size4}    Get File Size    ${outputdir2}
+    log    ${size4}
+    Should Be Equal As Integers    ${size3}    ${size4}
+    ${outputdirxx}    Set Variable    ${filedir}/spooler/output/jobout${jobid1}.txt
+    ${sizexx}    Get File Size    ${outputdirxx}
+    log    ${sizexx}
+    sleep    3
+    ${sizexy}    Get File Size    ${outputdirxx}
+    log    ${sizexy}
+    Should Not Be Equal As Integers    ${sizexx}    ${sizexy}
+    ${info1}    runCommand    su user1 -c "jctrl resume -m group2 0"
+    log    ${info1}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    ${outputdir3}    Set Variable    ${filedir}/spooler/output/jobout${jobid2}.txt
+    ${size5}    Get File Size    ${outputdir3}
+    log    ${size5}
+    sleep    3
+    ${size6}    Get File Size    ${outputdir3}
+    log    ${size6}
+    Should Not Be Equal As Integers    ${size5}    ${size6}
+    ${outputdir4}    Set Variable    ${filedir}/spooler/output/jobout${jobid3}.txt
+    ${size7}    Get File Size    ${outputdir4}
+    log    ${size7}
+    sleep    3
+    ${size8}    Get File Size    ${outputdir4}
+    log    ${size8}
+    Should Not Be Equal As Integers    ${size7}    ${size8}
+    runCommand    su jhadmin -c "jctrl kill -u all 0"
+    Remove Files    ${filedir}/spooler/output/*.txt
+    [Teardown]    delHostGroupAndHost    group2,group1    rhela1= 1 ()
+
+case24.(13)jctrl stop/resume -m指定节点不存在。
+    [Tags]    p2
+    [Setup]    CheckClusterStatus
+    ${stopinfo}    runCommand    su user1 -c "jctrl stop -m hostxwfno"
+    log    ${stopinfo}
+    Should Contain    ${stopinfo}    jctrl stop: error: too few arguments
+    Should Contain    ${stopinfo}    usage: jctrl stop
+    ${resumeinfo}    runCommand    su user1 -c "jctrl resume -m hostxwfno"
+    log    ${resumeinfo}
+    Should Contain    ${resumeinfo}    jctrl resume: error: too few arguments
+    Should Contain    ${resumeinfo}    usage: jctrl resume
+    ${stopinfo1}    runCommand    su user1 -c "jctrl stop -m hostxwfno 0"
+    log    ${stopinfo1}
+    ${resumeinfo1}    runCommand    su user1 -c "jctrl resume -m hostxwfno 0"
+    log    ${resumeinfo1}
+    Should Be Equal    ${stopinfo1}    hostxwfno: Bad host name, host group name or cluster name
+    Should Be Equal    ${resumeinfo1}    hostxwfno: Bad host name, host group name or cluster name
+    [Teardown]    CheckClusterStatus
+
+case25.(14)jctrl stop/resume -m指定的节点组不存在。
+    [Tags]    p2
+    [Setup]    CheckClusterStatus
+    ${stopinfo}    runCommand    su user1 -c "jctrl stop -m groupx"
+    log    ${stopinfo}
+    Should Contain    ${stopinfo}    jctrl stop: error: too few arguments
+    Should Contain    ${stopinfo}    usage: jctrl stop
+    ${resumeinfo}    runCommand    su user1 -c "jctrl resume -m groupx"
+    log    ${resumeinfo}
+    Should Contain    ${resumeinfo}    jctrl resume: error: too few arguments
+    Should Contain    ${resumeinfo}    usage: jctrl resume
+    ${stopinfo1}    runCommand    su user1 -c "jctrl stop -m groupx 0"
+    log    ${stopinfo1}
+    ${resumeinfo1}    runCommand    su user1 -c "jctrl resume -m groupx 0"
+    log    ${resumeinfo1}
+    Should Be Equal    ${stopinfo1}    groupx: Bad host name, host group name or cluster name
+    Should Be Equal    ${resumeinfo1}    groupx: Bad host name, host group name or cluster name
+    [Teardown]    CheckClusterStatus
+
+case24.(15)jctrl stop/resume -m同时指定多个节点。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file}    Set Variable    ${filedir}/spooler/input/jctrl.sh
+    addOrModifyHost    rhela1    2 ()
+    addOrModifyHost    rhelb    2 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job0}    querySubmitInfo    su user1 -c "jsub -m rhela1 ${file}"
+    ${jobid0}    getJobId    ${job0}
+    ${job1}    querySubmitInfo    su user1 -c "jsub -m rhela1 ${file}"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -m rhelb ${file}"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub -m rhelb ${file}"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    ${stopinfo}    runCommand    su user1 -c 'jctrl stop -m "rhela1 rhelb"'
+    log    ${stopinfo}
+    Should Contain    ${stopinfo}    jctrl stop: error: too few arguments
+    Should Contain    ${stopinfo}    usage: jctrl stop
+    ${resumeinfo}    runCommand    su user1 -c 'jctrl resume -m "rhela1 rhelb"'
+    log    ${resumeinfo}
+    Should Contain    ${resumeinfo}    jctrl resume: error: too few arguments
+    Should Contain    ${resumeinfo}    usage: jctrl resume
+    ${stopinfo}    runCommand    su user1 -c 'jctrl stop -m "rhela1 rhelb" 0'
+    log    ${stopinfo}
+    checkJobStatus    ${jobid0}    USUSP
+    checkJobStatus    ${jobid1}    USUSP
+    checkJobStatus    ${jobid2}    USUSP
+    checkJobStatus    ${jobid3}    USUSP
+    ${job00}    queryJobInfo    ${jobid0}
+    ${reason0}    getJobSpndRsn    ${job00}
+    log    ${reason0}
+    Should Contain    ${reason0}    The job was suspended by user;
+    ${job11}    queryJobInfo    ${jobid1}
+    ${reason1}    getJobSpndRsn    ${job11}
+    log    ${reason1}
+    Should Contain    ${reason1}    The job was suspended by user;
+    ${job22}    queryJobInfo    ${jobid2}
+    ${reason2}    getJobSpndRsn    ${job22}
+    log    ${reason2}
+    Should Contain    ${reason2}    The job was suspended by user;
+    ${job33}    queryJobInfo    ${jobid3}
+    ${reason3}    getJobSpndRsn    ${job33}
+    log    ${reason3}
+    Should Contain    ${reason3}    The job was suspended by user;
+    ${outputdira}    Set Variable    ${filedir}/spooler/output/jobout${jobid0}.txt
+    ${sizea}    Get File Size    ${outputdira}
+    log    ${sizea}
+    sleep    3
+    ${sizeb}    Get File Size    ${outputdira}
+    log    ${sizeb}
+    Should Be Equal As Integers    ${sizeb}    ${sizeb}
+    ${outputdirc}    Set Variable    ${filedir}/spooler/output/jobout${jobid1}.txt
+    ${sizec}    Get File Size    ${outputdirc}
+    log    ${sizec}
+    sleep    3
+    ${sized}    Get File Size    ${outputdirc}
+    log    ${sized}
+    Should Be Equal As Integers    ${sizec}    ${sized}
+    ${outputdire}    Set Variable    ${filedir}/spooler/output/jobout${jobid2}.txt
+    ${sizee}    Get File Size    ${outputdire}
+    log    ${sizee}
+    sleep    3
+    ${sizef}    Get File Size    ${outputdire}
+    log    ${sizef}
+    Should Be Equal As Integers    ${sizee}    ${sizef}
+    ${outputdirg}    Set Variable    ${filedir}/spooler/output/jobout${jobid3}.txt
+    ${sizeg}    Get File Size    ${outputdirg}
+    log    ${sizeg}
+    sleep    3
+    ${sizeh}    Get File Size    ${outputdirg}
+    log    ${sizeh}
+    Should Be Equal As Integers    ${sizeg}    ${sizeh}
+    ${info1}    runCommand    su user1 -c 'jctrl resume -m \ "rhela1 rhelb" 0'
+    log    ${info1}
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    ${outputdir11}    Set Variable    ${filedir}/spooler/output/jobout${jobid0}.txt
+    ${size11}    Get File Size    ${outputdir11}
+    log    ${size11}
+    sleep    3
+    ${size22}    Get File Size    ${outputdir11}
+    log    ${size22}
+    Should Not Be Equal As Integers    ${size11}    ${size22}
+    ${outputdir33}    Set Variable    ${filedir}/spooler/output/jobout${jobid1}.txt
+    ${size33}    Get File Size    ${outputdir33}
+    log    ${size33}
+    sleep    3
+    ${size44}    Get File Size    ${outputdir33}
+    log    ${size44}
+    Should Not Be Equal As Integers    ${size33}    ${size44}
+    ${outputdir55}    Set Variable    ${filedir}/spooler/output/jobout${jobid2}.txt
+    ${size55}    Get File Size    ${outputdir55}
+    log    ${size55}
+    sleep    3
+    ${size66}    Get File Size    ${outputdir55}
+    log    ${size66}
+    Should Not Be Equal As Integers    ${size55}    ${size66}
+    ${outputdir77}    Set Variable    ${filedir}/spooler/output/jobout${jobid3}.txt
+    ${size77}    Get File Size    ${outputdir77}
+    log    ${size77}
+    sleep    3
+    ${size88}    Get File Size    ${outputdir77}
+    log    ${size88}
+    Should Not Be Equal As Integers    ${size77}    ${size88}
+    runCommand    su jhadmin -c "jctrl kill -u all 0"
+    Remove Files    ${filedir}/spooler/output/*.txt
+    [Teardown]    modHostInfo    rhela1=1 ()    rhelb=1 ()
+
+case25.(16)jctrl stop/resume -m "host2 hostabc host1" 0同时指定的多个节点中包含不存在的节点，命令执行不成功，打印提示信息。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job0}    querySubmitInfo    su user1 -c "jsub -m rhela1 sleep 1000"
+    ${jobid0}    getJobId    ${job0}
+    ${job1}    querySubmitInfo    su user1 -c "jsub -m rhelb sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}    RUN
+    ${stopinfo}    runCommand    su user1 -c 'jctrl stop -m "rhela1 hostxwfno rhelb" 0'
+    log    ${stopinfo}
+    Should Be Equal    ${stopinfo}    hostxwfno: Bad host name, host group name or cluster name
+    sleep    5
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}    RUN
+    ${resumeinfo}    runCommand    su user1 -c 'jctrl resume -m "rhela1 hostxwfno rhelb" 0'
+    log    ${resumeinfo}
+    Should Be Equal    ${resumeinfo}    hostxwfno: Bad host name, host group name or cluster name
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}    RUN
+    [Teardown]    killJob
+
+case26.11672 (17)jctrl stop/resume -m "group2 group1" 0同时指定暂停多个节点组上的作业，命令执行不成功，打印提示信息。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file}    Set Variable    ${filedir}/spooler/input/jctrl.sh
+    addOrModifyHostGroup    group1    (rhelb)
+    addOrModifyHostGroup    group2    (rhela1)
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -m group1 ${file}"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -m group2 ${file}"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    ${stopinfo}    runCommand    su user1 -c 'jctrl stop -m "group1 group2" 0'
+    log    ${stopinfo}
+    Should Contain    ${stopinfo}    Job <${jobid1}> is being stopped
+    Should Contain    ${stopinfo}    Job <${jobid2}> is being stopped
+    checkJobStatus    ${jobid1}    USUSP
+    checkJobStatus    ${jobid2}    USUSP
+    ${job11}    queryJobInfo    ${jobid1}
+    ${reason1}    getJobSpndRsn    ${job11}
+    log    ${reason1}
+    Should Contain    ${reason1}    The job was suspended by user;
+    ${job22}    queryJobInfo    ${jobid2}
+    ${reason2}    getJobSpndRsn    ${job22}
+    log    ${reason2}
+    Should Contain    ${reason2}    The job was suspended by user;
+    ${outputdirc}    Set Variable    ${filedir}/spooler/output/jobout${jobid1}.txt
+    ${sizec}    Get File Size    ${outputdirc}
+    log    ${sizec}
+    sleep    3
+    ${sized}    Get File Size    ${outputdirc}
+    log    ${sized}
+    Should Be Equal As Integers    ${sizec}    ${sized}
+    ${outputdire}    Set Variable    ${filedir}/spooler/output/jobout${jobid2}.txt
+    ${sizee}    Get File Size    ${outputdire}
+    log    ${sizee}
+    sleep    3
+    ${sizef}    Get File Size    ${outputdire}
+    log    ${sizef}
+    Should Be Equal As Integers    ${sizee}    ${sizef}
+    ${resumeinfo}    runCommand    su user1 -c 'jctrl resume -m "group1 group2" 0'
+    log    ${resumeinfo}
+    Should Contain    ${resumeinfo}    Job <${jobid1}> is being resumed
+    Should Contain    ${resumeinfo}    Job <${jobid2}> is being resumed
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    ${outputdir33}    Set Variable    ${filedir}/spooler/output/jobout${jobid1}.txt
+    ${size33}    Get File Size    ${outputdir33}
+    log    ${size33}
+    sleep    3
+    ${size44}    Get File Size    ${outputdir33}
+    log    ${size44}
+    Should Not Be Equal As Integers    ${size33}    ${size44}
+    ${outputdir55}    Set Variable    ${filedir}/spooler/output/jobout${jobid2}.txt
+    ${size55}    Get File Size    ${outputdir55}
+    log    ${size55}
+    sleep    3
+    ${size66}    Get File Size    ${outputdir55}
+    log    ${size66}
+    Should Not Be Equal As Integers    ${size55}    ${size66}
+    runCommand    su jhadmin -c "jctrl kill -u all 0"
+    Remove Files    ${filedir}/spooler/output/*.txt
+    [Teardown]    delHostGroup    group2,group1
+
+case27. (18)jctrl stop/resume -m "group2 groupabc group1" 0同时指定的多个节点组中包含不存在的节点组，命令执行不成功，打印提示信息。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file}    Set Variable    ${filedir}/spooler/input/jctrl.sh
+    addOrModifyHostGroup    group1    (rhelb)
+    addOrModifyHostGroup    group2    (rhela1)
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -m group1 ${file}"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -m group2 ${file}"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    ${stopinfo}    runCommand    su user1 -c 'jctrl stop -m "group1 groupnoxwf group2" 0'
+    log    ${stopinfo}
+    Should Be Equal    ${stopinfo}    groupnoxwf: Bad host name, host group name or cluster name
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    ${stopinfo}    runCommand    su user1 -c 'jctrl resume -m "group1 groupnoxwf group2" 0'
+    log    ${stopinfo}
+    Should Be Equal    ${stopinfo}    groupnoxwf: Bad host name, host group name or cluster name
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    runCommand    su jhadmin -c "jctrl kill -u all 0"
+    Remove Files    ${filedir}/spooler/output/*.txt
+    [Teardown]    delHostGroup    group2,group1
+
+case28.(19)jctrl stop/resume -q。
+    [Tags]    long-time    p2
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    addOrModifyHost    rhela1    2 ()
+    addOrModifyHost    rhelb    3 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${file}    Set Variable    ${filedir}/spooler/input/jctrl.sh
+    ${job1}    querySubmitInfo    su user1 -c "jsub -q q1 ${file}"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -q q2 ${file}"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub -q q2 ${file}"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    sleep    3
+    ${stopinfo}    runCommand    su user1 -c "jctrl stop -q q2"
+    log    ${stopinfo}
+    Should Contain    ${stopinfo}    jctrl stop: error: too few arguments
+    Should Contain    ${stopinfo}    usage: jctrl stop
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    ${outputdir3}    Set Variable    ${filedir}/spooler/output/jobout${jobid2}.txt
+    ${size5}    Get File Size    ${outputdir3}
+    log    ${size5}
+    sleep    3
+    ${size6}    Get File Size    ${outputdir3}
+    log    ${size6}
+    Should Not Be Equal As Integers    ${size5}    ${size6}
+    ${outputdir4}    Set Variable    ${filedir}/spooler/output/jobout${jobid3}.txt
+    ${size7}    Get File Size    ${outputdir4}
+    log    ${size7}
+    sleep    3
+    ${size8}    Get File Size    ${outputdir4}
+    log    ${size8}
+    Should Not Be Equal As Integers    ${size7}    ${size8}
+    ${resumeinfo}    runCommand    su user1 -c "jctrl resume -q q2"
+    log    ${resumeinfo}
+    Should Contain    ${resumeinfo}    jctrl resume: error: too few arguments
+    Should Contain    ${resumeinfo}    usage: jctrl resume
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    ${outputdir3}    Set Variable    ${filedir}/spooler/output/jobout${jobid2}.txt
+    ${size5}    Get File Size    ${outputdir3}
+    log    ${size5}
+    sleep    3
+    ${size6}    Get File Size    ${outputdir3}
+    log    ${size6}
+    Should Not Be Equal As Integers    ${size5}    ${size6}
+    ${outputdir4}    Set Variable    ${filedir}/spooler/output/jobout${jobid3}.txt
+    ${size7}    Get File Size    ${outputdir4}
+    log    ${size7}
+    sleep    3
+    ${size8}    Get File Size    ${outputdir4}
+    log    ${size8}
+    Should Not Be Equal As Integers    ${size7}    ${size8}
+    runCommand    su jhadmin -c "jctrl kill -u all 0"
+    Remove Files    ${filedir}/spooler/output/*.txt
+    [Teardown]    modHostInfo    rhela1=1 ()    rhelb=1 ()
+
+case29.(21)jctrl stop/resume -q "low q2 normal" 0同时指定暂停/恢复多个队列上的作业，默认暂停/恢复当前用户指定队列的所有作业。
+    [Tags]    long-time    p2
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    addOrModifyHost    rhela1    3 ()
+    addOrModifyHost    rhelb    3 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${file}    Set Variable    ${filedir}/spooler/input/jctrl.sh
+    ${job1}    querySubmitInfo    su user1 -c "jsub ${file}"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user2 -c "jsub -q q1 ${file}"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user2 -c "jsub -q q2 ${file}"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user2 -c "jsub -q q2 ${file}"
+    ${jobid4}    getJobId    ${job4}
+    ${job5}    querySubmitInfo    su user2 -c "jsub -q low ${file}"
+    ${jobid5}    getJobId    ${job5}
+    ${job6}    querySubmitInfo    su user2 -c "jsub -q low ${file}"
+    ${jobid6}    getJobId    ${job6}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    RUN
+    checkJobStatus    ${jobid5}    RUN
+    checkJobStatus    ${jobid6}    RUN
+    sleep    3
+    ${stopinfo}    runCommand    su user2 -c 'jctrl stop -q "low q2 normal" 0'
+    log    ${stopinfo}
+    Should Not Contain    ${stopinfo}    Job <${jobid1}> is being stopped
+    Should Not Contain    ${stopinfo}    Job <${jobid2}> is being stopped
+    Should Contain    ${stopinfo}    Job <${jobid3}> is being stopped
+    Should Contain    ${stopinfo}    Job <${jobid4}> is being stopped
+    Should Contain    ${stopinfo}    Job <${jobid5}> is being stopped
+    Should Contain    ${stopinfo}    Job <${jobid6}> is being stopped
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    USUSP
+    checkJobStatus    ${jobid4}    USUSP
+    checkJobStatus    ${jobid5}    USUSP
+    checkJobStatus    ${jobid6}    USUSP
+    ${job33}    queryjobinfo    ${jobid3}
+    ${reason3}    getjobspndrsn    ${job33}
+    log    ${reason3}
+    should contain    ${reason3}    The job was suspended by user;
+    ${job44}    queryjobinfo    ${jobid4}
+    ${reason4}    getjobspndrsn    ${job44}
+    log    ${reason4}
+    should contain    ${reason4}    The job was suspended by user;
+    ${job55}    queryjobinfo    ${jobid5}
+    ${reason5}    getjobspndrsn    ${job55}
+    log    ${reason5}
+    should contain    ${reason5}    The job was suspended by user;
+    ${job66}    queryjobinfo    ${jobid6}
+    ${reason6}    getjobspndrsn    ${job66}
+    log    ${reason6}
+    should contain    ${reason6}    The job was suspended by user;
+    ${outputdir1}    Set Variable    ${filedir}/spooler/output/jobout${jobid3}.txt
+    ${size1}    Get File Size    ${outputdir1}
+    log    ${size1}
+    sleep    3
+    ${size2}    Get File Size    ${outputdir1}
+    log    ${size2}
+    Should Be Equal As Integers    ${size1}    ${size2}
+    ${outputdir2}    Set Variable    ${filedir}/spooler/output/jobout${jobid4}.txt
+    ${size3}    Get File Size    ${outputdir2}
+    log    ${size3}
+    sleep    3
+    ${size4}    Get File Size    ${outputdir2}
+    log    ${size4}
+    Should Be Equal As Integers    ${size3}    ${size4}
+    ${outputdira}    Set Variable    ${filedir}/spooler/output/jobout${jobid5}.txt
+    ${sizea}    Get File Size    ${outputdira}
+    log    ${sizea}
+    sleep    3
+    ${sizeb}    Get File Size    ${outputdira}
+    log    ${sizeb}
+    Should Be Equal As Integers    ${sizeb}    ${sizeb}
+    ${outputdirc}    Set Variable    ${filedir}/spooler/output/jobout${jobid6}.txt
+    ${sizec}    Get File Size    ${outputdirc}
+    log    ${sizec}
+    sleep    3
+    ${sized}    Get File Size    ${outputdirc}
+    log    ${sized}
+    Should Be Equal As Integers    ${sizec}    ${sized}
+    ${resumeinfo}    runCommand    su user2 -c 'jctrl resume -q "low q2 normal" 0'
+    log    ${resumeinfo}
+    Should Not Contain    ${resumeinfo}    Job <${jobid1}> is being resumed
+    Should Not Contain    ${resumeinfo}    Job <${jobid2}> is being resumed
+    Should Contain    ${resumeinfo}    Job <${jobid3}> is being resumed
+    Should Contain    ${resumeinfo}    Job <${jobid4}> is being resumed
+    Should Contain    ${resumeinfo}    Job <${jobid5}> is being resumed
+    Should Contain    ${resumeinfo}    Job <${jobid6}> is being resumed
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    RUN
+    checkJobStatus    ${jobid5}    RUN
+    checkJobStatus    ${jobid6}    RUN
+    ${outputdir11}    Set Variable    ${filedir}/spooler/output/jobout${jobid3}.txt
+    ${size11}    Get File Size    ${outputdir11}
+    log    ${size11}
+    sleep    3
+    ${size22}    Get File Size    ${outputdir11}
+    log    ${size22}
+    Should Not Be Equal As Integers    ${size11}    ${size22}
+    ${outputdir33}    Set Variable    ${filedir}/spooler/output/jobout${jobid4}.txt
+    ${size33}    Get File Size    ${outputdir33}
+    log    ${size33}
+    sleep    3
+    ${size44}    Get File Size    ${outputdir33}
+    log    ${size44}
+    Should Not Be Equal As Integers    ${size33}    ${size44}
+    ${outputdir55}    Set Variable    ${filedir}/spooler/output/jobout${jobid5}.txt
+    ${size55}    Get File Size    ${outputdir55}
+    log    ${size55}
+    sleep    3
+    ${size66}    Get File Size    ${outputdir55}
+    log    ${size66}
+    Should Not Be Equal As Integers    ${size55}    ${size66}
+    ${outputdir77}    Set Variable    ${filedir}/spooler/output/jobout${jobid6}.txt
+    ${size77}    Get File Size    ${outputdir77}
+    log    ${size77}
+    sleep    3
+    ${size88}    Get File Size    ${outputdir77}
+    log    ${size88}
+    Should Not Be Equal As Integers    ${size77}    ${size88}
+    runCommand    su jhadmin -c "jctrl kill -u all 0"
+    Remove Files    ${filedir}/spooler/output/*.txt
+    [Teardown]    modHostInfo    rhela1=1 ()    rhelb=1 ()
+
+case30.(22)jctrl stop/resume -q同时指定多个队列中包含不存在的队列，命令执行不成功，打印提示信息。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job0}    querySubmitInfo    su user1 -c "jsub -q q1 sleep 1000"
+    ${jobid0}    getJobId    ${job0}
+    ${job1}    querySubmitInfo    su user1 -c "jsub -q q2 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}    RUN
+    ${stopinfo}    runCommand    su user1 -c 'jctrl stop -q "q1 q2 qnoxwf" 0'
+    log    ${stopinfo}
+    Should Be Equal    ${stopinfo}    qnoxwf: No such queue
+    sleep    5
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}    RUN
+    ${resumeinfo}    runCommand    su user1 -c 'jctrl resume -q "q1 q2 qnoxwf" 0'
+    log    ${resumeinfo}
+    Should Be Equal    ${resumeinfo}    qnoxwf: No such queue
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}    RUN
+    [Teardown]    killJob
+
+case31.(23)jctrl stop/resume -q指定队列不存在，会打印提示。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${stopinfo}    runCommand    su user1 -c 'jctrl stop -q "qnoxwf" '
+    log    ${stopinfo}
+    Should Contain    ${stopinfo}    jctrl stop: error: too few arguments
+    Should Contain    ${stopinfo}    usage: jctrl stop
+    ${stopinfo1}    runCommand    su user1 -c 'jctrl stop -q "qnoxwf" 0'
+    log    ${stopinfo1}
+    Should Be Equal    ${stopinfo1}    qnoxwf: No such queue
+    ${resumeinfo}    runCommand    su user1 -c 'jctrl resume -q "qnoxwf" '
+    log    ${resumeinfo}
+    Should Contain    ${resumeinfo}    jctrl resume: error: too few arguments
+    Should Contain    ${resumeinfo}    usage: jctrl resume
+    ${resumeinfo1}    runCommand    su user1 -c 'jctrl resume -q "qnoxwf" 0'
+    log    ${resumeinfo1}
+    Should Be Equal    ${resumeinfo1}    qnoxwf: No such queue
+    [Teardown]    killJob
+
+case32.(24)jctrl stop/resume -u暂停/恢复指定用户的作业，用户A不能暂停/恢复用户B的作业，否则，会打印提示。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job0}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid0}    getJobId    ${job0}
+    ${job1}    querySubmitInfo    su user2 -c "jsub sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}    RUN
+    ${stopinfo}    runCommand    su user1 -c 'jctrl stop -u user2 0'
+    log    ${stopinfo}
+    Should Be Equal    ${stopinfo}    user1: User permission denied
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}    RUN
+    ${resumeinfo}    runCommand    su user1 -c 'jctrl resume -u user2 0'
+    log    ${resumeinfo}
+    Should Be Equal    ${resumeinfo}    user1: User permission denied
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}    RUN
+    [Teardown]    killJob
+
+case33.(25)jctrl stop/resume -u指定用户。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file}    Set Variable    ${filedir}/spooler/input/jctrl.sh
+    addOrModifyHost    rhela1    2 ()
+    addOrModifyHost    rhelb    2 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job0}    querySubmitInfo    su user1 -c "jsub \ ${file}"
+    ${jobid0}    getJobId    ${job0}
+    ${job1}    querySubmitInfo    su user1 -c "jsub ${file}"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user2 -c "jsub ${file}"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user2 -c "jsub ${file}"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    ${stopinfo}    runCommand    su user2 -c 'jctrl stop -u user2 '
+    log    ${stopinfo}
+    Should Contain    ${stopinfo}    jctrl stop: error: too few arguments
+    Should Contain    ${stopinfo}    usage: jctrl stop
+    sleep    3
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    ${resumeinfo}    runCommand    su user2 -c 'jctrl resume -u user2'
+    log    ${resumeinfo}
+    Should Contain    ${resumeinfo}    jctrl resume: error: too few arguments
+    Should Contain    ${resumeinfo}    usage: jctrl resume
+    sleep    3
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    runCommand    su jhadmin -c "jctrl kill -u all 0"
+    Remove Files    ${filedir}/spooler/output/*.txt
+    [Teardown]    modHostInfo    rhela1=1 ()    rhelb=1 ()
+
+case35.(28)jctrl stop/resume -u username 0指定用户，集群管理员或root用户可以暂停/恢复指定用户的所有作业。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file}    Set Variable    ${filedir}/spooler/input/jctrl.sh
+    addOrModifyHost    rhela1    2 ()
+    addOrModifyHost    rhelb    2 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job0}    querySubmitInfo    su user1 -c "jsub \ ${file}"
+    ${jobid0}    getJobId    ${job0}
+    ${job1}    querySubmitInfo    su user1 -c "jsub ${file}"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user2 -c "jsub ${file}"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user2 -c "jsub ${file}"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    ${stopinfo}    runCommand    su jhadmin -c 'jctrl stop -u user2 0'
+    log    ${stopinfo}
+    Should Not Contain    ${stopinfo}    Job <${jobid0}> is being stopped
+    Should Not Contain    ${stopinfo}    Job <${jobid1}> is being stopped
+    Should Contain    ${stopinfo}    Job <${jobid2}> is being stopped
+    Should Contain    ${stopinfo}    Job <${jobid3}> is being stopped
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    USUSP
+    checkJobStatus    ${jobid3}    USUSP
+    ${job22}    queryJobInfo    ${jobid2}
+    ${reason2}    getJobSpndRsn    ${job22}
+    log    ${reason2}
+    Should Contain    ${reason2}    The job was suspended by user;
+    ${job33}    queryJobInfo    ${jobid3}
+    ${reason3}    getJobSpndRsn    ${job33}
+    log    ${reason3}
+    Should Contain    ${reason3}    The job was suspended by user;
+    ${outputdire}    Set Variable    ${filedir}/spooler/output/jobout${jobid2}.txt
+    ${sizee}    Get File Size    ${outputdire}
+    log    ${sizee}
+    sleep    3
+    ${sizef}    Get File Size    ${outputdire}
+    log    ${sizef}
+    Should Be Equal As Integers    ${sizee}    ${sizef}
+    ${outputdirg}    Set Variable    ${filedir}/spooler/output/jobout${jobid3}.txt
+    ${sizeg}    Get File Size    ${outputdirg}
+    log    ${sizeg}
+    sleep    3
+    ${sizeh}    Get File Size    ${outputdirg}
+    log    ${sizeh}
+    Should Be Equal As Integers    ${sizeg}    ${sizeh}
+    ${resumeinfo}    runCommand    su jhadmin -c 'jctrl resume -u user2 0'
+    log    ${resumeinfo}
+    Should Not Contain    ${resumeinfo}    Job <${jobid0}> is being resumed
+    Should Not Contain    ${resumeinfo}    Job <${jobid1}> is being resumed
+    Should Contain    ${resumeinfo}    Job <${jobid2}> is being resumed
+    Should Contain    ${resumeinfo}    Job <${jobid3}> is being resumed
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    ${outputdir55}    Set Variable    ${filedir}/spooler/output/jobout${jobid2}.txt
+    ${size55}    Get File Size    ${outputdir55}
+    log    ${size55}
+    sleep    3
+    ${size66}    Get File Size    ${outputdir55}
+    log    ${size66}
+    Should Not Be Equal As Integers    ${size55}    ${size66}
+    ${outputdir77}    Set Variable    ${filedir}/spooler/output/jobout${jobid3}.txt
+    ${size77}    Get File Size    ${outputdir77}
+    log    ${size77}
+    sleep    3
+    ${size88}    Get File Size    ${outputdir77}
+    log    ${size88}
+    Should Not Be Equal As Integers    ${size77}    ${size88}
+    runCommand    su jhadmin -c "jctrl kill -u all 0"
+    Remove Files    ${filedir}/spooler/output/*.txt
+    [Teardown]    modHostInfo    rhela1=1 ()    rhelb=1 ()
+
+case34.(27)jctrl stop -u。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file}    Set Variable    ${filedir}/spooler/input/jctrl.sh
+    addOrModifyHost    rhela1    2 ()
+    addOrModifyHost    rhelb    2 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job0}    querySubmitInfo    su user1 -c "jsub \ ${file}"
+    ${jobid0}    getJobId    ${job0}
+    ${job1}    querySubmitInfo    su user1 -c "jsub ${file}"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user2 -c "jsub ${file}"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user2 -c "jsub ${file}"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    ${stopinfo}    runCommand    su jhadmin -c 'jctrl stop -u user2 '
+    log    ${stopinfo}
+    Should Contain    ${stopinfo}    jctrl stop: error: too few arguments
+    Should Contain    ${stopinfo}    usage: jctrl stop
+    sleep    3
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    ${resumeinfo}    runCommand    su jhadmin -c 'jctrl resume -u user2'
+    log    ${resumeinfo}
+    Should Contain    ${resumeinfo}    jctrl resume: error: too few arguments
+    Should Contain    ${resumeinfo}    usage: jctrl resume
+    sleep    3
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    runCommand    su jhadmin -c "jctrl kill -u all 0"
+    Remove Files    ${filedir}/spooler/output/*.txt
+    [Teardown]    modHostInfo    rhela1=1 ()    rhelb=1 ()
+
+case36.bug11755(29)jctrl stop/resume -u 0同时暂停/恢复多个用户的作业失败，会打印提示信息。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file}    Set Variable    ${filedir}/spooler/input/jctrl.sh
+    addOrModifyHost    rhela1    2 ()
+    addOrModifyHost    rhelb    2 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job0}    querySubmitInfo    su user1 -c "jsub \ ${file}"
+    ${jobid0}    getJobId    ${job0}
+    ${job1}    querySubmitInfo    su user1 -c "jsub ${file}"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user2 -c "jsub ${file}"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user2 -c "jsub ${file}"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    ${stopinfo}    runCommand    su user2 -c 'jctrl stop -u "user1 user2" 0'
+    log    ${stopinfo}
+    Should Contain    ${stopinfo}    user2: User permission denied
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    ${outputdir11}    Set Variable    ${filedir}/spooler/output/jobout${jobid0}.txt
+    ${size11}    Get File Size    ${outputdir11}
+    log    ${size11}
+    sleep    3
+    ${size22}    Get File Size    ${outputdir11}
+    log    ${size22}
+    Should Not Be Equal As Integers    ${size11}    ${size22}
+    ${outputdir33}    Set Variable    ${filedir}/spooler/output/jobout${jobid1}.txt
+    ${size33}    Get File Size    ${outputdir33}
+    log    ${size33}
+    sleep    3
+    ${size44}    Get File Size    ${outputdir33}
+    log    ${size44}
+    Should Not Be Equal As Integers    ${size33}    ${size44}
+    ${outputdir55}    Set Variable    ${filedir}/spooler/output/jobout${jobid2}.txt
+    ${size55}    Get File Size    ${outputdir55}
+    log    ${size55}
+    sleep    3
+    ${size66}    Get File Size    ${outputdir55}
+    log    ${size66}
+    Should Not Be Equal As Integers    ${size55}    ${size66}
+    ${outputdir77}    Set Variable    ${filedir}/spooler/output/jobout${jobid3}.txt
+    ${size77}    Get File Size    ${outputdir77}
+    log    ${size77}
+    sleep    3
+    ${size88}    Get File Size    ${outputdir77}
+    log    ${size88}
+    Should Not Be Equal As Integers    ${size77}    ${size88}
+    ${resumeinfo}    runCommand    su user2 -c 'jctrl resume -u "user1 user2" 0'
+    log    ${resumeinfo}
+    Should Contain    ${resumeinfo}    user2: User permission denied
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    ${stopinfo2}    runCommand    su jhadmin -c 'jctrl stop -u "user1 user2" 0'
+    log    ${stopinfo2}
+    Should Contain    ${stopinfo2}    Job <${jobid0}> is being stopped
+    Should Contain    ${stopinfo2}    Job <${jobid1}> is being stopped
+    Should Contain    ${stopinfo2}    Job <${jobid2}> is being stopped
+    Should Contain    ${stopinfo2}    Job <${jobid3}> is being stopped
+    checkJobStatus    ${jobid0}    USUSP
+    checkJobStatus    ${jobid1}    USUSP
+    checkJobStatus    ${jobid2}    USUSP
+    checkJobStatus    ${jobid3}    USUSP
+    ${job00}    queryJobInfo    ${jobid0}
+    ${reason0}    getJobSpndRsn    ${job00}
+    log    ${reason0}
+    Should Contain    ${reason0}    The job was suspended by user;
+    ${job11}    queryJobInfo    ${jobid1}
+    ${reason1}    getJobSpndRsn    ${job11}
+    log    ${reason1}
+    Should Contain    ${reason1}    The job was suspended by user;
+    ${job22}    queryJobInfo    ${jobid2}
+    ${reason2}    getJobSpndRsn    ${job22}
+    log    ${reason2}
+    Should Contain    ${reason2}    The job was suspended by user;
+    ${job33}    queryJobInfo    ${jobid3}
+    ${reason3}    getJobSpndRsn    ${job33}
+    log    ${reason3}
+    Should Contain    ${reason3}    The job was suspended by user;
+    ${outputdira}    Set Variable    ${filedir}/spooler/output/jobout${jobid0}.txt
+    ${sizea}    Get File Size    ${outputdira}
+    log    ${sizea}
+    sleep    3
+    ${sizeb}    Get File Size    ${outputdira}
+    log    ${sizeb}
+    Should Be Equal As Integers    ${sizea}    ${sizeb}
+    ${outputdirc}    Set Variable    ${filedir}/spooler/output/jobout${jobid1}.txt
+    ${sizec}    Get File Size    ${outputdirc}
+    log    ${sizec}
+    sleep    3
+    ${sized}    Get File Size    ${outputdirc}
+    log    ${sized}
+    Should Be Equal As Integers    ${sizec}    ${sized}
+    ${outputdire}    Set Variable    ${filedir}/spooler/output/jobout${jobid2}.txt
+    ${sizee}    Get File Size    ${outputdire}
+    log    ${sizee}
+    sleep    3
+    ${sizef}    Get File Size    ${outputdire}
+    log    ${sizef}
+    Should Be Equal As Integers    ${sizee}    ${sizef}
+    ${outputdirg}    Set Variable    ${filedir}/spooler/output/jobout${jobid3}.txt
+    ${sizeg}    Get File Size    ${outputdirg}
+    log    ${sizeg}
+    sleep    3
+    ${sizeh}    Get File Size    ${outputdirg}
+    log    ${sizeh}
+    Should Be Equal As Integers    ${sizeg}    ${sizeh}
+    ${resumeinfo2}    runCommand    su jhadmin -c 'jctrl resume -u \ "user1 user2" 0'
+    log    ${resumeinfo2}
+    Should Contain    ${resumeinfo2}    Job <${jobid0}> is being resumed
+    Should Contain    ${resumeinfo2}    Job <${jobid1}> is being resumed
+    Should Contain    ${resumeinfo2}    Job <${jobid2}> is being resumed
+    Should Contain    ${resumeinfo2}    Job <${jobid3}> is being resumed
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    ${outputdir11}    Set Variable    ${filedir}/spooler/output/jobout${jobid0}.txt
+    ${size11}    Get File Size    ${outputdir11}
+    log    ${size11}
+    sleep    3
+    ${size22}    Get File Size    ${outputdir11}
+    log    ${size22}
+    Should Not Be Equal As Integers    ${size11}    ${size22}
+    ${outputdir33}    Set Variable    ${filedir}/spooler/output/jobout${jobid1}.txt
+    ${size33}    Get File Size    ${outputdir33}
+    log    ${size33}
+    sleep    3
+    ${size44}    Get File Size    ${outputdir33}
+    log    ${size44}
+    Should Not Be Equal As Integers    ${size33}    ${size44}
+    ${outputdir55}    Set Variable    ${filedir}/spooler/output/jobout${jobid2}.txt
+    ${size55}    Get File Size    ${outputdir55}
+    log    ${size55}
+    sleep    3
+    ${size66}    Get File Size    ${outputdir55}
+    log    ${size66}
+    Should Not Be Equal As Integers    ${size55}    ${size66}
+    ${outputdir77}    Set Variable    ${filedir}/spooler/output/jobout${jobid3}.txt
+    ${size77}    Get File Size    ${outputdir77}
+    log    ${size77}
+    sleep    3
+    ${size88}    Get File Size    ${outputdir77}
+    log    ${size88}
+    Should Not Be Equal As Integers    ${size77}    ${size88}
+    runCommand    su jhadmin -c "jctrl kill -u all 0"
+    Remove Files    ${filedir}/spooler/output/*.txt
+    [Teardown]    modHostInfo    rhela1=1 ()    rhelb=1 ()
+
+case38.(31)jctrl stop/resume -u同时指定多个用户中包含不存在的用户。（管理员用户或root用户）
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file}    Set Variable    ${filedir}/spooler/input/jctrl.sh
+    addOrModifyHost    rhela1    2 ()
+    addOrModifyHost    rhelb    2 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job0}    querySubmitInfo    su user1 -c "jsub \ ${file}"
+    ${jobid0}    getJobId    ${job0}
+    ${job1}    querySubmitInfo    su user1 -c "jsub ${file}"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user2 -c "jsub ${file}"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user2 -c "jsub ${file}"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    ${stopinfob}    runCommand    su jhadmin -c 'jctrl stop -u "user2 userxwfno user1" 0'
+    log    ${stopinfob}
+    Should Be Equal    ${stopinfob}    userxwfno: Unknown user
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    ${outputdir11}    Set Variable    ${filedir}/spooler/output/jobout${jobid0}.txt
+    ${size11}    Get File Size    ${outputdir11}
+    log    ${size11}
+    sleep    3
+    ${size22}    Get File Size    ${outputdir11}
+    log    ${size22}
+    Should Not Be Equal As Integers    ${size11}    ${size22}
+    ${outputdir33}    Set Variable    ${filedir}/spooler/output/jobout${jobid1}.txt
+    ${size33}    Get File Size    ${outputdir33}
+    log    ${size33}
+    sleep    3
+    ${size44}    Get File Size    ${outputdir33}
+    log    ${size44}
+    Should Not Be Equal As Integers    ${size33}    ${size44}
+    ${outputdir55}    Set Variable    ${filedir}/spooler/output/jobout${jobid2}.txt
+    ${size55}    Get File Size    ${outputdir55}
+    log    ${size55}
+    sleep    3
+    ${size66}    Get File Size    ${outputdir55}
+    log    ${size66}
+    Should Not Be Equal As Integers    ${size55}    ${size66}
+    ${outputdir77}    Set Variable    ${filedir}/spooler/output/jobout${jobid3}.txt
+    ${size77}    Get File Size    ${outputdir77}
+    log    ${size77}
+    sleep    3
+    ${size88}    Get File Size    ${outputdir77}
+    log    ${size88}
+    Should Not Be Equal As Integers    ${size77}    ${size88}
+    ${resumeb}    runCommand    su jhadmin -c 'jctrl stop -u "user2 userxwfno user1" 0'
+    log    ${resumeb}
+    Should Be Equal    ${resumeb}    userxwfno: Unknown user
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    runCommand    su jhadmin -c "jctrl kill -u all 0"
+    Remove Files    ${filedir}/spooler/output/*.txt
+    [Teardown]    modHostInfo    rhela1=1 ()    rhelb=1 ()
+
+case37.(30)jctrl stop/resume -u同时指定多个用户中包含不存在的用户，用指定的用户执行jctrl stop。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file}    Set Variable    ${filedir}/spooler/input/jctrl.sh
+    addOrModifyHost    rhela1    2 ()
+    addOrModifyHost    rhelb    2 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job0}    querySubmitInfo    su user1 -c "jsub \ ${file}"
+    ${jobid0}    getJobId    ${job0}
+    ${job1}    querySubmitInfo    su user1 -c "jsub ${file}"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user2 -c "jsub ${file}"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user2 -c "jsub ${file}"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    ${stopinfo}    runCommand    su user2 -c 'jctrl stop -u "user2 userxwfno user1" 0'
+    log    ${stopinfo}
+    Should Be Equal    ${stopinfo}    userxwfno: Unknown user
+    ${stopinfoa}    runCommand    su user2 -c 'jctrl stop -u "user1 userxwfno user2" 0'
+    log    ${stopinfoa}
+    Should Be Equal    ${stopinfoa}    userxwfno: Unknown user
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    ${outputdir11}    Set Variable    ${filedir}/spooler/output/jobout${jobid0}.txt
+    ${size11}    Get File Size    ${outputdir11}
+    log    ${size11}
+    sleep    3
+    ${size22}    Get File Size    ${outputdir11}
+    log    ${size22}
+    Should Not Be Equal As Integers    ${size11}    ${size22}
+    ${outputdir33}    Set Variable    ${filedir}/spooler/output/jobout${jobid1}.txt
+    ${size33}    Get File Size    ${outputdir33}
+    log    ${size33}
+    sleep    3
+    ${size44}    Get File Size    ${outputdir33}
+    log    ${size44}
+    Should Not Be Equal As Integers    ${size33}    ${size44}
+    ${outputdir55}    Set Variable    ${filedir}/spooler/output/jobout${jobid2}.txt
+    ${size55}    Get File Size    ${outputdir55}
+    log    ${size55}
+    sleep    3
+    ${size66}    Get File Size    ${outputdir55}
+    log    ${size66}
+    Should Not Be Equal As Integers    ${size55}    ${size66}
+    ${outputdir77}    Set Variable    ${filedir}/spooler/output/jobout${jobid3}.txt
+    ${size77}    Get File Size    ${outputdir77}
+    log    ${size77}
+    sleep    3
+    ${size88}    Get File Size    ${outputdir77}
+    log    ${size88}
+    Should Not Be Equal As Integers    ${size77}    ${size88}
+    ${resumeinfo}    runCommand    su user2 -c 'jctrl resume -u "user2 userxwfno user1" 0'
+    log    ${resumeinfo}
+    Should Be Equal    ${resumeinfo}    userxwfno: Unknown user
+    ${resumea}    runCommand    su user2 -c 'jctrl resume -u "user1 userxwfno user2" 0'
+    log    ${resumea}
+    Should Be Equal    ${resumea}    userxwfno: Unknown user
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    runCommand    su jhadmin -c "jctrl kill -u all 0"
+    Remove Files    ${filedir}/spooler/output/*.txt
+    [Teardown]    modHostInfo    rhela1=1 ()    rhelb=1 ()
+
+case39.(32)jctrl stop/resume -u指定的用户不存在
+    [Setup]    readyTest
+    ${stopinfo}    runCommand    su jhadmin -c 'jctrl stop -u userxwfno'
+    log    ${stopinfo}
+    Should Contain    ${stopinfo}    jctrl stop: error: too few arguments
+    Should Contain    ${stopinfo}    usage: jctrl stop
+    ${stopinfo1}    runCommand    su jhadmin -c 'jctrl stop -u userxwfno 0'
+    log    ${stopinfo1}
+    Should Be Equal    ${stopinfo1}    userxwfno: Unknown user
+    ${resumeinfo}    runCommand    su jhadmin -c 'jctrl resume -u userxwfno'
+    log    ${resumeinfo}
+    Should Contain    ${resumeinfo}    jctrl resume: error: too few arguments
+    Should Contain    ${resumeinfo}    usage: jctrl resume
+    ${resumeinfo1}    runCommand    su jhadmin -c 'jctrl resume -u userxwfno 0'
+    log    ${resumeinfo1}
+    Should Be Equal    ${resumeinfo1}    userxwfno: Unknown user
+    [Teardown]    killJob
+
+case40.(33)jctrl stop/resume指定-u all关键字。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job0}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid0}    getJobId    ${job0}
+    ${job1}    querySubmitInfo    su user2 -c "jsub sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}    RUN
+    ${stopinfo}    runCommand    su user2 -c 'jctrl stop -u all '
+    log    ${stopinfo}
+    Should Contain    ${stopinfo}    jctrl stop: error: too few arguments
+    Should Contain    ${stopinfo}    usage: jctrl stop
+    ${resumeinfo}    runCommand    su user2 -c 'jctrl resume -u all'
+    log    ${resumeinfo}
+    Should Contain    ${resumeinfo}    jctrl resume: error: too few arguments
+    [Teardown]    killJob
+
+case41.(34)jctrl stop/resume指定-u all 0关键字，普通用户只能暂停/恢复本人的所有作业，其他用户的作业被暂停时，会打印提示。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file}    Set Variable    ${filedir}/spooler/input/jctrl.sh
+    addOrModifyHost    rhela1    2 ()
+    addOrModifyHost    rhelb    2 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job0}    querySubmitInfo    su user1 -c "jsub \ ${file}"
+    ${jobid0}    getJobId    ${job0}
+    ${job1}    querySubmitInfo    su user1 -c "jsub ${file}"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user2 -c "jsub ${file}"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user2 -c "jsub ${file}"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    ${stopinfoa}    runCommand    su user2 -c 'jctrl stop -u all 0'
+    log    ${stopinfoa}
+    Should Not Contain    ${stopinfoa}    Job <${jobid0}> is being stopped
+    Should Not Contain    ${stopinfoa}    Job <${jobid1}> is being stopped
+    Should Contain    ${stopinfoa}    Job <${jobid2}> is being stopped
+    Should Contain    ${stopinfoa}    Job <${jobid3}> is being stopped
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    USUSP
+    checkJobStatus    ${jobid3}    USUSP
+    ${job22}    queryJobInfo    ${jobid2}
+    ${reason2}    getJobSpndRsn    ${job22}
+    log    ${reason2}
+    Should Contain    ${reason2}    The job was suspended by user;
+    ${job33}    queryJobInfo    ${jobid3}
+    ${reason3}    getJobSpndRsn    ${job33}
+    log    ${reason3}
+    Should Contain    ${reason3}    The job was suspended by user;
+    ${outputdire}    Set Variable    ${filedir}/spooler/output/jobout${jobid2}.txt
+    ${sizee}    Get File Size    ${outputdire}
+    log    ${sizee}
+    sleep    3
+    ${sizef}    Get File Size    ${outputdire}
+    log    ${sizef}
+    Should Be Equal As Integers    ${sizee}    ${sizef}
+    ${outputdirg}    Set Variable    ${filedir}/spooler/output/jobout${jobid3}.txt
+    ${sizeg}    Get File Size    ${outputdirg}
+    log    ${sizeg}
+    sleep    3
+    ${sizeh}    Get File Size    ${outputdirg}
+    log    ${sizeh}
+    Should Be Equal As Integers    ${sizeg}    ${sizeh}
+    ${resumeinfo1}    runCommand    su user2 -c 'jctrl resume -u all 0'
+    log    ${resumeinfo1}
+    Should Not Contain    ${resumeinfo1}    Job <${jobid0}> is being resumed
+    Should Not Contain    ${resumeinfo1}    Job <${jobid1}> is being resumed
+    Should Contain    ${resumeinfo1}    Job <${jobid2}> is being resumed
+    Should Contain    ${resumeinfo1}    Job <${jobid3}> is being resumed
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    ${outputdir55}    Set Variable    ${filedir}/spooler/output/jobout${jobid2}.txt
+    ${size55}    Get File Size    ${outputdir55}
+    log    ${size55}
+    sleep    3
+    ${size66}    Get File Size    ${outputdir55}
+    log    ${size66}
+    Should Not Be Equal As Integers    ${size55}    ${size66}
+    ${outputdir77}    Set Variable    ${filedir}/spooler/output/jobout${jobid3}.txt
+    ${size77}    Get File Size    ${outputdir77}
+    log    ${size77}
+    sleep    3
+    ${size88}    Get File Size    ${outputdir77}
+    log    ${size88}
+    Should Not Be Equal As Integers    ${size77}    ${size88}
+    runCommand    su jhadmin -c "jctrl kill -u all 0"
+    Remove Files    ${filedir}/spooler/output/*.txt
+    [Teardown]    modHostInfo    rhela1=1 ()    rhelb=1 ()
+
+case42.(36)jctrl stop/resume指定-u all 0关键字，集群管理员或root用户可以暂停/恢复集群中所有用户的作业。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file}    Set Variable    ${filedir}/spooler/input/jctrl.sh
+    addOrModifyHost    rhela1    2 ()
+    addOrModifyHost    rhelb    2 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job0}    querySubmitInfo    su user1 -c "jsub \ ${file}"
+    ${jobid0}    getJobId    ${job0}
+    ${job1}    querySubmitInfo    su user1 -c "jsub ${file}"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user2 -c "jsub ${file}"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user2 -c "jsub ${file}"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    ${stopinfo2}    runCommand    su jhadmin -c 'jctrl stop -u all 0'
+    log    ${stopinfo2}
+    Should Contain    ${stopinfo2}    Job <${jobid0}> is being stopped
+    Should Contain    ${stopinfo2}    Job <${jobid1}> is being stopped
+    Should Contain    ${stopinfo2}    Job <${jobid2}> is being stopped
+    Should Contain    ${stopinfo2}    Job <${jobid3}> is being stopped
+    checkJobStatus    ${jobid0}    USUSP
+    checkJobStatus    ${jobid1}    USUSP
+    checkJobStatus    ${jobid2}    USUSP
+    checkJobStatus    ${jobid3}    USUSP
+    ${job00}    queryJobInfo    ${jobid0}
+    ${reason0}    getJobSpndRsn    ${job00}
+    log    ${reason0}
+    Should Contain    ${reason0}    The job was suspended by user;
+    ${job11}    queryJobInfo    ${jobid1}
+    ${reason1}    getJobSpndRsn    ${job11}
+    log    ${reason1}
+    Should Contain    ${reason1}    The job was suspended by user;
+    ${job22}    queryJobInfo    ${jobid2}
+    ${reason2}    getJobSpndRsn    ${job22}
+    log    ${reason2}
+    Should Contain    ${reason2}    The job was suspended by user;
+    ${job33}    queryJobInfo    ${jobid3}
+    ${reason3}    getJobSpndRsn    ${job33}
+    log    ${reason3}
+    Should Contain    ${reason3}    The job was suspended by user;
+    ${outputdira}    Set Variable    ${filedir}/spooler/output/jobout${jobid0}.txt
+    ${sizea}    Get File Size    ${outputdira}
+    log    ${sizea}
+    sleep    3
+    ${sizeb}    Get File Size    ${outputdira}
+    log    ${sizeb}
+    Should Be Equal As Integers    ${sizeb}    ${sizeb}
+    ${outputdirc}    Set Variable    ${filedir}/spooler/output/jobout${jobid1}.txt
+    ${sizec}    Get File Size    ${outputdirc}
+    log    ${sizec}
+    sleep    3
+    ${sized}    Get File Size    ${outputdirc}
+    log    ${sized}
+    Should Be Equal As Integers    ${sizec}    ${sized}
+    ${outputdire}    Set Variable    ${filedir}/spooler/output/jobout${jobid2}.txt
+    ${sizee}    Get File Size    ${outputdire}
+    log    ${sizee}
+    sleep    3
+    ${sizef}    Get File Size    ${outputdire}
+    log    ${sizef}
+    Should Be Equal As Integers    ${sizee}    ${sizef}
+    ${outputdirg}    Set Variable    ${filedir}/spooler/output/jobout${jobid3}.txt
+    ${sizeg}    Get File Size    ${outputdirg}
+    log    ${sizeg}
+    sleep    3
+    ${sizeh}    Get File Size    ${outputdirg}
+    log    ${sizeh}
+    Should Be Equal As Integers    ${sizeg}    ${sizeh}
+    ${resumeinfo2}    runCommand    su jhadmin -c 'jctrl resume -u all 0'
+    log    ${resumeinfo2}
+    Should Contain    ${resumeinfo2}    Job <${jobid0}> is being resumed
+    Should Contain    ${resumeinfo2}    Job <${jobid1}> is being resumed
+    Should Contain    ${resumeinfo2}    Job <${jobid2}> is being resumed
+    Should Contain    ${resumeinfo2}    Job <${jobid3}> is being resumed
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    ${outputdir11}    Set Variable    ${filedir}/spooler/output/jobout${jobid0}.txt
+    ${size11}    Get File Size    ${outputdir11}
+    log    ${size11}
+    sleep    3
+    ${size22}    Get File Size    ${outputdir11}
+    log    ${size22}
+    Should Not Be Equal As Integers    ${size11}    ${size22}
+    ${outputdir33}    Set Variable    ${filedir}/spooler/output/jobout${jobid1}.txt
+    ${size33}    Get File Size    ${outputdir33}
+    log    ${size33}
+    sleep    3
+    ${size44}    Get File Size    ${outputdir33}
+    log    ${size44}
+    Should Not Be Equal As Integers    ${size33}    ${size44}
+    ${outputdir55}    Set Variable    ${filedir}/spooler/output/jobout${jobid2}.txt
+    ${size55}    Get File Size    ${outputdir55}
+    log    ${size55}
+    sleep    3
+    ${size66}    Get File Size    ${outputdir55}
+    log    ${size66}
+    Should Not Be Equal As Integers    ${size55}    ${size66}
+    ${outputdir77}    Set Variable    ${filedir}/spooler/output/jobout${jobid3}.txt
+    ${size77}    Get File Size    ${outputdir77}
+    log    ${size77}
+    sleep    3
+    ${size88}    Get File Size    ${outputdir77}
+    log    ${size88}
+    Should Not Be Equal As Integers    ${size77}    ${size88}
+    runCommand    su jhadmin -c "jctrl kill -u all 0"
+    Remove Files    ${filedir}/spooler/output/*.txt
+    [Teardown]    modHostInfo    rhela1=1 ()    rhelb=1 ()
+
+case43.(37)重复执行jctrl stop/resume暂停/恢复同1个作业，会打印提示。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file}    Set Variable    ${filedir}/spooler/input/jctrl.sh
+    addOrModifyHost    rhela1    2 ()
+    addOrModifyHost    rhelb    2 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job0}    querySubmitInfo    su user1 -c "jsub \ ${file}"
+    ${jobid0}    getJobId    ${job0}
+    ${job1}    querySubmitInfo    su user1 -c "jsub ${file}"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user2 -c "jsub ${file}"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user2 -c "jsub ${file}"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    ${stopinfo1}    runCommand    su jhadmin -c 'jctrl stop ${jobid0}'
+    log    ${stopinfo1}
+    Should Contain    ${stopinfo1}    Job <${jobid0}> is being stopped
+    Should Not Contain    ${stopinfo1}    Job <${jobid1}> is being stopped
+    Should Not Contain    ${stopinfo1}    Job <${jobid2}> is being stopped
+    Should Not Contain    ${stopinfo1}    Job <${jobid3}> is being stopped
+    checkJobStatus    ${jobid0}    USUSP
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    ${job00}    queryJobInfo    ${jobid0}
+    ${reason0}    getJobSpndRsn    ${job00}
+    log    ${reason0}
+    Should Contain    ${reason0}    The job was suspended by user;
+    ${outputdira}    Set Variable    ${filedir}/spooler/output/jobout${jobid0}.txt
+    ${sizea}    Get File Size    ${outputdira}
+    log    ${sizea}
+    sleep    3
+    ${sizeb}    Get File Size    ${outputdira}
+    log    ${sizeb}
+    Should Be Equal As Integers    ${sizeb}    ${sizeb}
+    ${stopinfo2}    runCommand    su jhadmin -c 'jctrl stop ${jobid0}'
+    log    ${stopinfo2}
+    Should Be Equal    ${stopinfo2}    Job <${jobid0}> has already stopped
+    ${outputdirc}    Set Variable    ${filedir}/spooler/output/jobout${jobid0}.txt
+    ${sizec}    Get File Size    ${outputdirc}
+    log    ${sizec}
+    sleep    3
+    ${sized}    Get File Size    ${outputdirc}
+    log    ${sized}
+    Should Be Equal As Integers    ${sizec}    ${sized}
+    ${resumeinfo1}    runCommand    su jhadmin -c 'jctrl resume ${jobid0}'
+    log    ${resumeinfo1}
+    Should Contain    ${resumeinfo1}    Job <${jobid0}> is being resumed
+    Should Not Contain    ${resumeinfo1}    Job <${jobid1}> is being resumed
+    Should Not Contain    ${resumeinfo1}    Job <${jobid2}> is being resumed
+    Should Not Contain    ${resumeinfo1}    Job <${jobid3}> is being resumed
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    ${outputdir11}    Set Variable    ${filedir}/spooler/output/jobout${jobid0}.txt
+    ${size11}    Get File Size    ${outputdir11}
+    log    ${size11}
+    sleep    3
+    ${size22}    Get File Size    ${outputdir11}
+    log    ${size22}
+    Should Not Be Equal As Integers    ${size11}    ${size22}
+    ${resumeinfo2}    runCommand    su jhadmin -c 'jctrl resume ${jobid0}'
+    log    ${resumeinfo2}
+    Should Be Equal    ${resumeinfo2}    Job <${jobid0}> has already resumed
+    ${outputdir33}    Set Variable    ${filedir}/spooler/output/jobout${jobid0}.txt
+    ${size33}    Get File Size    ${outputdir33}
+    log    ${size33}
+    sleep    3
+    ${size44}    Get File Size    ${outputdir33}
+    log    ${size44}
+    Should Not Be Equal As Integers    ${size33}    ${size44}
+    runCommand    su jhadmin -c "jctrl kill -u all 0"
+    Remove Files    ${filedir}/spooler/output/*.txt
+    [Teardown]    modHostInfo    rhela1=1 ()    rhelb=1 ()
+
+case44.(38)jctrl stop/resume暂停/恢复不同状态的作业，只有RUN和PEND状态的作业可以被临时暂停/恢复。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file}    Set Variable    ${filedir}/spooler/input/jctrl.sh
+    ${file1}    Set Variable    ${filedir}/spooler/input/jctrl1.sh
+    ${job1}    querySubmitInfo    su user1 -c "jsub ${file1}"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub ${file}"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid2}    RUN
+    runCommand    jctrl kill ${jobid2}
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid1}    DONE
+    ${job3}    querySubmitInfo    su user1 -c "jsub -q prelow ${file}"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user1 -c "jsub ${file}"
+    ${jobid4}    getJobId    ${job4}
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    RUN
+    ${job5}    querySubmitInfo    su user1 -c "jsub -q prehigh ${file}"
+    ${jobid5}    getJobId    ${job5}
+    ${job6}    querySubmitInfo    su user1 -c "jsub ${file}"
+    ${jobid6}    getJobId    ${job6}
+    ${job7}    querySubmitInfo    su user1 -c "jsub ${file}"
+    ${jobid7}    getJobId    ${job7}
+    ${job8}    querySubmitInfo    su user1 -c "jsub -J arr[1-2] ${file}"
+    ${jobid8}    getJobId    ${job8}
+    runCommand    su user1 -c "jctrl stop ${jobid4} ${jobid6}"
+    checkJobStatus    ${jobid1}    DONE
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    SSUSP
+    checkJobStatus    ${jobid4}    USUSP
+    checkJobStatus    ${jobid5}    RUN
+    checkJobStatus    ${jobid6}    PSUSP
+    checkJobStatus    ${jobid7}    PEND
+    checkJobStatus    ${jobid8}[1]    PEND
+    checkJobStatus    ${jobid8}[2]    PEND
+    ${stopinfo}    runCommand    su user1 -c "jctrl stop -u all 0"
+    log    ${stopinfo}
+    Should Not Contain    ${stopinfo}    Job <${jobid1}> is being stopped
+    Should Not Contain    ${stopinfo}    Job <${jobid2}> is being stopped
+    Should Contain    ${stopinfo}    Job <${jobid3}> : Failed to stop
+    Should Contain    ${stopinfo}    Job <${jobid4}> has already stopped
+    Should Contain    ${stopinfo}    Job <${jobid5}> is being stopped
+    Should Contain    ${stopinfo}    Job <${jobid6}> has already stopped
+    Should Contain    ${stopinfo}    Job <${jobid7}> is being stopped
+    Should Contain    ${stopinfo}    Job <${jobid8}[1]> is being stopped
+    Should Contain    ${stopinfo}    Job <${jobid8}[2]> is being stopped
+    ${outputdira}    Set Variable    ${filedir}/spooler/output/jobout${jobid5}.txt
+    ${sizea}    Get File Size    ${outputdira}
+    log    ${sizea}
+    sleep    3
+    ${sizeb}    Get File Size    ${outputdira}
+    log    ${sizeb}
+    Should Be Equal As Integers    ${sizeb}    ${sizeb}
+    ${resumeinfo}    runCommand    su user1 -c "jctrl resume -u all 0"
+    log    ${resumeinfo}
+    Should Not Contain    ${resumeinfo}    Job <${jobid1}> is being resumed
+    Should Not Contain    ${resumeinfo}    Job <${jobid2}> is being resumed
+    Should Contain    ${resumeinfo}    Job <${jobid3}> has been suspended by system, cannot be resumed
+    Should Contain    ${resumeinfo}    Job <${jobid4}> is being resumed
+    Should Contain    ${resumeinfo}    Job <${jobid5}> is being resumed
+    Should Contain    ${resumeinfo}    Job <${jobid6}> is being resumed
+    Should Contain    ${resumeinfo}    Job <${jobid7}> is being resumed
+    Should Contain    ${resumeinfo}    Job <${jobid8}[1]> is being resumed
+    Should Contain    ${resumeinfo}    Job <${jobid8}[2]> is being resumed
+    ${outputdir11}    Set Variable    ${filedir}/spooler/output/jobout${jobid4}.txt
+    ${size11}    Get File Size    ${outputdir11}
+    log    ${size11}
+    sleep    3
+    ${size22}    Get File Size    ${outputdir11}
+    log    ${size22}
+    Should Not Be Equal As Integers    ${size11}    ${size22}
+    ${outputdir33}    Set Variable    ${filedir}/spooler/output/jobout${jobid5}.txt
+    ${size33}    Get File Size    ${outputdir33}
+    log    ${size33}
+    sleep    3
+    ${size44}    Get File Size    ${outputdir33}
+    log    ${size44}
+    Should Not Be Equal As Integers    ${size33}    ${size44}
+    ${outputdirc}    Set Variable    ${filedir}/spooler/output/jobout${jobid1}.txt
+    ${sizec}    Get File Size    ${outputdirc}
+    log    ${sizec}
+    sleep    3
+    ${sized}    Get File Size    ${outputdirc}
+    log    ${sized}
+    Should Be Equal As Integers    ${sizec}    ${sized}
+    ${outputdire}    Set Variable    ${filedir}/spooler/output/jobout${jobid2}.txt
+    ${sizee}    Get File Size    ${outputdire}
+    log    ${sizee}
+    sleep    3
+    ${sizef}    Get File Size    ${outputdire}
+    log    ${sizef}
+    Should Be Equal As Integers    ${sizee}    ${sizef}
+    ${outputdirg}    Set Variable    ${filedir}/spooler/output/jobout${jobid3}.txt
+    ${sizeg}    Get File Size    ${outputdirg}
+    log    ${sizeg}
+    sleep    3
+    ${sizeh}    Get File Size    ${outputdirg}
+    log    ${sizeh}
+    Should Be Equal As Integers    ${sizeg}    ${sizeh}
+    runCommand    su jhadmin -c "jctrl kill -u all 0"
+    Remove Files    ${filedir}/spooler/output/*.txt
+    [Teardown]    killJob
+
+case45.(39)jctrl stop/resume -J。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file}    Set Variable    ${filedir}/spooler/input/jctrl.sh
+    addOrModifyHost    rhela1    2 ()
+    addOrModifyHost    rhelb    2 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job0}    querySubmitInfo    su user1 -c "jsub -J job1 ${file}"
+    ${jobid0}    getJobId    ${job0}
+    ${job1}    querySubmitInfo    su user1 -c "jsub -J job2 ${file}"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -J job2 ${file}"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub -J job3 ${file}"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    ${stopinfoa}    runCommand    su user1 -c 'jctrl stop -J job2'
+    log    ${stopinfoa}
+    Should Contain    ${stopinfoa}    jctrl stop: error: too few arguments
+    Should Contain    ${stopinfoa}    usage: jctrl stop
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    ${outputdir55}    Set Variable    ${filedir}/spooler/output/jobout${jobid1}.txt
+    ${size55}    Get File Size    ${outputdir55}
+    log    ${size55}
+    sleep    3
+    ${size66}    Get File Size    ${outputdir55}
+    log    ${size66}
+    Should Not Be Equal As Integers    ${size55}    ${size66}
+    ${outputdir77}    Set Variable    ${filedir}/spooler/output/jobout${jobid2}.txt
+    ${size77}    Get File Size    ${outputdir77}
+    log    ${size77}
+    sleep    3
+    ${size88}    Get File Size    ${outputdir77}
+    log    ${size88}
+    Should Not Be Equal As Integers    ${size77}    ${size88}
+    ${resumeinfo1}    runCommand    su user1 -c 'jctrl resume -J job2'
+    log    ${resumeinfo1}
+    Should Contain    ${resumeinfo1}    jctrl resume: error: too few arguments
+    Should Contain    ${resumeinfo1}    usage: jctrl resume
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    runCommand    su jhadmin -c "jctrl kill -u all 0"
+    Remove Files    ${filedir}/spooler/output/*.txt
+    [Teardown]    modHostInfo    rhela1=1 ()    rhelb=1 ()
+
+case46.(41)jctrl stop/resume -J指定的作业名称不存在，会打印提示。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub -J job1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -J job2 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    ${stopinfo}    runCommand    su user1 -c "jctrl stop -J jobxwfno 0"
+    log    ${stopinfo}
+    Should Be Equal    ${stopinfo}    No unfinished job found
+    [Teardown]    killJob
+
+case47.(44-1)jctrl stop/resume -J jobname 0指定数组作业名称，可以暂停整个数组作业。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file}    Set Variable    ${filedir}/spooler/input/jctrl.sh
+    addOrModifyHost    rhela1    2 ()
+    addOrModifyHost    rhelb    3 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job0}    querySubmitInfo    su user1 -c "jsub -J a[1-2] ${file}"
+    ${jobid0}    getJobId    ${job0}
+    ${job1}    querySubmitInfo    su user1 -c "jsub -J b[1-3] ${file}"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid0}[1]    RUN
+    checkJobStatus    ${jobid0}[2]    RUN
+    checkJobStatus    ${jobid1}[1]    RUN
+    checkJobStatus    ${jobid1}[2]    RUN
+    checkJobStatus    ${jobid1}[3]    RUN
+    ${stopinfo2}    runCommand    su user1 -c 'jctrl stop -J b 0'
+    log    ${stopinfo2}
+    Should Not Contain    ${stopinfo2}    Job <${jobid0}[1]> is being stopped
+    Should Not Contain    ${stopinfo2}    Job <${jobid0}[2]> is being stopped
+    Should Contain    ${stopinfo2}    Job <${jobid1}[1]> is being stopped
+    Should Contain    ${stopinfo2}    Job <${jobid1}[2]> is being stopped
+    Should Contain    ${stopinfo2}    Job <${jobid1}[3]> is being stopped
+    checkJobStatus    ${jobid0}[1]    RUN
+    checkJobStatus    ${jobid0}[2]    RUN
+    checkJobStatus    ${jobid1}[1]    USUSP
+    checkJobStatus    ${jobid1}[2]    USUSP
+    checkJobStatus    ${jobid1}[3]    USUSP
+    ${job11}    queryJobInfo    ${jobid1}[1]
+    ${reason1}    getJobSpndRsn    ${job11}
+    log    ${reason1}
+    Should Contain    ${reason1}    The job was suspended by user;
+    ${job22}    queryJobInfo    ${jobid1}[2]
+    ${reason2}    getJobSpndRsn    ${job22}
+    log    ${reason2}
+    Should Contain    ${reason2}    The job was suspended by user;
+    ${job33}    queryJobInfo    ${jobid1}[3]
+    ${reason3}    getJobSpndRsn    ${job33}
+    log    ${reason3}
+    Should Contain    ${reason3}    The job was suspended by user;
+    ${outputdira}    Set Variable    ${filedir}/spooler/output/jobout${jobid1}[1].txt
+    ${sizea}    Get File Size    ${outputdira}
+    log    ${sizea}
+    sleep    3
+    ${sizeb}    Get File Size    ${outputdira}
+    log    ${sizeb}
+    Should Be Equal As Integers    ${sizeb}    ${sizeb}
+    ${outputdirc}    Set Variable    ${filedir}/spooler/output/jobout${jobid1}[2].txt
+    ${sizec}    Get File Size    ${outputdirc}
+    log    ${sizec}
+    sleep    3
+    ${sized}    Get File Size    ${outputdirc}
+    log    ${sized}
+    Should Be Equal As Integers    ${sizec}    ${sized}
+    ${outputdire}    Set Variable    ${filedir}/spooler/output/jobout${jobid1}[3].txt
+    ${sizee}    Get File Size    ${outputdire}
+    log    ${sizee}
+    sleep    3
+    ${sizef}    Get File Size    ${outputdire}
+    log    ${sizef}
+    Should Be Equal As Integers    ${sizee}    ${sizef}
+    ${outputdirg}    Set Variable    ${filedir}/spooler/output/jobout${jobid0}[1].txt
+    ${sizeg}    Get File Size    ${outputdirg}
+    log    ${sizeg}
+    sleep    3
+    ${sizeh}    Get File Size    ${outputdirg}
+    log    ${sizeh}
+    Should Not Be Equal As Integers    ${sizeg}    ${sizeh}
+    ${resumeinfo2}    runCommand    su user1 -c 'jctrl resume -J b 0'
+    log    ${resumeinfo2}
+    Should Not Contain    ${resumeinfo2}    Job <${jobid0}[1]> is being resumed
+    Should Not Contain    ${resumeinfo2}    Job <${jobid0}[2]> is being resumed
+    Should Contain    ${resumeinfo2}    Job <${jobid1}[1]> is being resumed
+    Should Contain    ${resumeinfo2}    Job <${jobid1}[2]> is being resumed
+    Should Contain    ${resumeinfo2}    Job <${jobid1}[3]> is being resumed
+    checkJobStatus    ${jobid0}[1]    RUN
+    checkJobStatus    ${jobid0}[2]    RUN
+    checkJobStatus    ${jobid1}[1]    RUN
+    checkJobStatus    ${jobid1}[2]    RUN
+    checkJobStatus    ${jobid1}[3]    RUN
+    ${outputdir11}    Set Variable    ${filedir}/spooler/output/jobout${jobid1}[1].txt
+    ${size11}    Get File Size    ${outputdir11}
+    log    ${size11}
+    sleep    3
+    ${size22}    Get File Size    ${outputdir11}
+    log    ${size22}
+    Should Not Be Equal As Integers    ${size11}    ${size22}
+    ${outputdir33}    Set Variable    ${filedir}/spooler/output/jobout${jobid1}[2].txt
+    ${size33}    Get File Size    ${outputdir33}
+    log    ${size33}
+    sleep    3
+    ${size44}    Get File Size    ${outputdir33}
+    log    ${size44}
+    Should Not Be Equal As Integers    ${size33}    ${size44}
+    ${outputdir55}    Set Variable    ${filedir}/spooler/output/jobout${jobid1}[3].txt
+    ${size55}    Get File Size    ${outputdir55}
+    log    ${size55}
+    sleep    3
+    ${size66}    Get File Size    ${outputdir55}
+    log    ${size66}
+    Should Not Be Equal As Integers    ${size55}    ${size66}
+    ${outputdir77}    Set Variable    ${filedir}/spooler/output/jobout${jobid0}[1].txt
+    ${size77}    Get File Size    ${outputdir77}
+    log    ${size77}
+    sleep    3
+    ${size88}    Get File Size    ${outputdir77}
+    log    ${size88}
+    Should Not Be Equal As Integers    ${size77}    ${size88}
+    ${outputdir9}    Set Variable    ${filedir}/spooler/output/jobout${jobid0}[2].txt
+    ${size99}    Get File Size    ${outputdir9}
+    log    ${size99}
+    sleep    3
+    ${size100}    Get File Size    ${outputdir9}
+    log    ${size100}
+    Should Not Be Equal As Integers    ${size99}    ${size100}
+    runCommand    su jhadmin -c "jctrl kill -u all 0"
+    Remove Files    ${filedir}/spooler/output/*.txt
+    [Teardown]    modHostInfo    rhela1=1 ()    rhelb=1 ()
+
+case48.(46)jctrl stop/resume -q暂停/恢复已被删除队列上的运行作业失败，报有提示信息。
+    [Tags]    p2
+    [Setup]    readyTest
+    addOrModifyQueue    qtestno    PRIORITY=10\n
+    jadminSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -q qtestno sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    delQueueA    qtestno
+    jadminSched
+    checkRestartClusterStatus
+    sleep    3
+    ${stopinfo}    runCommand    su user1 -c "jctrl stop -q qtestno 0"
+    log    ${stopinfo}
+    Should Be Equal    ${stopinfo}    qtestno: No such queue
+    [Teardown]    delQueue    qtestno
+
+case49.(47)jctrl resume -q恢复已被删除队列上的运行作业失败，报有提示信息。
+    [Tags]    p2
+    [Setup]    readyTest
+    addOrModifyQueue    qtestno1    PRIORITY=10\n
+    jadminSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -q qtestno1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${stopinfox}    runCommand    su user1 -c "jctrl stop ${jobid1}"
+    log    ${stopinfox}
+    delQueueA    qtestno1
+    jadminSched
+    checkRestartClusterStatus
+    sleep    3
+    ${resumeinfo}    runCommand    su user1 -c "jctrl resume -q qtestno1 0"
+    log    ${resumeinfo}
+    Should Be Equal    ${resumeinfo}    qtestno1: No such queue
+    [Teardown]    delQueue    qtestno1
+
+case50.(58)jctrl stop/resume -m -u暂停/恢复指定节点上指定用户的作业，如果指定节点上存在指定用户的作业，作业被暂停/恢复，否则，报有提示信息。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file}    Set Variable    ${filedir}/spooler/input/jctrl.sh
+    addOrModifyHost    rhela1    2 ()
+    addOrModifyHost    rhelb    2 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job0}    querySubmitInfo    su user1 -c "jsub -m rhela1 \ ${file}"
+    ${jobid0}    getJobId    ${job0}
+    ${job1}    querySubmitInfo    su user1 -c "jsub -m rhelb ${file}"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user2 -c "jsub -m rhela1 ${file}"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su jhadmin -c "jsub -m rhelb ${file}"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    ${stopinfom}    runCommand    su jhadmin -c 'jctrl stop -m rhelb -u user2 0'
+    log    ${stopinfom}
+    Should Be Equal    ${stopinfom}    No unfinished job found
+    ${resumeinfom}    runCommand    su jhadmin -c 'jctrl resume -m rhelb -u user2 0'
+    log    ${resumeinfom}
+    Should Be Equal    ${resumeinfom}    No unfinished job found
+    ${stopinfoa}    runCommand    su jhadmin -c 'jctrl stop -m rhelb -u user1 0'
+    log    ${stopinfoa}
+    Should Not Contain    ${stopinfoa}    Job <${jobid0}> is being stopped
+    Should Contain    ${stopinfoa}    Job <${jobid1}> is being stopped
+    Should Not Contain    ${stopinfoa}    Job <${jobid2}> is being stopped
+    Should Not Contain    ${stopinfoa}    Job <${jobid3}> is being stopped
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}    USUSP
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    ${job22}    queryJobInfo    ${jobid1}
+    ${reason2}    getJobSpndRsn    ${job22}
+    log    ${reason2}
+    Should Contain    ${reason2}    The job was suspended by user;
+    ${outputdir11}    Set Variable    ${filedir}/spooler/output/jobout${jobid0}.txt
+    ${size11}    Get File Size    ${outputdir11}
+    log    ${size11}
+    sleep    3
+    ${size22}    Get File Size    ${outputdir11}
+    log    ${size22}
+    Should Not Be Equal As Integers    ${size11}    ${size22}
+    ${outputdir33}    Set Variable    ${filedir}/spooler/output/jobout${jobid1}.txt
+    ${size33}    Get File Size    ${outputdir33}
+    log    ${size33}
+    sleep    3
+    ${size44}    Get File Size    ${outputdir33}
+    log    ${size44}
+    Should Be Equal As Integers    ${size33}    ${size44}
+    ${outputdir55}    Set Variable    ${filedir}/spooler/output/jobout${jobid2}.txt
+    ${size55}    Get File Size    ${outputdir55}
+    log    ${size55}
+    sleep    3
+    ${size66}    Get File Size    ${outputdir55}
+    log    ${size66}
+    Should Not Be Equal As Integers    ${size55}    ${size66}
+    ${outputdir77}    Set Variable    ${filedir}/spooler/output/jobout${jobid3}.txt
+    ${size77}    Get File Size    ${outputdir77}
+    log    ${size77}
+    sleep    3
+    ${size88}    Get File Size    ${outputdir77}
+    log    ${size88}
+    Should Not Be Equal As Integers    ${size77}    ${size88}
+    ${stopinfob}    runCommand    su jhadmin -c 'jctrl stop -m rhela1 -u user2 0'
+    log    ${stopinfob}
+    Should Not Contain    ${stopinfob}    Job <${jobid0}> is being stopped
+    Should Not Contain    ${stopinfob}    Job <${jobid1}> is being stopped
+    Should Contain    ${stopinfob}    Job <${jobid2}> is being stopped
+    Should Not Contain    ${stopinfob}    Job <${jobid3}> is being stopped
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}    USUSP
+    checkJobStatus    ${jobid2}    USUSP
+    checkJobStatus    ${jobid3}    RUN
+    ${outputdir111}    Set Variable    ${filedir}/spooler/output/jobout${jobid0}.txt
+    ${size111}    Get File Size    ${outputdir111}
+    log    ${size111}
+    sleep    3
+    ${size222}    Get File Size    ${outputdir111}
+    log    ${size222}
+    Should Not Be Equal As Integers    ${size111}    ${size222}
+    ${outputdir333}    Set Variable    ${filedir}/spooler/output/jobout${jobid1}.txt
+    ${size333}    Get File Size    ${outputdir333}
+    log    ${size333}
+    sleep    3
+    ${size444}    Get File Size    ${outputdir333}
+    log    ${size444}
+    Should Be Equal As Integers    ${size333}    ${size444}
+    ${outputdir555}    Set Variable    ${filedir}/spooler/output/jobout${jobid2}.txt
+    ${size555}    Get File Size    ${outputdir555}
+    log    ${size555}
+    sleep    3
+    ${size666}    Get File Size    ${outputdir555}
+    log    ${size666}
+    Should Be Equal As Integers    ${size555}    ${size666}
+    ${outputdir777}    Set Variable    ${filedir}/spooler/output/jobout${jobid3}.txt
+    ${size777}    Get File Size    ${outputdir777}
+    log    ${size777}
+    sleep    3
+    ${size888}    Get File Size    ${outputdir777}
+    log    ${size888}
+    Should Not Be Equal As Integers    ${size777}    ${size888}
+    ${resumeinfo1}    runCommand    su jhadmin -c 'jctrl resume -m rhelb -u user1 0'
+    log    ${resumeinfo1}
+    Should Not Contain    ${resumeinfo1}    Job <${jobid0}> is being resumed
+    Should Contain    ${resumeinfo1}    Job <${jobid1}> is being resumed
+    Should Not Contain    ${resumeinfo1}    Job <${jobid2}> is being resumed
+    Should Not Contain    ${resumeinfo1}    Job <${jobid3}> is being resumed
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    USUSP
+    checkJobStatus    ${jobid3}    RUN
+    ${outputdira}    Set Variable    ${filedir}/spooler/output/jobout${jobid0}.txt
+    ${sizea}    Get File Size    ${outputdira}
+    log    ${sizea}
+    sleep    3
+    ${sizeb}    Get File Size    ${outputdira}
+    log    ${sizeb}
+    Should Not Be Equal As Integers    ${sizea}    ${sizeb}
+    ${outputdirc}    Set Variable    ${filedir}/spooler/output/jobout${jobid1}.txt
+    ${sizec}    Get File Size    ${outputdirc}
+    log    ${sizec}
+    sleep    3
+    ${sized}    Get File Size    ${outputdirc}
+    log    ${sized}
+    Should Not Be Equal As Integers    ${sizec}    ${sized}
+    ${outputdire}    Set Variable    ${filedir}/spooler/output/jobout${jobid2}.txt
+    ${sizee}    Get File Size    ${outputdire}
+    log    ${sizee}
+    sleep    3
+    ${sizef}    Get File Size    ${outputdire}
+    log    ${sizef}
+    Should Be Equal As Integers    ${sizee}    ${sizef}
+    ${outputdirg}    Set Variable    ${filedir}/spooler/output/jobout${jobid3}.txt
+    ${sizeg}    Get File Size    ${outputdirg}
+    log    ${sizeg}
+    sleep    3
+    ${sizeh}    Get File Size    ${outputdirg}
+    log    ${sizeh}
+    Should Not Be Equal As Integers    ${sizeg}    ${sizeh}
+    ${resumeinfo2}    runCommand    su jhadmin -c 'jctrl resume -m rhela1 -u user2 0'
+    log    ${resumeinfo2}
+    Should Not Contain    ${resumeinfo2}    Job <${jobid0}> is being resumed
+    Should Not Contain    ${resumeinfo2}    Job <${jobid1}> is being resumed
+    Should Contain    ${resumeinfo2}    Job <${jobid2}> is being resumed
+    Should Not Contain    ${resumeinfo2}    Job <${jobid3}> is being resumed
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    ${outputdiraa}    Set Variable    ${filedir}/spooler/output/jobout${jobid0}.txt
+    ${sizeaa}    Get File Size    ${outputdiraa}
+    log    ${sizeaa}
+    sleep    3
+    ${sizebb}    Get File Size    ${outputdiraa}
+    log    ${sizebb}
+    Should Not Be Equal As Integers    ${sizeaa}    ${sizebb}
+    ${outputdircc}    Set Variable    ${filedir}/spooler/output/jobout${jobid1}.txt
+    ${sizecc}    Get File Size    ${outputdircc}
+    log    ${sizecc}
+    sleep    3
+    ${sizedd}    Get File Size    ${outputdircc}
+    log    ${sizedd}
+    Should Not Be Equal As Integers    ${sizecc}    ${sizedd}
+    ${outputdiree}    Set Variable    ${filedir}/spooler/output/jobout${jobid2}.txt
+    ${sizeee}    Get File Size    ${outputdiree}
+    log    ${sizeee}
+    sleep    3
+    ${sizeff}    Get File Size    ${outputdiree}
+    log    ${sizeff}
+    Should Not Be Equal As Integers    ${sizeee}    ${sizeff}
+    ${outputdirgg}    Set Variable    ${filedir}/spooler/output/jobout${jobid3}.txt
+    ${sizegg}    Get File Size    ${outputdirgg}
+    log    ${sizegg}
+    sleep    3
+    ${sizehh}    Get File Size    ${outputdirgg}
+    log    ${sizehh}
+    Should Not Be Equal As Integers    ${sizegg}    ${sizehh}
+    runCommand    su jhadmin -c "jctrl kill -u all 0"
+    Remove Files    ${filedir}/spooler/output/*.txt
+    [Teardown]    modHostInfo    rhela1=1 ()    rhelb=1 ()
+
+case51.(59)jctrl stop/resume -q -m暂停/恢复指定队列和节点上的作业，如果指定队列和节点上有运行作业，作业被暂停/恢复，否则，报有提示信息。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file}    Set Variable    ${filedir}/spooler/input/jctrl.sh
+    addOrModifyHost    rhela1    3 ()
+    addOrModifyHost    rhelb    1 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job0}    querySubmitInfo    su user1 -c "jsub -m rhela1 -q q1 ${file}"
+    ${jobid0}    getJobId    ${job0}
+    ${job1}    querySubmitInfo    su user1 -c "jsub -m rhelb -q q1 ${file}"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -m rhela1 -q q2 ${file}"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub -m rhela1 -q q1 ${file}"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    ${stopinfoma}    runCommand    su user1 -c 'jctrl stop -m rhelb -q q2 0'
+    log    ${stopinfoma}
+    Should Be Equal    ${stopinfoma}    No unfinished job found
+    ${resumeinfoma}    runCommand    su user1 -c 'jctrl resume -m rhelb -q q2 0'
+    log    ${resumeinfoma}
+    Should Be Equal    ${resumeinfoma}    No unfinished job found
+    ${stopinfo1}    runCommand    su user1 -c 'jctrl stop -m rhela1 -q q1 0'
+    log    ${stopinfo1}
+    Should Contain    ${stopinfo1}    Job <${jobid0}> is being stopped
+    Should Not Contain    ${stopinfo1}    Job <${jobid1}> is being stopped
+    Should Not Contain    ${stopinfo1}    Job <${jobid2}> is being stopped
+    Should Contain    ${stopinfo1}    Job <${jobid3}> is being stopped
+    checkJobStatus    ${jobid0}    USUSP
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    USUSP
+    ${job00}    queryJobInfo    ${jobid0}
+    ${reason0}    getJobSpndRsn    ${job00}
+    log    ${reason0}
+    Should Contain    ${reason0}    The job was suspended by user;
+    ${job33}    queryJobInfo    ${jobid3}
+    ${reason3}    getJobSpndRsn    ${job33}
+    log    ${reason3}
+    Should Contain    ${reason3}    The job was suspended by user;
+    ${outputdira}    Set Variable    ${filedir}/spooler/output/jobout${jobid0}.txt
+    ${sizea}    Get File Size    ${outputdira}
+    log    ${sizea}
+    sleep    3
+    ${sizeb}    Get File Size    ${outputdira}
+    log    ${sizeb}
+    Should Be Equal As Integers    ${sizea}    ${sizeb}
+    ${outputdirc}    Set Variable    ${filedir}/spooler/output/jobout${jobid1}.txt
+    ${sizec}    Get File Size    ${outputdirc}
+    log    ${sizec}
+    sleep    3
+    ${sized}    Get File Size    ${outputdirc}
+    log    ${sized}
+    Should Not Be Equal As Integers    ${sizec}    ${sized}
+    ${outputdire}    Set Variable    ${filedir}/spooler/output/jobout${jobid2}.txt
+    ${sizee}    Get File Size    ${outputdire}
+    log    ${sizee}
+    sleep    3
+    ${sizef}    Get File Size    ${outputdire}
+    log    ${sizef}
+    Should Not Be Equal As Integers    ${sizee}    ${sizef}
+    ${outputdirg}    Set Variable    ${filedir}/spooler/output/jobout${jobid3}.txt
+    ${sizeg}    Get File Size    ${outputdirg}
+    log    ${sizeg}
+    sleep    3
+    ${sizeh}    Get File Size    ${outputdirg}
+    log    ${sizeh}
+    Should Be Equal As Integers    ${sizeg}    ${sizeh}
+    ${resumeinfo2}    runCommand    su user1 -c 'jctrl resume -m rhela1 -q q1 0'
+    log    ${resumeinfo2}
+    Should Contain    ${resumeinfo2}    Job <${jobid0}> is being resumed
+    Should Not Contain    ${resumeinfo2}    Job <${jobid1}> is being resumed
+    Should Not Contain    ${resumeinfo2}    Job <${jobid2}> is being resumed
+    Should Contain    ${resumeinfo2}    Job <${jobid3}> is being resumed
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    ${outputdir11}    Set Variable    ${filedir}/spooler/output/jobout${jobid0}.txt
+    ${size11}    Get File Size    ${outputdir11}
+    log    ${size11}
+    sleep    3
+    ${size22}    Get File Size    ${outputdir11}
+    log    ${size22}
+    Should Not Be Equal As Integers    ${size11}    ${size22}
+    ${outputdir33}    Set Variable    ${filedir}/spooler/output/jobout${jobid1}.txt
+    ${size33}    Get File Size    ${outputdir33}
+    log    ${size33}
+    sleep    3
+    ${size44}    Get File Size    ${outputdir33}
+    log    ${size44}
+    Should Not Be Equal As Integers    ${size33}    ${size44}
+    ${outputdir55}    Set Variable    ${filedir}/spooler/output/jobout${jobid2}.txt
+    ${size55}    Get File Size    ${outputdir55}
+    log    ${size55}
+    sleep    3
+    ${size66}    Get File Size    ${outputdir55}
+    log    ${size66}
+    Should Not Be Equal As Integers    ${size55}    ${size66}
+    ${outputdir77}    Set Variable    ${filedir}/spooler/output/jobout${jobid3}.txt
+    ${size77}    Get File Size    ${outputdir77}
+    log    ${size77}
+    sleep    3
+    ${size88}    Get File Size    ${outputdir77}
+    log    ${size88}
+    Should Not Be Equal As Integers    ${size77}    ${size88}
+    runCommand    su jhadmin -c "jctrl kill -u all 0"
+    Remove Files    ${filedir}/spooler/output/*.txt
+    [Teardown]    modHostInfo    rhela1=1 ()    rhelb=1 ()
+
+case52.(60)jctrl stop/resume -m -J暂停/恢复指定节点上指定作业名称的作业，如果指定节点上存在指定作业名称的作业，作业被暂停，否则，报有提示信息。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file}    Set Variable    ${filedir}/spooler/input/jctrl.sh
+    addOrModifyHost    rhela1    3 ()
+    addOrModifyHost    rhelb    1 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job0}    querySubmitInfo    su user1 -c "jsub -m rhela1 -J job1 ${file}"
+    ${jobid0}    getJobId    ${job0}
+    ${job1}    querySubmitInfo    su user1 -c "jsub -m rhelb -J job1 ${file}"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -m rhela1 -J job2 ${file}"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub -m rhela1 -J job1 ${file}"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    ${stopinfoma}    runCommand    su user1 -c 'jctrl stop -m rhelb -J job2 0'
+    log    ${stopinfoma}
+    Should Be Equal    ${stopinfoma}    No unfinished job found
+    ${resumeinfoma}    runCommand    su user1 -c 'jctrl resume -m rhelb -J job2 0'
+    log    ${resumeinfoma}
+    Should Be Equal    ${resumeinfoma}    No unfinished job found
+    ${stopinfo1}    runCommand    su user1 -c 'jctrl stop -m rhela1 -J job1 0'
+    log    ${stopinfo1}
+    Should Contain    ${stopinfo1}    Job <${jobid0}> is being stopped
+    Should Not Contain    ${stopinfo1}    Job <${jobid1}> is being stopped
+    Should Not Contain    ${stopinfo1}    Job <${jobid2}> is being stopped
+    Should Contain    ${stopinfo1}    Job <${jobid3}> is being stopped
+    checkJobStatus    ${jobid0}    USUSP
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    USUSP
+    ${job00}    queryJobInfo    ${jobid0}
+    ${reason0}    getJobSpndRsn    ${job00}
+    log    ${reason0}
+    Should Contain    ${reason0}    The job was suspended by user;
+    ${job33}    queryJobInfo    ${jobid3}
+    ${reason3}    getJobSpndRsn    ${job33}
+    log    ${reason3}
+    Should Contain    ${reason3}    The job was suspended by user;
+    ${outputdira}    Set Variable    ${filedir}/spooler/output/jobout${jobid0}.txt
+    ${sizea}    Get File Size    ${outputdira}
+    log    ${sizea}
+    sleep    3
+    ${sizeb}    Get File Size    ${outputdira}
+    log    ${sizeb}
+    Should Be Equal As Integers    ${sizea}    ${sizeb}
+    ${outputdirc}    Set Variable    ${filedir}/spooler/output/jobout${jobid1}.txt
+    ${sizec}    Get File Size    ${outputdirc}
+    log    ${sizec}
+    sleep    3
+    ${sized}    Get File Size    ${outputdirc}
+    log    ${sized}
+    Should Not Be Equal As Integers    ${sizec}    ${sized}
+    ${outputdire}    Set Variable    ${filedir}/spooler/output/jobout${jobid2}.txt
+    ${sizee}    Get File Size    ${outputdire}
+    log    ${sizee}
+    sleep    3
+    ${sizef}    Get File Size    ${outputdire}
+    log    ${sizef}
+    Should Not Be Equal As Integers    ${sizee}    ${sizef}
+    ${outputdirg}    Set Variable    ${filedir}/spooler/output/jobout${jobid3}.txt
+    ${sizeg}    Get File Size    ${outputdirg}
+    log    ${sizeg}
+    sleep    3
+    ${sizeh}    Get File Size    ${outputdirg}
+    log    ${sizeh}
+    Should Be Equal As Integers    ${sizeg}    ${sizeh}
+    ${resumeinfo2}    runCommand    su user1 -c 'jctrl resume -m rhela1 -J job1 0'
+    log    ${resumeinfo2}
+    Should Contain    ${resumeinfo2}    Job <${jobid0}> is being resumed
+    Should Not Contain    ${resumeinfo2}    Job <${jobid1}> is being resumed
+    Should Not Contain    ${resumeinfo2}    Job <${jobid2}> is being resumed
+    Should Contain    ${resumeinfo2}    Job <${jobid3}> is being resumed
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    ${outputdir11}    Set Variable    ${filedir}/spooler/output/jobout${jobid0}.txt
+    ${size11}    Get File Size    ${outputdir11}
+    log    ${size11}
+    sleep    3
+    ${size22}    Get File Size    ${outputdir11}
+    log    ${size22}
+    Should Not Be Equal As Integers    ${size11}    ${size22}
+    ${outputdir33}    Set Variable    ${filedir}/spooler/output/jobout${jobid1}.txt
+    ${size33}    Get File Size    ${outputdir33}
+    log    ${size33}
+    sleep    3
+    ${size44}    Get File Size    ${outputdir33}
+    log    ${size44}
+    Should Not Be Equal As Integers    ${size33}    ${size44}
+    ${outputdir55}    Set Variable    ${filedir}/spooler/output/jobout${jobid2}.txt
+    ${size55}    Get File Size    ${outputdir55}
+    log    ${size55}
+    sleep    3
+    ${size66}    Get File Size    ${outputdir55}
+    log    ${size66}
+    Should Not Be Equal As Integers    ${size55}    ${size66}
+    ${outputdir77}    Set Variable    ${filedir}/spooler/output/jobout${jobid3}.txt
+    ${size77}    Get File Size    ${outputdir77}
+    log    ${size77}
+    sleep    3
+    ${size88}    Get File Size    ${outputdir77}
+    log    ${size88}
+    Should Not Be Equal As Integers    ${size77}    ${size88}
+    runCommand    su jhadmin -c "jctrl kill -u all 0"
+    Remove Files    ${filedir}/spooler/output/*.txt
+    [Teardown]    modHostInfo    rhela1=1 ()    rhelb=1 ()
+
+case53.(61)jctrl stop/resume -q -J暂停/恢复指定队列上指定作业名称的作业，如果指定队列上存在指定作业名称的作业，作业被暂停，否则，报有提示信息。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file}    Set Variable    ${filedir}/spooler/input/jctrl.sh
+    addOrModifyHost    rhela1    3 ()
+    addOrModifyHost    rhelb    2 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job0}    querySubmitInfo    su user1 -c "jsub -q q1 \ -J job1 ${file}"
+    ${jobid0}    getJobId    ${job0}
+    ${job1}    querySubmitInfo    su user1 -c "jsub -q q2 -J job1 ${file}"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -q q1 -J job2 ${file}"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub -q q1 -J job1 ${file}"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user1 -c "jsub -q q2 -J job2 ${file}"
+    ${jobid4}    getJobId    ${job4}
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    RUN
+    ${stopinfoma}    runCommand    su user1 -c 'jctrl stop -q q1 -J job3 0'
+    log    ${stopinfoma}
+    Should Be Equal    ${stopinfoma}    No unfinished job found
+    ${resumeinfoma}    runCommand    su user1 -c 'jctrl resume -q q1 -J job3 0'
+    log    ${resumeinfoma}
+    Should Be Equal    ${resumeinfoma}    No unfinished job found
+    ${stopinfo1}    runCommand    su user1 -c 'jctrl stop -q q1 -J job1 0'
+    log    ${stopinfo1}
+    Should Contain    ${stopinfo1}    Job <${jobid0}> is being stopped
+    Should Not Contain    ${stopinfo1}    Job <${jobid1}> is being stopped
+    Should Not Contain    ${stopinfo1}    Job <${jobid2}> is being stopped
+    Should Contain    ${stopinfo1}    Job <${jobid3}> is being stopped
+    Should Not Contain    ${stopinfo1}    Job <${jobid4}> is being stopped
+    checkJobStatus    ${jobid0}    USUSP
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    USUSP
+    checkJobStatus    ${jobid4}    RUN
+    ${job00}    queryJobInfo    ${jobid0}
+    ${reason0}    getJobSpndRsn    ${job00}
+    log    ${reason0}
+    Should Contain    ${reason0}    The job was suspended by user;
+    ${job33}    queryJobInfo    ${jobid3}
+    ${reason3}    getJobSpndRsn    ${job33}
+    log    ${reason3}
+    Should Contain    ${reason3}    The job was suspended by user;
+    ${outputdira}    Set Variable    ${filedir}/spooler/output/jobout${jobid0}.txt
+    ${sizea}    Get File Size    ${outputdira}
+    log    ${sizea}
+    sleep    3
+    ${sizeb}    Get File Size    ${outputdira}
+    log    ${sizeb}
+    Should Be Equal As Integers    ${sizea}    ${sizeb}
+    ${outputdirc}    Set Variable    ${filedir}/spooler/output/jobout${jobid1}.txt
+    ${sizec}    Get File Size    ${outputdirc}
+    log    ${sizec}
+    sleep    3
+    ${sized}    Get File Size    ${outputdirc}
+    log    ${sized}
+    Should Not Be Equal As Integers    ${sizec}    ${sized}
+    ${outputdire}    Set Variable    ${filedir}/spooler/output/jobout${jobid2}.txt
+    ${sizee}    Get File Size    ${outputdire}
+    log    ${sizee}
+    sleep    3
+    ${sizef}    Get File Size    ${outputdire}
+    log    ${sizef}
+    Should Not Be Equal As Integers    ${sizee}    ${sizef}
+    ${outputdirg}    Set Variable    ${filedir}/spooler/output/jobout${jobid3}.txt
+    ${sizeg}    Get File Size    ${outputdirg}
+    log    ${sizeg}
+    sleep    3
+    ${sizeh}    Get File Size    ${outputdirg}
+    log    ${sizeh}
+    Should Be Equal As Integers    ${sizeg}    ${sizeh}
+    ${outputdirj}    Set Variable    ${filedir}/spooler/output/jobout${jobid4}.txt
+    ${sizej}    Get File Size    ${outputdirj}
+    log    ${sizej}
+    sleep    3
+    ${sizek}    Get File Size    ${outputdirj}
+    log    ${sizek}
+    Should Not Be Equal As Integers    ${sizej}    ${sizek}
+    ${resumeinfo2}    runCommand    su user1 -c "jctrl resume -q q1 -J job1 0"
+    log    ${resumeinfo2}
+    Should Contain    ${resumeinfo2}    Job <${jobid0}> is being resumed
+    Should Not Contain    ${resumeinfo2}    Job <${jobid1}> is being resumed
+    Should Not Contain    ${resumeinfo2}    Job <${jobid2}> is being resumed
+    Should Contain    ${resumeinfo2}    Job <${jobid3}> is being resumed
+    Should Not Contain    ${resumeinfo2}    Job <${jobid4}> is being resumed
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    RUN
+    ${outputdir11}    Set Variable    ${filedir}/spooler/output/jobout${jobid0}.txt
+    ${size11}    Get File Size    ${outputdir11}
+    log    ${size11}
+    sleep    3
+    ${size22}    Get File Size    ${outputdir11}
+    log    ${size22}
+    Should Not Be Equal As Integers    ${size11}    ${size22}
+    ${outputdir33}    Set Variable    ${filedir}/spooler/output/jobout${jobid1}.txt
+    ${size33}    Get File Size    ${outputdir33}
+    log    ${size33}
+    sleep    3
+    ${size44}    Get File Size    ${outputdir33}
+    log    ${size44}
+    Should Not Be Equal As Integers    ${size33}    ${size44}
+    ${outputdir55}    Set Variable    ${filedir}/spooler/output/jobout${jobid2}.txt
+    ${size55}    Get File Size    ${outputdir55}
+    log    ${size55}
+    sleep    3
+    ${size66}    Get File Size    ${outputdir55}
+    log    ${size66}
+    Should Not Be Equal As Integers    ${size55}    ${size66}
+    ${outputdir77}    Set Variable    ${filedir}/spooler/output/jobout${jobid3}.txt
+    ${size77}    Get File Size    ${outputdir77}
+    log    ${size77}
+    sleep    3
+    ${size88}    Get File Size    ${outputdir77}
+    log    ${size88}
+    Should Not Be Equal As Integers    ${size77}    ${size88}
+    ${outputdir99}    Set Variable    ${filedir}/spooler/output/jobout${jobid4}.txt
+    ${size111}    Get File Size    ${outputdir99}
+    log    ${size111}
+    sleep    3
+    ${size222}    Get File Size    ${outputdir99}
+    log    ${size222}
+    Should Not Be Equal As Integers    ${size111}    ${size222}
+    runCommand    su jhadmin -c "jctrl kill -u all 0"
+    Remove Files    ${filedir}/spooler/output/*.txt
+    [Teardown]    modHostInfo    rhela1=1 ()    rhelb=1 ()

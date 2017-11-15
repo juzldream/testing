@@ -1,0 +1,33 @@
+usage: jjobs [-h] [-V] [-w | -l] [-a] [-d] [-p] [-s] [-r] [-A] [-m host_name]
+             [-q queue_name] [-u user_name | -u all] [-P project_name]
+             [-J name_spec]
+             [jobId [jobId ...]]
+
+description: displays information about jobs
+
+positional arguments:
+  jobId                 displays information about the specified jobId
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -V                    print JH UniScheduler release version and exit
+  -w                    displays job information without truncating fields
+  -l                    displays detailed information for each job in a multi-
+                        line format
+  -a                    displays information about jobs in all states
+  -d                    displays information about jobs that finished recently
+  -p                    displays pending jobs, together with the pending
+                        reasons that caused each job not to be dispatched
+                        during the last dispatch turn
+  -s                    displays suspended jobs, together with the suspending
+                        reason that caused each job to become suspended
+  -r                    displays running jobs
+  -A                    displays summarized information about job arrays
+  -m host_name          only displays jobs in the specified hosts
+  -q queue_name         only displays jobs in the specified queues
+  -u user_name | -u all
+                        only displays jobs that have been submitted by the
+                        specified users, the keyword 'all' specifies all users
+  -P project_name       only displays jobs that belong to the specified
+                        project
+  -J name_spec          displays information about the specified job name

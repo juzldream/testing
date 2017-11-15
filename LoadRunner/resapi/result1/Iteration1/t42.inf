@@ -1,0 +1,13 @@
+[t42]
+SnapshotXmlFile=snapshot_42.xml
+ContentType=text/html
+StepName=Rest Request: GET: {uurl}/jobs?token=...
+Total=1
+FileName1=t42.html
+RequestHeaderFile=t42_RequestHeader.txt
+ResponseHeaderFile=t42_ResponseHeader.txt
+RawStepEndTime=1489560230403
+RawStepName=GET: {uurl}/jobs?token=...
+RequestBodyFile=t42_RequestBody.txt
+RawStepStartTime=1489560230157
+URL1=http://192.168.149.131:8080/appform/ws/jobs?token=5593C3BE599B55BBB8B8ED18B9817545445B5D69C7BAA46EEAE948791D7AFD8066C49C89199580BD460A381305F1F6AFE8D3E669AA2ADA5B6FF8798B95BF243FA36CD8D4D299A75D77F4EC18E5909F310915A19660E8A7B95B2A9D758B4EB2AD

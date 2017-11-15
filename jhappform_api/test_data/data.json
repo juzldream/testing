@@ -1,9 +1,10 @@
 {
-     "other_param": [
+    "other_param": [
         {
+            "email_receiver": "rzhou@jhinno.com;XXX@jhinno.com",
             "appform_top": "/apps/jhappform/",
             "jhscheduler_top": "/apps/unischeduler/",
-            "baseUrl": "http://192.168.0.157:8080/appform/ws/",
+            "baseUrl": "http://192.168.0.133:8080/appform/ws/",
             "loginUser": [
                 {
                     "username": "jhadmin",
@@ -14,6 +15,7 @@
     ],
     "login": [
         {
+            "说明": "登录appform测试case数据",
             "data": [
                 {
                     "name": "case1",
@@ -30,114 +32,1407 @@
                 {
                     "name": "case3",
                     "expect": "0",
-                    "username": "user1",
-                    "password": ""
+                    "username": "jhusers",
+                    "password": "Jhadmin123"
                 },
                 {
                     "name": "case4",
                     "expect": "0",
+                    "username": "@",
+                    "password": "$"
+                },
+                {
+                    "name": "case5",
+                    "expect": "0",
+                    "username": "",
+                    "password": ""
+                },
+                {
+                    "name": "case6",
+                    "expect": "0",
+                    "username": "用户1",
+                    "password": "免密码"
+                },
+                {
+                    "name": "case7",
+                    "expect": "0",
                     "username": "",
                     "password": "Letmein123"
+                },
+                {
+                    "name": "case8",
+                    "expect": "0",
+                    "username": "a",
+                    "password": "b"
                 }
             ]
         }
     ],
     "logout": [
         {
+            "说明": "注销appform测试case数据",
             "data": [
                 {
                     "name": "case1",
                     "expect": "0",
-                    "token": "jhadmin"
+                    "token": "access_tokne"
                 },
                 {
                     "name": "case2",
                     "expect": "0",
-                    "token": "user1"
+                    "token": ""
+                },
+                {
+                    "name": "case3",
+                    "expect": "0",
+                    "token": "#"
+                },
+                {
+                    "name": "case4",
+                    "expect": "0",
+                    "token": "访问值"
+                }
+            ]
+        }
+    ],
+    "applist": [
+        {
+            "data": [
+                {
+                    "name": "case1",
+                    "expect": "0",
+                    "token": "access_tokne"
+                },
+                {
+                    "name": "case2",
+                    "expect": "0",
+                    "token": ""
+                },
+                {
+                    "name": "case3",
+                    "expect": "0",
+                    "token": "#"
+                },
+                {
+                    "name": "case4",
+                    "expect": "0",
+                    "token": "访问值"
                 }
             ]
         }
     ],
     "ping": [
         {
+            "说明": "检查jhinno restful api是否可用",
             "data": [
                 {
                     "name": "case1",
                     "expect": "0",
-                    "token": "token1"
+                    "token": "access_tokne"
                 },
                 {
                     "name": "case2",
                     "expect": "0",
-                    "token": "token1"
+                    "token": ""
+                },
+                {
+                    "name": "case3",
+                    "expect": "0",
+                    "token": "#"
+                },
+                {
+                    "name": "case4",
+                    "expect": "0",
+                    "token": "访问值"
                 }
             ]
         }
     ],
     "spoolers": [
         {
+            "说明": "根据scope查询数据目录列表",
             "data": [
                 {
                     "name": "case1",
                     "expect": "0",
-                    "token": "token1"
+                    "token": "access_tokne"
                 },
                 {
                     "name": "case2",
                     "expect": "0",
-                    "token": "token1"
+                    "token": ""
+                },
+                {
+                    "name": "case3",
+                    "expect": "0",
+                    "token": "#"
+                },
+                {
+                    "name": "case4",
+                    "expect": "0",
+                    "token": "访问值"
                 }
             ]
         }
     ],
     "desktops": [
         {
+            "说明": "根据当前用户 scope 查询桌面列表",
             "data": [
                 {
                     "name": "case1",
                     "expect": "0",
-                    "token": "token1"
+                    "token": "access_tokne"
                 },
                 {
                     "name": "case2",
                     "expect": "0",
-                    "token": "token2"
+                    "token": ""
                 },
                 {
                     "name": "case3",
                     "expect": "0",
-                    "token": "token3"
+                    "token": "#"
+                },
+                {
+                    "name": "case4",
+                    "expect": "0",
+                    "token": "访问值"
                 }
             ]
         }
     ],
-     "renamefile": [
+    "jobs": [
         {
+            "说明": "根据用户当前 scope 查询作业",
             "data": [
                 {
                     "name": "case1",
                     "expect": "0",
-                    "old_file_name": "case1",
-                    "new_file_name": "token123"
-
+                    "token": "access_tokne"
                 },
                 {
                     "name": "case2",
                     "expect": "0",
-                    "old_file_name": "case1",
-                    "new_file_name": "token123"
+                    "token": ""
                 },
                 {
                     "name": "case3",
                     "expect": "0",
-                    "old_file_name": "case1",
-                    "new_file_name": "token123"
+                    "token": "#"
+                },
+                {
+                    "name": "case4",
+                    "expect": "0",
+                    "token": "访问值"
+                }
+            ]
+        }
+    ],
+    "jsub": [
+        {
+            "说明": "提交作业,cas文件不能为空。即，must 对应的参数必须存在，optional 对应的参数为可选",
+            "data": [
+                {
+                    "must": [
+                        {
+                            "name": "case1",
+                            "expect": "0",
+                            "casfile": "cas_0029access_tokne.cas"
+                        }
+                    ],
+                    "optional": [
+                        {
+                            "project": "pro1",
+                            "jobname": "Fluent01",
+                            "datfile": "datfile",
+                            "duatltimestep": "duatltimestep",
+                            "timesetp": "timesetp",
+                            "iteration": "iteration",
+                            "autosavesetp": "autosavesetp",
+                            "relese": "6.3.26",
+                            "gui": "true",
+                            "ncpu": "2",
+                            "version": "version",
+                            "priority": "priority"
+                        }
+                    ]
+                },
+                {
+                    "must": [
+                        {
+                            "name": "case2",
+                            "expect": "0",
+                            "casfile": "cas_0029access_tokne.cas"
+                        }
+                    ],
+                    "optional": [
+                        {
+                            "project": "pro1",
+                            "jobname": "Fluent01",
+                            "datfile": "datfile",
+                            "duatltimestep": "duatltimestep",
+                            "timesetp": "timesetp",
+                            "iteration": "iteration",
+                            "autosavesetp": "autosavesetp",
+                            "relese": "6.3.26",
+                            "gui": "true"
+                        }
+                    ]
+                },
+                {
+                    "must": [
+                        {
+                            "name": "case3",
+                            "expect": "0",
+                            "casfile": "prottal.log.md"
+                        }
+                    ],
+                    "optional": [
+                        {
+                            "project": "pro2",
+                            "jobname": "Fluent02",
+                            "datfile": "datfile",
+                            "duatltimestep": "duatltimestep",
+                            "timesetp": "timesetp",
+                            "iteration": "iteration",
+                            "autosavesetp": "autosavesetp",
+                            "relese": "9.3.26",
+                            "gui": "true",
+                            "ncpu": "2",
+                            "version": "version",
+                            "priority": "priority"
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "renamefile": [
+        {
+            "说明": "重命名文件",
+            "data": [
+                {
+                    "name": "case1",
+                    "expect": "0",
+                    "old_file_name": "",
+                    "new_file_name": "file_name1"
+                },
+                {
+                    "name": "case2",
+                    "expect": "0",
+                    "old_file_name": "file_name1",
+                    "new_file_name": ""
+                },
+                {
+                    "name": "case3",
+                    "expect": "0",
+                    "old_file_name": "",
+                    "new_file_name": ""
+                },
+                {
+                    "name": "case4",
+                    "expect": "0",
+                    "old_file_name": "file_name1",
+                    "new_file_name": "file_name2"
+                },
+                {
+                    "name": "case5",
+                    "expect": "0",
+                    "old_file_name": "/apps/jhappform/logs/portal.log.bak_1019",
+                    "new_file_name": "portal.log19"
+                }
+            ]
+        }
+    ],
+    "deletefile": [
+        {
+            "说明": "删除文件",
+            "data": [
+                {
+                    "name": "case1",
+                    "expect": "0",
+                    "file_name": "file_name1"
+                },
+                {
+                    "name": "case2",
+                    "expect": "0",
+                    "file_name": ""
+                },
+                {
+                    "name": "case3",
+                    "expect": "0",
+                    "file_name": "*",
+                    "new_file_name": ""
+                },
+                {
+                    "name": "case4",
+                    "expect": "0",
+                    "file_name": "中文"
+                },
+                {
+                    "name": "case5",
+                    "expect": "0",
+                    "file_name": "/apps/jhappform/logs/portal.log.bak"
+                }
+            ]
+        }
+    ],
+    "url": [
+        {
+            "说明": "返回页面URL",
+            "data": [
+                {
+                    "name": "case1",
+                    "expect": "0",
+                    "appname": "file_name1"
+                },
+                {
+                    "name": "case2",
+                    "expect": "0",
+                    "appname": ""
+                },
+                {
+                    "name": "case3",
+                    "expect": "0",
+                    "appname": "*"
+                },
+                {
+                    "name": "case4",
+                    "expect": "0",
+                    "appname": "中文"
+                },
+                {
+                    "name": "case5",
+                    "expect": "0",
+                    "appname": "portal.log.bak"
+                },
+                {
+                    "name": "case6",
+                    "expect": "1",
+                    "appname": "jobmana"
+                },
+                {
+                    "name": "case7",
+                    "expect": "1",
+                    "appname": "desktopmana"
+                },
+                {
+                    "name": "case8",
+                    "expect": "1",
+                    "appname": "spoolermana"
+                },
+                {
+                    "name": "case9",
+                    "expect": "0",
+                    "appname": "sharegroup_manager"
+                },
+                {
+                    "name": "case10",
+                    "expect": "1",
+                    "appname": "CFX"
+                },
+                {
+                    "name": "case11",
+                    "expect": "1",
+                    "appname": "作业管理"
+                },
+                {
+                    "name": "case12",
+                    "expect": "1",
+                    "appname": "分享组管理"
+                },
+                {
+                    "name": "case13",
+                    "expect": "1",
+                    "appname": "会话管理"
+                },
+                {
+                    "name": "case14",
+                    "expect": "1",
+                    "appname": "统计分析"
+                },
+                {
+                    "name": "case15",
+                    "expect": "1",
+                    "appname": "集群监控"
+                },
+                {
+                    "name": "case16",
+                    "expect": "1",
+                    "appname": "数据管理"
+                },
+                {
+                    "name": "case17",
+                    "expect": "1",
+                    "appname": "虚拟化管理"
+                },
+                {
+                    "name": "case18",
+                    "expect": "1",
+                    "appname": "统计分析"
+                },
+                {
+                    "name": "case19",
+                    "expect": "1",
+                    "appname": "CFX交互模式"
+                },
+                {
+                    "name": "case20",
+                    "expect": "1",
+                    "appname": "Fluent"
+                },
+                {
+                    "name": "case21",
+                    "expect": "1",
+                    "appname": "Catia"
+                },
+                {
+                    "name": "case22",
+                    "expect": "1",
+                    "appname": "Fluent"
+                },
+                {
+                    "name": "case23",
+                    "expect": "1",
+                    "appname": "Linux"
+                },
+                {
+                    "name": "case24",
+                    "expect": "1",
+                    "appname": "Windows"
+                },
+                {
+                    "name": "case25",
+                    "expect": "1",
+                    "appname": "R"
+                },
+                {
+                    "name": "case26",
+                    "expect": "1",
+                    "appname": "通用作业提交"
+                },
+                {
+                    "name": "case27",
+                    "expect": "1",
+                    "appname": "Matlab并行"
+                },
+                {
+                    "name": "case28",
+                    "expect": "1",
+                    "appname": "NAMD"
+                },
+                {
+                    "name": "case29",
+                    "expect": "1",
+                    "appname": "Vasp"
+                },
+                {
+                    "name": "case30",
+                    "expect": "1",
+                    "appname": "AUTODYN"
+                }
+            ]
+        }
+    ],
+    "filelist": [
+        {
+            "说明": "获取文件列表",
+            "data": [
+                {
+                    "name": "case1",
+                    "expect": "0",
+                    "dir": "file_name1"
+                },
+                {
+                    "name": "case2",
+                    "expect": "0",
+                    "dir": ""
+                },
+                {
+                    "name": "case3",
+                    "expect": "0",
+                    "dir": "*"
+                },
+                {
+                    "name": "case4",
+                    "expect": "0",
+                    "dir": "中文"
+                },
+                {
+                    "name": "case5",
+                    "expect": "1",
+                    "dir": "/apps/jhappform/logs/"
+                }
+            ]
+        }
+    ],
+    "mkdir": [
+        {
+            "说明": "指定目录创建文件夹",
+            "data": [
+                {
+                    "name": "case1",
+                    "expect": "0",
+                    "isforce": "false",
+                    "dirpath": "file_name1"
+                },
+                {
+                    "name": "case2",
+                    "expect": "0",
+                    "isforce": "false",
+                    "dirpath": ""
+                },
+                {
+                    "name": "case3",
+                    "expect": "0",
+                    "isforce": "false",
+                    "dirpath": "*"
+                },
+                {
+                    "name": "case4",
+                    "expect": "0",
+                    "isforce": "false",
+                    "dirpath": "中文"
+                },
+                {
+                    "name": "case5",
+                    "expect": "1",
+                    "isforce": "false",
+                    "dirpath": "/apps/jhappform/tts/"
+                },
+                {
+                    "name": "case6",
+                    "expect": "1",
+                    "isforce": "true",
+                    "dirpath": "/apps/jhappform/ms/ts"
+                },
+                {
+                    "name": "case7",
+                    "expect": "0",
+                    "isforce": "true",
+                    "dirpath": "*"
+                },
+                {
+                    "name": "case8",
+                    "expect": "0",
+                    "isforce": "true",
+                    "dirpath": "../apps"
+                },
+                {
+                    "name": "case9",
+                    "expect": "0",
+                    "isforce": "false",
+                    "dirpath": "/apps/jhinno/ms/ts"
+                },
+                {
+                    "name": "case10",
+                    "expect": "0",
+                    "isforce": "",
+                    "dirpath": "/apps/jhinno/ms/ts"
+                }
+            ]
+        }
+    ],
+    "copyfile": [
+        {
+            "说明": "copy文件",
+            "data": [
+                {
+                    "name": "case1",
+                    "expect": "0",
+                    "source_file_name": "",
+                    "target_file_name": "file_name1"
+                },
+                {
+                    "name": "case2",
+                    "expect": "0",
+                    "source_file_name": "file_name1",
+                    "target_file_name": ""
+                },
+                {
+                    "name": "case3",
+                    "expect": "0",
+                    "source_file_name": "",
+                    "target_file_name": ""
+                },
+                {
+                    "name": "case4",
+                    "expect": "0",
+                    "source_file_name": "file_name1",
+                    "target_file_name": "file_name2"
+                },
+                {
+                    "name": "case5",
+                    "expect": "1",
+                    "source_file_name": "/apps/jhappform/logs/portal.log",
+                    "target_file_name": "portal.log.bak_1019"
+                }
+            ]
+        }
+    ],
+    "purge": [
+        {
+            "说明": "设置过期时间删除数据目录",
+            "data": [
+                {
+                    "name": "case1",
+                    "expect": "0",
+                    "id": "",
+                    "expiration_time": "2018-11-11"
+                },
+                {
+                    "name": "case2",
+                    "expect": "0",
+                    "id": "2229",
+                    "expiration_time": ""
+                },
+                {
+                    "name": "case3",
+                    "expect": "0",
+                    "id": "",
+                    "expiration_time": ""
+                },
+                {
+                    "name": "case4",
+                    "expect": "0",
+                    "id": "000",
+                    "expiration_time": "2018-11-11"
+                },
+                {
+                    "name": "case5",
+                    "expect": "0",
+                    "id": "方法",
+                    "expiration_time": "2018-11-11"
+                }
+            ]
+        }
+    ],
+    "actionjob": [
+        {
+            "说明": "操作（kill、peek、resume、stop、top、bot）单个作业",
+            "data": [
+                {
+                    "name": "case1",
+                    "expect": "0",
+                    "id": "",
+                    "action": "kill"
+                },
+                {
+                    "name": "case2",
+                    "expect": "0",
+                    "id": "2229",
+                    "action": "kill"
+                },
+                {
+                    "name": "case3",
+                    "expect": "0",
+                    "id": "",
+                    "action": "stop"
+                },
+                {
+                    "name": "case4",
+                    "expect": "0",
+                    "id": "2229",
+                    "action": "stop"
+                },
+                {
+                    "name": "case5",
+                    "expect": "0",
+                    "id": "",
+                    "action": "resume"
+                },
+                {
+                    "name": "case6",
+                    "expect": "0",
+                    "id": "2229",
+                    "action": "resume"
+                },
+                {
+                    "name": "case7",
+                    "expect": "0",
+                    "id": "",
+                    "action": "resume"
+                },
+                {
+                    "name": "case8",
+                    "expect": "0",
+                    "id": "2229",
+                    "action": "top"
+                },
+                {
+                    "name": "case9",
+                    "expect": "0",
+                    "id": "",
+                    "action": "bot"
+                }
+            ]
+        }
+    ],
+    "actionjobs": [
+        {
+            "说明": "操作（kill、peek、resume、stop、top、bot）多个作业",
+            "data": [
+                {
+                    "name": "case1",
+                    "expect": "0",
+                    "ids": "",
+                    "action": "kill"
+                },
+                {
+                    "name": "case2",
+                    "expect": "0",
+                    "ids": "2229,2229",
+                    "action": "kill"
+                },
+                {
+                    "name": "case3",
+                    "expect": "0",
+                    "ids": "",
+                    "action": "stop"
+                },
+                {
+                    "name": "case4",
+                    "expect": "0",
+                    "ids": "2229",
+                    "action": "stop"
+                },
+                {
+                    "name": "case5",
+                    "expect": "0",
+                    "ids": "",
+                    "action": "resume"
+                },
+                {
+                    "name": "case6",
+                    "expect": "0",
+                    "ids": "2229",
+                    "action": "resume"
+                },
+                {
+                    "name": "case7",
+                    "expect": "0",
+                    "ids": "",
+                    "action": "resume"
+                }
+            ]
+        }
+    ],
+    "sharedesktop": [
+        {
+            "说明": "用户共享桌面，observer :观察模式共享给用户；collaborator ：协作模式共享给用户",
+            "data": [
+                {
+                    "name": "case1",
+                    "expect": "1",
+                    "id": "98950187175464",
+                    "mode": "observer",
+                    "user":"user1"
+                },
+                {
+                    "name": "case1",
+                    "expect": "0",
+                    "id": "1",
+                    "mode": "collaborator",
+                    "user":"user1"
+                }
+            ]
+        }
+    ],
+    "jobid": [
+        {
+            "说明": "根据作业 id 查询作业",
+            "data": [
+                {
+                    "name": "case1",
+                    "expect": "0",
+                    "id": "_"
+                },
+                {
+                    "name": "case2",
+                    "expect": "0",
+                    "id": "file_name1"
+                },
+                {
+                    "name": "case3",
+                    "expect": "0",
+                    "id": "@"
+                },
+                {
+                    "name": "case4",
+                    "expect": "0",
+                    "id": "中文"
+                },
+                {
+                    "name": "case5",
+                    "expect": "1",
+                    "id": "2229"
+                }
+            ]
+        }
+    ],
+    "delspooler": [
+        {
+            "说明": "立即删除数据目录",
+            "data": [
+                {
+                    "name": "case1",
+                    "expect": "0",
+                    "id": "_"
+                },
+                {
+                    "name": "case2",
+                    "expect": "0",
+                    "id": "file_name1"
+                },
+                {
+                    "name": "case3",
+                    "expect": "0",
+                    "id": "@"
+                },
+                {
+                    "name": "case4",
+                    "expect": "0",
+                    "id": "中文"
+                },
+                {
+                    "name": "case5",
+                    "expect": "0",
+                    "id": "2229"
+                }
+            ]
+        }
+    ],
+    "desktopid": [
+        {
+            "说明": "根据桌面id查询桌面",
+            "data": [
+                {
+                    "name": "case1",
+                    "expect": "0",
+                    "id": "_"
+                },
+                {
+                    "name": "case2",
+                    "expect": "0",
+                    "id": "file_name1"
+                },
+                {
+                    "name": "case3",
+                    "expect": "0",
+                    "id": "@"
+                },
+                {
+                    "name": "case4",
+                    "expect": "0",
+                    "id": "中文"
+                },
+                {
+                    "name": "case5",
+                    "expect": "0",
+                    "id": "2126"
+                }
+            ]
+        }
+    ],
+    "spoolerid": [
+        {
+            "说明": "根据作业id查询数据目录信息",
+            "data": [
+                {
+                    "name": "case1",
+                    "expect": "0",
+                    "id": "_"
+                },
+                {
+                    "name": "case2",
+                    "expect": "0",
+                    "id": "file_name1"
+                },
+                {
+                    "name": "case3",
+                    "expect": "0",
+                    "id": "@"
+                },
+                {
+                    "name": "case4",
+                    "expect": "0",
+                    "id": "中文"
+                },
+                {
+                    "name": "case5",
+                    "expect": "0",
+                    "id": "2126"
+                }
+            ]
+        }
+    ],
+    "jobflist": [
+        {
+            "说明": "根据作业 id 查询作业数据文件列表",
+            "data": [
+                {
+                    "name": "case1",
+                    "expect": "0",
+                    "id": "_"
+                },
+                {
+                    "name": "case2",
+                    "expect": "0",
+                    "id": "file_name1"
+                },
+                {
+                    "name": "case3",
+                    "expect": "0",
+                    "id": "@"
+                },
+                {
+                    "name": "case4",
+                    "expect": "0",
+                    "id": "中文"
+                },
+                {
+                    "name": "case5",
+                    "expect": "1",
+                    "id": "2127"
+                }
+            ]
+        }
+    ],
+    "desktopclose": [
+        {
+            "说明": "关闭桌面",
+            "data": [
+                {
+                    "name": "case1",
+                    "expect": "0",
+                    "id": "_"
+                },
+                {
+                    "name": "case2",
+                    "expect": "0",
+                    "id": "file_name1"
+                },
+                {
+                    "name": "case3",
+                    "expect": "0",
+                    "id": "@"
+                },
+                {
+                    "name": "case4",
+                    "expect": "0",
+                    "id": "中文"
+                },
+                {
+                    "name": "case5",
+                    "expect": "0",
+                    "id": "2127"
+                }
+            ]
+        }
+    ],
+    "jobids": [
+        {
+            "说明": "根据作业 id 列表查询作业",
+            "data": [
+                {
+                    "name": "case1",
+                    "expect": "1",
+                    "ids": "2229,2229"
+                },
+                {
+                    "name": "case2",
+                    "expect": "0",
+                    "ids": "file_name1"
+                },
+                {
+                    "name": "case3",
+                    "expect": "0",
+                    "ids": "@"
+                },
+                {
+                    "name": "case4",
+                    "expect": "0",
+                    "ids": "中文"
+                },
+                {
+                    "name": "case5",
+                    "expect": "1",
+                    "ids": "2229"
+                },
+                {
+                    "name": "case6",
+                    "expect": "0",
+                    "ids": ","
+                },
+                {
+                    "name": "case7",
+                    "expect": "0",
+                    "ids": ",,"
+                },
+                {
+                    "name": "case8",
+                    "expect": "0",
+                    "ids": "*"
+                },
+                {
+                    "name": "case9",
+                    "expect": "0",
+                    "ids": "999,999"
+                },
+                {
+                    "name": "case10",
+                    "expect": "0",
+                    "ids": "2126,999"
+                }
+            ]
+        }
+    ],
+    "desktopids": [
+        {
+            "说明": "根据桌面id列表查询桌面列表",
+            "data": [
+                {
+                    "name": "case1",
+                    "expect": "0",
+                    "ids": "2126,2126"
+                },
+                {
+                    "name": "case2",
+                    "expect": "0",
+                    "ids": "file_name1"
+                },
+                {
+                    "name": "case3",
+                    "expect": "0",
+                    "ids": "@"
+                },
+                {
+                    "name": "case4",
+                    "expect": "0",
+                    "ids": "中文"
+                },
+                {
+                    "name": "case5",
+                    "expect": "0",
+                    "ids": "2126"
+                },
+                {
+                    "name": "case6",
+                    "expect": "0",
+                    "ids": ","
+                },
+                {
+                    "name": "case7",
+                    "expect": "0",
+                    "ids": ",,"
+                },
+                {
+                    "name": "case8",
+                    "expect": "0",
+                    "ids": "*"
+                },
+                {
+                    "name": "case9",
+                    "expect": "0",
+                    "ids": "999,999"
+                },
+                {
+                    "name": "case10",
+                    "expect": "0",
+                    "ids": "2126,999"
+                }
+            ]
+        }
+    ],
+    "spoolerids": [
+        {
+            "说明": "根据作业id列表查询数据目录列表",
+            "data": [
+                {
+                    "name": "case1",
+                    "expect": "0",
+                    "ids": "2126,2126"
+                },
+                {
+                    "name": "case2",
+                    "expect": "0",
+                    "ids": "file_name1"
+                },
+                {
+                    "name": "case3",
+                    "expect": "0",
+                    "ids": "@"
+                },
+                {
+                    "name": "case4",
+                    "expect": "0",
+                    "ids": "中文"
+                },
+                {
+                    "name": "case5",
+                    "expect": "0",
+                    "ids": "2126"
+                },
+                {
+                    "name": "case6",
+                    "expect": "0",
+                    "ids": ","
+                },
+                {
+                    "name": "case7",
+                    "expect": "0",
+                    "ids": ",,"
+                },
+                {
+                    "name": "case8",
+                    "expect": "0",
+                    "ids": "*"
+                },
+                {
+                    "name": "case9",
+                    "expect": "0",
+                    "ids": "999,999"
+                },
+                {
+                    "name": "case10",
+                    "expect": "0",
+                    "ids": "2126,999"
+                }
+            ]
+        }
+    ],
+    "jobname": [
+        {
+            "说明": "根据作业名称查询作业",
+            "data": [
+                {
+                    "name": "case1",
+                    "expect": "0",
+                    "jobname": "2126,2126"
+                },
+                {
+                    "name": "case2",
+                    "expect": "0",
+                    "jobname": "file_name1"
+                },
+                {
+                    "name": "case3",
+                    "expect": "0",
+                    "jobname": "@"
+                },
+                {
+                    "name": "case4",
+                    "expect": "0",
+                    "jobname": "中文"
+                },
+                {
+                    "name": "case5",
+                    "expect": "1",
+                    "jobname": "apitest"
+                },
+                {
+                    "name": "case6",
+                    "expect": "0",
+                    "jobname": ","
+                },
+                {
+                    "name": "case7",
+                    "expect": "0",
+                    "jobname": ",,"
+                },
+                {
+                    "name": "case8",
+                    "expect": "0",
+                    "jobname": "*"
+                },
+                {
+                    "name": "case9",
+                    "expect": "0",
+                    "jobname": "999,999"
+                },
+                {
+                    "name": "case10",
+                    "expect": "0",
+                    "jobname": "2126,999"
+                }
+            ]
+        }
+    ],
+    "desktopname": [
+        {
+            "说明": "根据桌面名称查询作业",
+            "data": [
+                {
+                    "name": "case1",
+                    "expect": "0",
+                    "desktopname": "2126,2126"
+                },
+                {
+                    "name": "case2",
+                    "expect": "0",
+                    "desktopname": "file_name1"
+                },
+                {
+                    "name": "case3",
+                    "expect": "0",
+                    "desktopname": "@"
+                },
+                {
+                    "name": "case4",
+                    "expect": "0",
+                    "desktopname": "中文"
+                },
+                {
+                    "name": "case5",
+                    "expect": "0",
+                    "desktopname": "apitest"
+                },
+                {
+                    "name": "case6",
+                    "expect": "0",
+                    "desktopname": ","
+                },
+                {
+                    "name": "case7",
+                    "expect": "0",
+                    "desktopname": ",,"
+                },
+                {
+                    "name": "case8",
+                    "expect": "0",
+                    "desktopname": "*"
+                },
+                {
+                    "name": "case9",
+                    "expect": "0",
+                    "desktopname": "999,999"
+                },
+                {
+                    "name": "case10",
+                    "expect": "0",
+                    "desktopname": "2126,999"
+                }
+            ]
+        }
+    ],
+    "sopplername": [
+        {
+            "说明": "根据作业名称查询作业",
+            "data": [
+                {
+                    "name": "case1",
+                    "expect": "0",
+                    "sopplername": "2126,2126"
+                },
+                {
+                    "name": "case2",
+                    "expect": "0",
+                    "sopplername": "file_name1"
+                },
+                {
+                    "name": "case3",
+                    "expect": "0",
+                    "sopplername": "@"
+                },
+                {
+                    "name": "case4",
+                    "expect": "0",
+                    "sopplername": "中文"
+                },
+                {
+                    "name": "case5",
+                    "expect": "0",
+                    "sopplername": "apitest"
+                },
+                {
+                    "name": "case6",
+                    "expect": "0",
+                    "sopplername": ","
+                },
+                {
+                    "name": "case7",
+                    "expect": "0",
+                    "sopplername": ",,"
+                },
+                {
+                    "name": "case8",
+                    "expect": "0",
+                    "sopplername": "*"
+                },
+                {
+                    "name": "case9",
+                    "expect": "0",
+                    "sopplername": "999,999"
+                },
+                {
+                    "name": "case10",
+                    "expect": "0",
+                    "sopplername": "2126,999"
+                }
+            ]
+        }
+    ],
+    "jobstatus": [
+        {
+            "说明": "根据作业状态查询作业",
+            "data": [
+                {
+                    "name": "case1",
+                    "expect": "1",
+                    "status": "done"
+                },
+                {
+                    "name": "case2",
+                    "expect": "1",
+                    "status": "exit"
+                },
+                {
+                    "name": "case3",
+                    "expect": "0",
+                    "status": "pend"
+                },
+                {
+                    "name": "case4",
+                    "expect": "0",
+                    "status": "run"
+                },
+                {
+                    "name": "case5",
+                    "expect": "0",
+                    "status": "ususp"
+                },
+                {
+                    "name": "case6",
+                    "expect": "0",
+                    "status": "psusp"
+                },
+                {
+                    "name": "case7",
+                    "expect": "0",
+                    "status": ",,"
+                },
+                {
+                    "name": "case8",
+                    "expect": "0",
+                    "status": "*"
+                },
+                {
+                    "name": "case9",
+                    "expect": "0",
+                    "status": "中文"
+                },
+                {
+                    "name": "case10",
+                    "expect": "0",
+                    "status": "——"
                 }
             ]
         }
     ],
     "desktopStart": [
         {
+            "说明": "启动桌面",
             "data": [
                 {
                     "name": "case1",
@@ -145,9 +1440,9 @@
                     "OS": "linux",
                     "appid": "gedit",
                     "resource": "linux",
-                    "protocol": "vnc"
-
-
+                    "protocol": "vnc",
+                    "metircs_width": "1024",
+                    "metircs_height": "1024"
                 },
                 {
                     "name": "case2",
@@ -155,7 +1450,9 @@
                     "OS": "unix",
                     "appid": "gedit",
                     "resource": "linux",
-                    "protocol": "vnc"
+                    "protocol": "vnc",
+                    "metircs_width": "1024",
+                    "metircs_height": "1024"
                 },
                 {
                     "name": "case3",
@@ -163,7 +1460,19 @@
                     "OS": "linux",
                     "appid": "notepad",
                     "resource": "linux",
-                    "protocol": "vnc"
+                    "protocol": "vnc",
+                    "metircs_width": "1024",
+                    "metircs_height": "1024"
+                },
+                {
+                    "name": "case4",
+                    "expect": "0",
+                    "OS": "linux",
+                    "appid": "notepad",
+                    "resource": "linux",
+                    "protocol": "jhapp",
+                    "metircs_width": "1024",
+                    "metircs_height": "1024"
                 }
             ]
         }

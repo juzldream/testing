@@ -1,0 +1,147 @@
+*** Settings ***
+Suite Setup       preSuite    spooler/conf/conf-fcfs
+Suite Teardown    postSuite
+Library           /apps/autotest4/lib/clusterKeyword.py
+Library           /apps/autotest4/lib/clusterLib.py
+Library           /apps/autotest4/lib/common.py
+Library           /apps/autotest4/lib/hostKeyword.py
+Library           /apps/autotest4/lib/hostLib.py
+Library           /apps/autotest4/lib/hostsConfLib.py
+Library           /apps/autotest4/lib/jobKeyword.py
+Library           /apps/autotest4/lib/jobLib.py
+Library           /apps/autotest4/lib/myUtils.py
+Library           /apps/autotest4/lib/OperatingSystem.py
+Library           /apps/autotest4/lib/queueKeyword.py
+Library           /apps/autotest4/lib/queueLib.py
+Library           /apps/autotest4/lib/paramsConfLib.py
+Library           /apps/autotest4/lib/queuesConfLib.py
+Library           /apps/autotest4/lib/retry.py
+Library           /apps/autotest4/lib/schedulerConfLib.py
+Library           /apps/autotest4/lib/userGroupKeyword.py
+Library           /apps/autotest4/lib/userGroupLib.py
+Library           /apps/autotest4/lib/userKeyword.py
+Library           /apps/autotest4/lib/usersConfLib.py
+Library           /apps/autotest4/lib/userLib.py
+
+*** Test Cases ***
+case1.在一个队列中，先提交的作业先执行
+    [Tags]    p1
+    [Setup]    readyTest
+    ${localhost}    runCommand    hostname
+    ${job0}    querySubmitInfo    su jhadmin -c "jsub -m ${localhost} sleep 1000"
+    ${jobid0}    getJobId    ${job0}
+    checkJobStatus    ${jobid0}    RUN
+    ${job1}    querySubmitInfo    su jhadmin -c "jsub sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su jhadmin -c "jsub sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su jhadmin -c "jsub sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    PEND
+    runCommand    jctrl kill ${jobid1}
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    PEND
+    runCommand    jctrl kill ${jobid2}
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    RUN
+    [Teardown]    killJob
+
+case2.在一个队列中，不同用户提交的作业按照先来先服务顺序执行
+    [Tags]    p1
+    [Setup]    readyTest
+    ${localhost}    RUN    hostname
+    ${job0}    querySubmitInfo    su jhadmin -c "jsub -m ${localhost} sleep 1000"
+    ${jobid0}    getJobId    ${job0}
+    checkJobStatus    ${jobid0}    RUN
+    ${job1}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user2 -c "jsub sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user3 -c "jsub sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user4 -c "jsub sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    runCommand    jctrl kill ${jobid1}
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    runCommand    jctrl kill ${jobid2}
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    PEND
+    runCommand    jctrl kill ${jobid3}
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    EXIT
+    checkJobStatus    ${jobid4}    RUN
+    [Teardown]    killJob
+
+case3.不同队列，不同优先级
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job0}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid0}    getJobId    ${job0}
+    checkJobStatus    ${jobid0}    RUN
+    ${job1}    querySubmitInfo    su user1 -c "jsub -q fcfs1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user2 -c "jsub -q fcfs1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user3 -c "jsub -q fcfs2 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user4 -c "jsub -q fcfs2 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    checkJobStatus    ${jobid1}    PEND
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    sleep    2
+    runCommand    jctrl kill ${jobid0}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    PEND
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    RUN
+    runCommand    jctrl kill ${jobid4}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    EXIT
+    checkJobStatus    ${jobid0}    EXIT
+    [Teardown]    killJob
+
+case4.bug10290不同队列，相同优先级
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub -q fcfs3 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user2 -c "jsub -q fcfs3 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user3 -c "jsub -q fcfs4 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user4 -c "jsub -q fcfs4 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    runCommand    jctrl kill ${jobid1}
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    PEND
+    runCommand    jctrl kill ${jobid2}
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    RUN
+    [Teardown]    killJob

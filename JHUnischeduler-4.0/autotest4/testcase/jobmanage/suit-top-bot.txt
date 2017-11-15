@@ -1,0 +1,2741 @@
+*** Settings ***
+Suite Setup       preSuite    spooler/conf/conf-top-bot
+Suite Teardown    postSuite
+Library           /apps/autotest4/lib/clusterKeyword.py
+Library           /apps/autotest4/lib/clusterLib.py
+Library           /apps/autotest4/lib/common.py
+Library           /apps/autotest4/lib/hostKeyword.py
+Library           /apps/autotest4/lib/hostLib.py
+Library           /apps/autotest4/lib/hostsConfLib.py
+Library           /apps/autotest4/lib/jobKeyword.py
+Library           /apps/autotest4/lib/jobLib.py
+Library           /apps/autotest4/lib/myUtils.py
+Library           /apps/autotest4/lib/OperatingSystem.py
+Library           /apps/autotest4/lib/queueKeyword.py
+Library           /apps/autotest4/lib/queueLib.py
+Library           /apps/autotest4/lib/paramsConfLib.py
+Library           /apps/autotest4/lib/queuesConfLib.py
+Library           /apps/autotest4/lib/retry.py
+Library           /apps/autotest4/lib/schedulerConfLib.py
+Library           /apps/autotest4/lib/userGroupKeyword.py
+Library           /apps/autotest4/lib/userGroupLib.py
+Library           /apps/autotest4/lib/userKeyword.py
+Library           /apps/autotest4/lib/usersConfLib.py
+Library           /apps/autotest4/lib/userLib.py
+
+*** Test Cases ***
+case1.同一个用户同一个队列的作业top一个作业到第一位（不指定位置时，默认top到第一位）
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job0}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid0}    getJobId    ${job0}
+    checkJobStatus    ${jobid0}    RUN
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    ${job5}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid5}    getJobId    ${job5}
+    ${job6}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid6}    getJobId    ${job6}
+    sleep    2
+    runCommand    su user1 -c "jctrl top ${jobid6}"
+    runCommand    su jhadmin -c "jctrl kill ${jobid0}"
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    PEND
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    checkJobStatus    ${jobid5}    PEND
+    checkJobStatus    ${jobid6}    RUN
+    runCommand    su jhadmin -c "jctrl kill ${jobid6}"
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    checkJobStatus    ${jobid5}    PEND
+    checkJobStatus    ${jobid6}    EXIT
+    runCommand    su jhadmin -c "jctrl kill ${jobid1}"
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    checkJobStatus    ${jobid5}    PEND
+    checkJobStatus    ${jobid6}    EXIT
+    runCommand    su jhadmin -c "jctrl kill ${jobid2}"
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    PEND
+    checkJobStatus    ${jobid5}    PEND
+    checkJobStatus    ${jobid6}    EXIT
+    runCommand    su jhadmin -c "jctrl kill ${jobid3}"
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    EXIT
+    checkJobStatus    ${jobid4}    RUN
+    checkJobStatus    ${jobid5}    PEND
+    checkJobStatus    ${jobid6}    EXIT
+    runCommand    su jhadmin -c "jctrl kill ${jobid4}"
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    EXIT
+    checkJobStatus    ${jobid4}    EXIT
+    checkJobStatus    ${jobid5}    RUN
+    checkJobStatus    ${jobid6}    EXIT
+    [Teardown]    killJob
+
+case2.同一个用户同一个队列的作业top一个作业到第一位（指定位置-p，top到第一位）
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job0}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid0}    getJobId    ${job0}
+    checkJobStatus    ${jobid0}    RUN
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    ${job5}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid5}    getJobId    ${job5}
+    ${job6}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid6}    getJobId    ${job6}
+    sleep    2
+    runCommand    su user1 -c "jctrl top -p 1 ${jobid6}"
+    runCommand    su jhadmin -c "jctrl kill ${jobid0}"
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    PEND
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    checkJobStatus    ${jobid5}    PEND
+    checkJobStatus    ${jobid6}    RUN
+    runCommand    su jhadmin -c "jctrl kill ${jobid6}"
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    checkJobStatus    ${jobid5}    PEND
+    checkJobStatus    ${jobid6}    EXIT
+    runCommand    su jhadmin -c "jctrl kill ${jobid1}"
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    checkJobStatus    ${jobid5}    PEND
+    checkJobStatus    ${jobid6}    EXIT
+    runCommand    su jhadmin -c "jctrl kill ${jobid2}"
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    PEND
+    checkJobStatus    ${jobid5}    PEND
+    checkJobStatus    ${jobid6}    EXIT
+    runCommand    su jhadmin -c "jctrl kill ${jobid3}"
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    EXIT
+    checkJobStatus    ${jobid4}    RUN
+    checkJobStatus    ${jobid5}    PEND
+    checkJobStatus    ${jobid6}    EXIT
+    runCommand    su jhadmin -c "jctrl kill ${jobid4}"
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    EXIT
+    checkJobStatus    ${jobid4}    EXIT
+    checkJobStatus    ${jobid5}    RUN
+    checkJobStatus    ${jobid6}    EXIT
+    [Teardown]    killJob
+
+case3.同一个用户同一个队列的作业top一个作业（指定位置-p 2，top到第二位）
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job0}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid0}    getJobId    ${job0}
+    checkJobStatus    ${jobid0}    RUN
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    ${job5}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid5}    getJobId    ${job5}
+    ${job6}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid6}    getJobId    ${job6}
+    sleep    2
+    runCommand    su user1 -c "jctrl top -p 2 ${jobid6}"
+    runCommand    su jhadmin -c "jctrl kill ${jobid0}"
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    checkJobStatus    ${jobid5}    PEND
+    checkJobStatus    ${jobid6}    PEND
+    runCommand    su jhadmin -c "jctrl kill ${jobid1}"
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    checkJobStatus    ${jobid5}    PEND
+    checkJobStatus    ${jobid6}    RUN
+    runCommand    su jhadmin -c "jctrl kill ${jobid6}"
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    checkJobStatus    ${jobid5}    PEND
+    checkJobStatus    ${jobid6}    EXIT
+    runCommand    su jhadmin -c "jctrl kill ${jobid2}"
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    PEND
+    checkJobStatus    ${jobid5}    PEND
+    checkJobStatus    ${jobid6}    EXIT
+    runCommand    su jhadmin -c "jctrl kill ${jobid3}"
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    EXIT
+    checkJobStatus    ${jobid4}    RUN
+    checkJobStatus    ${jobid5}    PEND
+    checkJobStatus    ${jobid6}    EXIT
+    runCommand    su jhadmin -c "jctrl kill ${jobid4}"
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    EXIT
+    checkJobStatus    ${jobid4}    EXIT
+    checkJobStatus    ${jobid5}    RUN
+    checkJobStatus    ${jobid6}    EXIT
+    [Teardown]    killJob
+
+case4.top一个数组作业（默认只移动数组作业的第一个作业）
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job0}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid0}    getJobId    ${job0}
+    checkJobStatus    ${jobid0}    RUN
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub -n 2 -J "job[1-3]" sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    sleep    2
+    runCommand    su user1 -c "jctrl top -p 2 ${jobid3}"
+    runCommand    su jhadmin -c "jctrl kill ${jobid0}"
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}[1]    PEND
+    checkJobStatus    ${jobid3}[2]    PEND
+    checkJobStatus    ${jobid3}[3]    PEND
+    runCommand    su jhadmin -c "jctrl kill ${jobid1}"
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}[1]    RUN
+    checkJobStatus    ${jobid3}[2]    PEND
+    checkJobStatus    ${jobid3}[3]    PEND
+    runCommand    su jhadmin -c "jctrl kill ${jobid3}[1]"
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}[1]    EXIT
+    checkJobStatus    ${jobid3}[2]    PEND
+    checkJobStatus    ${jobid3}[3]    PEND
+    runCommand    su jhadmin -c "jctrl kill ${jobid2}"
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}[1]    EXIT
+    checkJobStatus    ${jobid3}[2]    RUN
+    checkJobStatus    ${jobid3}[3]    PEND
+    runCommand    su jhadmin -c "jctrl kill ${jobid3}[2]"
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}[1]    EXIT
+    checkJobStatus    ${jobid3}[2]    EXIT
+    checkJobStatus    ${jobid3}[3]    RUN
+    [Teardown]    killJob
+
+case5.同一个用户不同队列，跨队列top，普通用户自己top。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job0}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid0}    getJobId    ${job0}
+    checkJobStatus    ${jobid0}    RUN
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub -n 2 -q high1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    sleep    2
+    runCommand    su user1 -c "jctrl top -p 1 ${jobid2}"
+    runCommand    su jhadmin -c "jctrl kill ${jobid0}"
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    PEND
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    PEND
+    runCommand    su jhadmin -c "jctrl kill ${jobid2}"
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    PEND
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    RUN
+    runCommand    su jhadmin -c "jctrl kill ${jobid3}"
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    EXIT
+    [Teardown]    killJob
+
+case6.同一个用户不同队列，跨队列top，普通用户自己bot自己的作业。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job0}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid0}    getJobId    ${job0}
+    checkJobStatus    ${jobid0}    RUN
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub -n 2 -q high1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    sleep    2
+    runCommand    su user1 -c "jctrl bot -p 1 ${jobid3}"
+    runCommand    su jhadmin -c "jctrl kill ${jobid0}"
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    PEND
+    runCommand    su jhadmin -c "jctrl kill ${jobid1}"
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    PEND
+    runCommand    su jhadmin -c "jctrl kill ${jobid2}"
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    RUN
+    [Teardown]    killJob
+
+case7.同一用户不同队列，跨队列top，管理员top普通用户的作业。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job0}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid0}    getJobId    ${job0}
+    checkJobStatus    ${jobid0}    RUN
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub -n 2 -q high1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    sleep    2
+    runCommand    su jhadmin -c "jctrl top -p 1 ${jobid2}"
+    runCommand    su jhadmin -c "jctrl kill ${jobid0}"
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    PEND
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    PEND
+    runCommand    su jhadmin -c "jctrl kill ${jobid2}"
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    PEND
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    RUN
+    runCommand    su jhadmin -c "jctrl kill ${jobid3}"
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    EXIT
+    [Teardown]    killJob
+
+case8.不同用户相同队列，跨用户op，管理员top -c普通用户的作业。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job0}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid0}    getJobId    ${job0}
+    checkJobStatus    ${jobid0}    RUN
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user2 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user3 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    sleep    2
+    runCommand    su jhadmin -c "jctrl top -c -p 1 ${jobid4}"
+    runCommand    su jhadmin -c "jctrl kill ${jobid0}"
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    PEND
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    RUN
+    runCommand    su jhadmin -c "jctrl kill ${jobid4}"
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    EXIT
+    runCommand    su jhadmin -c "jctrl kill ${jobid1}"
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    EXIT
+    runCommand    su jhadmin -c "jctrl kill ${jobid2}"
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    EXIT
+    [Teardown]    killJob
+
+case9.队列管理员top其它普通用户的作业，报错。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job0}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid0}    getJobId    ${job0}
+    checkJobStatus    ${jobid0}    RUN
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 -q qadmin sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user2 -c "jsub -n 2 -q qadmin sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user3 -c "jsub -n 2 -q qadmin sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user2 -c "jsub -n 2 -q qadmin sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    sleep    2
+    ${info}    RUN    su user2 -c "jctrl top -c -p 1 ${jobid4}"
+    log    ${info}
+    runCommand    su jhadmin -c "jctrl kill ${jobid0}"
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    runCommand    su jhadmin -c "jctrl kill ${jobid1}"
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    runCommand    su jhadmin -c "jctrl kill ${jobid2}"
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    PEND
+    runCommand    su jhadmin -c "jctrl kill ${jobid3}"
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    EXIT
+    checkJobStatus    ${jobid4}    RUN
+    [Teardown]    killJob
+
+case10.当kill掉pend作业后，作业可以正常前移。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job0}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid0}    getJobId    ${job0}
+    checkJobStatus    ${jobid0}    RUN
+    ${job00}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid00}    getJobId    ${job00}
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user2 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user2 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    sleep    2
+    ${info}    runCommand    su user1 -c "jctrl top -p 2 ${jobid4}"
+    log    ${info}
+    sleep    2
+    runCommand    su jhadmin -c "jctrl kill ${jobid00}"
+    checkJobStatus    ${jobid00}    EXIT
+    ${job5}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid5}    getJobId    ${job5}
+    runCommand    su jhadmin -c "jctrl kill ${jobid0}"
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid00}    EXIT
+    checkJobStatus    ${jobid1}    PEND
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    RUN
+    checkJobStatus    ${jobid5}    PEND
+    runCommand    su jhadmin -c "jctrl kill ${jobid4}"
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid00}    EXIT
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    EXIT
+    checkJobStatus    ${jobid5}    PEND
+    runCommand    su jhadmin -c "jctrl kill ${jobid1}"
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid00}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    EXIT
+    checkJobStatus    ${jobid5}    PEND
+    runCommand    su jhadmin -c "jctrl kill ${jobid2}"
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid00}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    EXIT
+    checkJobStatus    ${jobid5}    PEND
+    runCommand    su jhadmin -c "jctrl kill ${jobid3}"
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid00}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    EXIT
+    checkJobStatus    ${jobid4}    EXIT
+    checkJobStatus    ${jobid5}    RUN
+    [Teardown]    killJob
+
+case11.jctrl start 一个top的作业。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job0}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid0}    getJobId    ${job0}
+    checkJobStatus    ${jobid0}    RUN
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user2 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su jhadmin -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    sleep    2
+    ${info}    runCommand    su jhadmin -c "jctrl top -p 1 ${jobid3}"
+    log    ${info}
+    runCommand    su jhadmin -c "jctrl start -m 'rhelb rhela1' ${jobid3}"
+    checkJobStatus    ${jobid3}    RUN
+    runCommand    su jhadmin -c "jctrl kill ${jobid0}"
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    PEND
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    PEND
+    runCommand    su jhadmin -c "jctrl kill ${jobid3}"
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    EXIT
+    checkJobStatus    ${jobid4}    PEND
+    runCommand    su jhadmin -c "jctrl kill ${jobid1}"
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    EXIT
+    checkJobStatus    ${jobid4}    PEND
+    runCommand    su jhadmin -c "jctrl kill ${jobid2}"
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    EXIT
+    checkJobStatus    ${jobid4}    RUN
+    [Teardown]    killJob
+
+case12.fairshare与top同时使用，top生效。
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyUserGroupA    group1    (user1 user2) (user1) ([default,100])
+    jadminJhdsSched
+    checkClusterStatus
+    ${job0}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid0}    getJobId    ${job0}
+    ${job01}    querySubmitInfo    su jhadmin -c "jsub sleep 1000"
+    ${jobid01}    getJobId    ${job01}
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid01}    RUN
+    ${job1}    querySubmitInfo    su user1 -c "jsub -q fair1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user2 -c "jsub -q fair1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub -q fair1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user1 -c "jsub -q fair1 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    sleep    2
+    ${info}    runCommand    su jhadmin -c "jctrl top -p 1 ${jobid4}"
+    log    ${info}
+    sleep    2
+    runCommand    su jhadmin -c "jctrl kill ${jobid0}"
+    ${infoaaa}    runCommand    su jhadmin -c "jjobs -u all"
+    log    ${infoaaa}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid01}    RUN
+    checkJobStatus    ${jobid1}    PEND
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    RUN
+    runCommand    su jhadmin -c "jctrl kill ${jobid4}"
+    ${infobbb}    runCommand    su jhadmin -c "jjobs -u all"
+    log    ${infobbb}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    EXIT
+    runCommand    su jhadmin -c "jctrl kill ${jobid1}"
+    ${infoccc}    runCommand    su jhadmin -c "jjobs -u all"
+    log    ${infoccc}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    EXIT
+    runCommand    su jhadmin -c "jctrl kill ${jobid2}"
+    ${infoddd}    runCommand    su jhadmin -c "jjobs -u all"
+    log    ${infoddd}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    EXIT
+    [Teardown]    delUserGroup    group1
+
+case13.总的pend job 5，user1有2个pend，user1执行top -p 3 user1的作业。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job0}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid0}    getJobId    ${job0}
+    checkJobStatus    ${jobid0}    RUN
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user2 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su jhadmin -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user3 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    ${job5}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid5}    getJobId    ${job5}
+    sleep    2
+    ${info}    runCommand    su user1 -c "jctrl top -p 3 ${jobid5}"
+    log    ${info}
+    runCommand    su jhadmin -c "jctrl kill ${jobid0}"
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    checkJobStatus    ${jobid5}    PEND
+    runCommand    su jhadmin -c "jctrl kill ${jobid1}"
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    checkJobStatus    ${jobid5}    PEND
+    runCommand    su jhadmin -c "jctrl kill ${jobid2}"
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    PEND
+    checkJobStatus    ${jobid5}    PEND
+    runCommand    su jhadmin -c "jctrl kill ${jobid3}"
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    EXIT
+    checkJobStatus    ${jobid4}    RUN
+    checkJobStatus    ${jobid5}    PEND
+    runCommand    su jhadmin -c "jctrl kill ${jobid4}"
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    EXIT
+    checkJobStatus    ${jobid4}    EXIT
+    checkJobStatus    ${jobid5}    RUN
+    [Teardown]    killJob
+
+case14.总的pend job 5，user1有2个pend，集群管理员执行top -p 3 user1的作业。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job0}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid0}    getJobId    ${job0}
+    checkJobStatus    ${jobid0}    RUN
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user2 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su jhadmin -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user3 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    ${job5}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid5}    getJobId    ${job5}
+    sleep    2
+    ${info}    runCommand    su jhadmin -c "jctrl top -c -p 3 ${jobid5}"
+    log    ${info}
+    runCommand    su jhadmin -c "jctrl kill ${jobid0}"
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    checkJobStatus    ${jobid5}    PEND
+    runCommand    su jhadmin -c "jctrl kill ${jobid1}"
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    checkJobStatus    ${jobid5}    PEND
+    runCommand    su jhadmin -c "jctrl kill ${jobid2}"
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    checkJobStatus    ${jobid5}    RUN
+    runCommand    su jhadmin -c "jctrl kill ${jobid5}"
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    PEND
+    checkJobStatus    ${jobid5}    EXIT
+    ${log}    runCommand    su jhadmin -c "jctrl kill ${jobid3}"
+    log    ${log}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    EXIT
+    checkJobStatus    ${jobid4}    RUN
+    checkJobStatus    ${jobid5}    EXIT
+    [Teardown]    killJob
+
+case15.默认根据作业的提交顺序调度。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job0}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid0}    getJobId    ${job0}
+    checkJobStatus    ${jobid0}    RUN
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    ${job5}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid5}    getJobId    ${job5}
+    ${job6}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid6}    getJobId    ${job6}
+    sleep    2
+    ${info0}    runCommand    su user1 -c "jctrl kill ${jobid0}"
+    log    ${info0}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    checkJobStatus    ${jobid5}    PEND
+    checkJobStatus    ${jobid6}    PEND
+    ${info1}    runCommand    su user1 -c "jctrl kill ${jobid1}"
+    log    ${info1}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    checkJobStatus    ${jobid5}    PEND
+    checkJobStatus    ${jobid6}    PEND
+    ${info2}    runCommand    su user1 -c "jctrl kill ${jobid2}"
+    log    ${info2}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    PEND
+    checkJobStatus    ${jobid5}    PEND
+    checkJobStatus    ${jobid6}    PEND
+    ${info3}    runCommand    su user1 -c "jctrl kill ${jobid3}"
+    log    ${info3}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    EXIT
+    checkJobStatus    ${jobid4}    RUN
+    checkJobStatus    ${jobid5}    PEND
+    checkJobStatus    ${jobid6}    PEND
+    ${info4}    runCommand    su user1 -c "jctrl kill ${jobid4}"
+    log    ${info4}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    EXIT
+    checkJobStatus    ${jobid4}    EXIT
+    checkJobStatus    ${jobid5}    RUN
+    checkJobStatus    ${jobid6}    PEND
+    ${info5}    runCommand    su user1 -c "jctrl kill ${jobid5}"
+    log    ${info5}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    EXIT
+    checkJobStatus    ${jobid4}    EXIT
+    checkJobStatus    ${jobid5}    EXIT
+    checkJobStatus    ${jobid6}    RUN
+    [Teardown]    killJob
+
+case16.(5)top -p 0
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    ${job5}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid5}    getJobId    ${job5}
+    ${job6}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid6}    getJobId    ${job6}
+    sleep    2
+    ${topinfo}    runCommand    su user1 -c "jctrl top -p 0 ${jobid6}"
+    log    ${topinfo}
+    Should Be Equal    ${topinfo}    0: Position value out of range[1-9223372036854775807]
+    ${info1}    runCommand    su user1 -c "jctrl kill ${jobid1}"
+    log    ${info1}
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    checkJobStatus    ${jobid5}    PEND
+    checkJobStatus    ${jobid6}    PEND
+    ${info2}    runCommand    su user1 -c "jctrl kill ${jobid2}"
+    log    ${info2}
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    PEND
+    checkJobStatus    ${jobid5}    PEND
+    checkJobStatus    ${jobid6}    PEND
+    ${info3}    runCommand    su user1 -c "jctrl kill ${jobid3}"
+    log    ${info3}
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    EXIT
+    checkJobStatus    ${jobid4}    RUN
+    checkJobStatus    ${jobid5}    PEND
+    checkJobStatus    ${jobid6}    PEND
+    ${info4}    runCommand    su user1 -c "jctrl kill ${jobid4}"
+    log    ${info4}
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    EXIT
+    checkJobStatus    ${jobid4}    EXIT
+    checkJobStatus    ${jobid5}    RUN
+    checkJobStatus    ${jobid6}    PEND
+    ${info5}    runCommand    su user1 -c "jctrl kill ${jobid5}"
+    log    ${info5}
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    EXIT
+    checkJobStatus    ${jobid4}    EXIT
+    checkJobStatus    ${jobid5}    EXIT
+    checkJobStatus    ${jobid6}    RUN
+    [Teardown]    killJob
+
+case17.(6)top -p指定一个不存在的jobid。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    ${job5}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid5}    getJobId    ${job5}
+    ${job6}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid6}    getJobId    ${job6}
+    sleep    2
+    ${topinfo}    runCommand    su user1 -c "jctrl top -p 1 100000"
+    log    ${topinfo}
+    Should Be Equal    ${topinfo}    100000: No matching job found
+    [Teardown]    killJob
+
+case18.(7)top -p指定一个超过作业当前的位置。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job0}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid0}    getJobId    ${job0}
+    checkJobStatus    ${jobid0}    RUN
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    ${job5}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid5}    getJobId    ${job5}
+    ${job6}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid6}    getJobId    ${job6}
+    sleep    2
+    ${topinfo}    runCommand    su user1 -c "jctrl top -p 5 ${jobid3}"
+    log    ${topinfo}
+    Should Be Equal    ${topinfo}    Job <${jobid3}> has been moved to position 5 from top
+    sleep    2
+    ${info0}    runCommand    su user1 -c "jctrl kill ${jobid0}"
+    log    ${info0}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    checkJobStatus    ${jobid5}    PEND
+    checkJobStatus    ${jobid6}    PEND
+    ${info1}    runCommand    su user1 -c "jctrl kill ${jobid1}"
+    log    ${info1}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    checkJobStatus    ${jobid5}    PEND
+    checkJobStatus    ${jobid6}    PEND
+    ${info2}    runCommand    su user1 -c "jctrl kill ${jobid2}"
+    log    ${info2}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    RUN
+    checkJobStatus    ${jobid5}    PEND
+    checkJobStatus    ${jobid6}    PEND
+    ${info3}    runCommand    su user1 -c "jctrl kill ${jobid4}"
+    log    ${info3}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    EXIT
+    checkJobStatus    ${jobid5}    RUN
+    checkJobStatus    ${jobid6}    PEND
+    ${info4}    runCommand    su user1 -c "jctrl kill ${jobid5}"
+    log    ${info4}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    EXIT
+    checkJobStatus    ${jobid5}    EXIT
+    checkJobStatus    ${jobid6}    PEND
+    ${info5}    runCommand    su user1 -c "jctrl kill ${jobid3}"
+    log    ${info5}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    EXIT
+    checkJobStatus    ${jobid4}    EXIT
+    checkJobStatus    ${jobid5}    EXIT
+    checkJobStatus    ${jobid6}    RUN
+    [Teardown]    killJob
+
+case19.(8)top -p指定一个超过当前集群用户作业总的pend数。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job0}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid0}    getJobId    ${job0}
+    checkJobStatus    ${jobid0}    RUN
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    ${job5}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid5}    getJobId    ${job5}
+    ${job6}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid6}    getJobId    ${job6}
+    sleep    2
+    ${topinfo}    runCommand    su user1 -c "jctrl top -p 10 ${jobid3}"
+    log    ${topinfo}
+    Should Contain    ${topinfo}    Warning: position value<10> is beyond movable range
+    Should Contain    ${topinfo}    Job <${jobid3}> has been moved to position 6 from top
+    sleep    2
+    ${info0}    runCommand    su user1 -c "jctrl kill ${jobid0}"
+    log    ${info0}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    checkJobStatus    ${jobid5}    PEND
+    checkJobStatus    ${jobid6}    PEND
+    ${info1}    runCommand    su user1 -c "jctrl kill ${jobid1}"
+    log    ${info1}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    checkJobStatus    ${jobid5}    PEND
+    checkJobStatus    ${jobid6}    PEND
+    ${info2}    runCommand    su user1 -c "jctrl kill ${jobid2}"
+    log    ${info2}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    RUN
+    checkJobStatus    ${jobid5}    PEND
+    checkJobStatus    ${jobid6}    PEND
+    ${info3}    runCommand    su user1 -c "jctrl kill ${jobid4}"
+    log    ${info3}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    EXIT
+    checkJobStatus    ${jobid5}    RUN
+    checkJobStatus    ${jobid6}    PEND
+    ${info4}    runCommand    su user1 -c "jctrl kill ${jobid5}"
+    log    ${info4}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    EXIT
+    checkJobStatus    ${jobid5}    EXIT
+    checkJobStatus    ${jobid6}    RUN
+    ${info5}    runCommand    su user1 -c "jctrl kill ${jobid6}"
+    log    ${info5}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    EXIT
+    checkJobStatus    ${jobid5}    EXIT
+    checkJobStatus    ${jobid6}    EXIT
+    [Teardown]    killJob
+
+case20.bug11463 (9)bot -p指定一个超过集群中总的pend作业数。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job0}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid0}    getJobId    ${job0}
+    checkJobStatus    ${jobid0}    RUN
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    ${job5}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid5}    getJobId    ${job5}
+    ${job6}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid6}    getJobId    ${job6}
+    sleep    2
+    ${topinfo}    runCommand    su user1 -c "jctrl bot -p 10 ${jobid3}"
+    log    ${topinfo}
+    Should Contain    ${topinfo}    Warning: position value<10> is beyond movable range
+    Should Contain    ${topinfo}    Job <${jobid3}> has been moved to position 1 from top
+    sleep    2
+    ${info0}    runCommand    su user1 -c "jctrl kill ${jobid0}"
+    log    ${info0}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    PEND
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    PEND
+    checkJobStatus    ${jobid5}    PEND
+    checkJobStatus    ${jobid6}    PEND
+    ${info1}    runCommand    su user1 -c "jctrl kill ${jobid3}"
+    log    ${info1}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    EXIT
+    checkJobStatus    ${jobid4}    PEND
+    checkJobStatus    ${jobid5}    PEND
+    checkJobStatus    ${jobid6}    PEND
+    ${info2}    runCommand    su user1 -c "jctrl kill ${jobid1}"
+    log    ${info2}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    EXIT
+    checkJobStatus    ${jobid4}    PEND
+    checkJobStatus    ${jobid5}    PEND
+    checkJobStatus    ${jobid6}    PEND
+    ${info3}    runCommand    su user1 -c "jctrl kill ${jobid2}"
+    log    ${info3}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    EXIT
+    checkJobStatus    ${jobid4}    RUN
+    checkJobStatus    ${jobid5}    PEND
+    checkJobStatus    ${jobid6}    PEND
+    ${info4}    runCommand    su user1 -c "jctrl kill ${jobid4}"
+    log    ${info4}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    EXIT
+    checkJobStatus    ${jobid4}    EXIT
+    checkJobStatus    ${jobid5}    RUN
+    checkJobStatus    ${jobid6}    PEND
+    ${info5}    runCommand    su user1 -c "jctrl kill ${jobid5}"
+    log    ${info5}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    EXIT
+    checkJobStatus    ${jobid4}    EXIT
+    checkJobStatus    ${jobid5}    EXIT
+    checkJobStatus    ${jobid6}    RUN
+    [Teardown]    killJob
+
+case21.(10)在pend作业中存在数组作业，top一个作业到一个数组作业中间。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job0}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid0}    getJobId    ${job0}
+    checkJobStatus    ${jobid0}    RUN
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c 'jsub -n 2 \ -J "job[1-4]" sleep 1000'
+    ${jobid3}    getJobId    ${job3}
+    sleep    2
+    ${topinfo}    runCommand    su user1 -c "jctrl top -p 3 ${jobid1}"
+    log    ${topinfo}
+    Should Be Equal    ${topinfo}    Job <${jobid1}> has been moved to position 3 from top
+    sleep    2
+    ${info0}    runCommand    su user1 -c "jctrl kill ${jobid0}"
+    log    ${info0}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    PEND
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}[1]    PEND
+    checkJobStatus    ${jobid3}[2]    PEND
+    checkJobStatus    ${jobid3}[3]    PEND
+    checkJobStatus    ${jobid3}[4]    PEND
+    ${info1}    runCommand    su user1 -c "jctrl kill ${jobid2}"
+    log    ${info1}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    PEND
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}[1]    RUN
+    checkJobStatus    ${jobid3}[2]    PEND
+    checkJobStatus    ${jobid3}[3]    PEND
+    checkJobStatus    ${jobid3}[4]    PEND
+    ${info2}    runCommand    su user1 -c "jctrl kill ${jobid3}[1]"
+    log    ${info2}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}[1]    EXIT
+    checkJobStatus    ${jobid3}[2]    PEND
+    checkJobStatus    ${jobid3}[3]    PEND
+    checkJobStatus    ${jobid3}[4]    PEND
+    ${info3}    runCommand    su user1 -c "jctrl kill ${jobid1}"
+    log    ${info3}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}[1]    EXIT
+    checkJobStatus    ${jobid3}[2]    RUN
+    checkJobStatus    ${jobid3}[3]    PEND
+    checkJobStatus    ${jobid3}[4]    PEND
+    [Teardown]    killJob
+
+case22.(12)top一个数组作业+index。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job0}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid0}    getJobId    ${job0}
+    checkJobStatus    ${jobid0}    RUN
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c 'jsub -n 2 \ -J "job[1-4]" sleep 1000'
+    ${jobid3}    getJobId    ${job3}
+    sleep    2
+    ${topinfo}    runCommand    su user1 -c "jctrl top -p 1 ${jobid3}[3]"
+    log    ${topinfo}
+    Should Be Equal    ${topinfo}    Job <${jobid3}[3]> has been moved to position 1 from top
+    sleep    2
+    ${info0}    runCommand    su user1 -c "jctrl kill ${jobid0}"
+    log    ${info0}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    PEND
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}[1]    PEND
+    checkJobStatus    ${jobid3}[2]    PEND
+    checkJobStatus    ${jobid3}[3]    RUN
+    checkJobStatus    ${jobid3}[4]    PEND
+    ${info1}    runCommand    su user1 -c "jctrl kill ${jobid3}[3]"
+    log    ${info1}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}[1]    PEND
+    checkJobStatus    ${jobid3}[2]    PEND
+    checkJobStatus    ${jobid3}[3]    EXIT
+    checkJobStatus    ${jobid3}[4]    PEND
+    ${info2}    runCommand    su user1 -c "jctrl kill ${jobid1}"
+    log    ${info2}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}[1]    PEND
+    checkJobStatus    ${jobid3}[2]    PEND
+    checkJobStatus    ${jobid3}[3]    EXIT
+    checkJobStatus    ${jobid3}[4]    PEND
+    ${info3}    runCommand    su user1 -c "jctrl kill ${jobid2}"
+    log    ${info3}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}[1]    RUN
+    checkJobStatus    ${jobid3}[2]    PEND
+    checkJobStatus    ${jobid3}[3]    EXIT
+    checkJobStatus    ${jobid3}[4]    PEND
+    ${info4}    runCommand    su user1 -c "jctrl kill ${jobid3}[1]"
+    log    ${info4}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}[1]    EXIT
+    checkJobStatus    ${jobid3}[2]    RUN
+    checkJobStatus    ${jobid3}[3]    EXIT
+    checkJobStatus    ${jobid3}[4]    PEND
+    ${info5}    runCommand    su user1 -c "jctrl kill ${jobid3}[2]"
+    log    ${info5}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}[1]    EXIT
+    checkJobStatus    ${jobid3}[2]    EXIT
+    checkJobStatus    ${jobid3}[3]    EXIT
+    checkJobStatus    ${jobid3}[4]    RUN
+    [Teardown]    killJob
+
+case23.(13)top一个作业后，当作业pend时，执行jctrl requeue后，top不生效。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job0}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid0}    getJobId    ${job0}
+    checkJobStatus    ${jobid0}    RUN
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c 'jsub -n 2 \ -J "job[1-4]" sleep 1000'
+    ${jobid3}    getJobId    ${job3}
+    sleep    2
+    ${topinfo}    runCommand    su user1 -c "jctrl top -p 1 ${jobid3}[3]"
+    log    ${topinfo}
+    Should Be Equal    ${topinfo}    Job <${jobid3}[3]> has been moved to position 1 from top
+    sleep    3
+    ${requeinfo}    runCommand    su user1 -c "jctrl requeue ${jobid3}[3]"
+    log    ${requeinfo}
+    Should Be Equal    ${requeinfo}    Job <${jobid3}[3]> is being requeued
+    checkHistContain    jhist -l ${jobid3}[3]    1
+    sleep    3
+    ${info0}    runCommand    su user1 -c "jctrl kill ${jobid0}"
+    log    ${info0}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}[1]    PEND
+    checkJobStatus    ${jobid3}[2]    PEND
+    checkJobStatus    ${jobid3}[3]    PEND
+    checkJobStatus    ${jobid3}[4]    PEND
+    ${info1}    runCommand    su user1 -c "jctrl kill ${jobid1}"
+    log    ${info1}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}[1]    PEND
+    checkJobStatus    ${jobid3}[2]    PEND
+    checkJobStatus    ${jobid3}[3]    PEND
+    checkJobStatus    ${jobid3}[4]    PEND
+    ${info2}    runCommand    su user1 -c "jctrl kill ${jobid2}"
+    log    ${info2}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}[1]    RUN
+    checkJobStatus    ${jobid3}[2]    PEND
+    checkJobStatus    ${jobid3}[3]    PEND
+    checkJobStatus    ${jobid3}[4]    PEND
+    ${info3}    runCommand    su user1 -c "jctrl kill ${jobid3}[1]"
+    log    ${info3}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}[1]    EXIT
+    checkJobStatus    ${jobid3}[2]    RUN
+    checkJobStatus    ${jobid3}[3]    PEND
+    checkJobStatus    ${jobid3}[4]    PEND
+    ${info4}    runCommand    su user1 -c "jctrl kill ${jobid3}[2]"
+    log    ${info4}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}[1]    EXIT
+    checkJobStatus    ${jobid3}[2]    EXIT
+    checkJobStatus    ${jobid3}[3]    PEND
+    checkJobStatus    ${jobid3}[4]    RUN
+    ${info5}    runCommand    su user1 -c "jctrl kill ${jobid3}[4]"
+    log    ${info5}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}[1]    EXIT
+    checkJobStatus    ${jobid3}[2]    EXIT
+    checkJobStatus    ${jobid3}[3]    RUN
+    checkJobStatus    ${jobid3}[4]    EXIT
+    [Teardown]    killJob
+
+case24.(16)同一个用户不同队列，跨队列top，普通用户top其它用户的作业。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job0}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid0}    getJobId    ${job0}
+    checkJobStatus    ${jobid0}    RUN
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c 'jsub -n 2 -q high1 sleep 1000'
+    ${jobid3}    getJobId    ${job3}
+    sleep    2
+    ${topinfo}    runCommand    su user2 -c "jctrl top -p 1 ${jobid2}"
+    log    ${topinfo}
+    Should Be Equal    ${topinfo}    user2: User permission denied
+    ${info0}    runCommand    su user1 -c "jctrl kill ${jobid0}"
+    log    ${info0}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    PEND
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    RUN
+    ${info1}    runCommand    su user1 -c "jctrl kill ${jobid3}"
+    log    ${info1}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    EXIT
+    ${info2}    runCommand    su user1 -c "jctrl kill ${jobid1}"
+    log    ${info2}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    EXIT
+    [Teardown]    killJob
+
+case25.(17)同一个用户不同队列，跨队列bot，普通用户bot其它用户的作业。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job0}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid0}    getJobId    ${job0}
+    checkJobStatus    ${jobid0}    RUN
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c 'jsub -n 2 -q high1 sleep 1000'
+    ${jobid3}    getJobId    ${job3}
+    sleep    2
+    ${topinfo}    runCommand    su user2 -c "jctrl bot \ -p 1 ${jobid2}"
+    log    ${topinfo}
+    Should Be Equal    ${topinfo}    user2: User permission denied
+    ${info0}    runCommand    su user1 -c "jctrl kill ${jobid0}"
+    log    ${info0}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    PEND
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    RUN
+    ${info1}    runCommand    su user1 -c "jctrl kill ${jobid3}"
+    log    ${info1}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    EXIT
+    ${info2}    runCommand    su user1 -c "jctrl kill ${jobid1}"
+    log    ${info2}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    EXIT
+    [Teardown]    killJob
+
+case26.(19)同一个用户不同队列，跨队列bot，管理员bot所有用户的作业。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job0}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid0}    getJobId    ${job0}
+    checkJobStatus    ${jobid0}    RUN
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c 'jsub -n 2 -q high1 sleep 1000'
+    ${jobid3}    getJobId    ${job3}
+    sleep    2
+    ${topinfo}    runCommand    su jhadmin -c "jctrl bot \ -p 1 ${jobid3}"
+    log    ${topinfo}
+    Should Be Equal    ${topinfo}    Job <${jobid3}> has been moved to position 1 from bottom
+    sleep    2
+    ${info0}    runCommand    su user1 -c "jctrl kill ${jobid0}"
+    log    ${info0}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    PEND
+    ${info1}    runCommand    su user1 -c "jctrl kill ${jobid1}"
+    log    ${info1}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    PEND
+    ${info2}    runCommand    su user1 -c "jctrl kill ${jobid2}"
+    log    ${info2}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    RUN
+    [Teardown]    killJob
+
+case27.(20)不同用户相同队列，跨用户top，集群管理员top普通用户的作业，该普通用户有多个pend作业。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job0}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid0}    getJobId    ${job0}
+    checkJobStatus    ${jobid0}    RUN
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user2 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user3 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    sleep    2
+    ${topinfo}    runCommand    su jhadmin -c "jctrl top -p 1 -c ${jobid3}"
+    log    ${topinfo}
+    Should Be Equal    ${topinfo}    Job <${jobid3}> has been moved to position 1 from top
+    sleep    2
+    ${info0}    runCommand    su jhadmin -c "jctrl kill ${jobid0}"
+    log    ${info0}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    PEND
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    PEND
+    ${info1}    runCommand    su jhadmin -c "jctrl kill ${jobid3}"
+    log    ${info1}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    EXIT
+    checkJobStatus    ${jobid4}    PEND
+    ${info2}    runCommand    su jhadmin -c "jctrl kill ${jobid1}"
+    log    ${info2}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    EXIT
+    checkJobStatus    ${jobid4}    PEND
+    ${info3}    runCommand    su jhadmin -c "jctrl kill ${jobid2}"
+    log    ${info3}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    EXIT
+    checkJobStatus    ${jobid4}    RUN
+    [Teardown]    killJob
+
+case28.(21)不同用户相同队列，跨用户top，集群管理员top普通用户的作业，该普通用户只有一个pend的作业。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job0}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid0}    getJobId    ${job0}
+    checkJobStatus    ${jobid0}    RUN
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user2 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user3 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    sleep    2
+    ${topinfo}    runCommand    su jhadmin -c "jctrl top -p 1 -c ${jobid4}"
+    log    ${topinfo}
+    Should Be Equal    ${topinfo}    Job <${jobid4}> has been moved to position 1 from top
+    sleep    2
+    ${info0}    runCommand    su jhadmin -c "jctrl kill ${jobid0}"
+    log    ${info0}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    PEND
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    RUN
+    ${info1}    runCommand    su jhadmin -c "jctrl kill ${jobid4}"
+    log    ${info1}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    EXIT
+    ${info2}    runCommand    su jhadmin -c "jctrl kill ${jobid1}"
+    log    ${info2}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    EXIT
+    ${info3}    runCommand    su jhadmin -c "jctrl kill ${jobid2}"
+    log    ${info3}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    EXIT
+    [Teardown]    killJob
+
+case29.(22)不同用户相同队列，跨用户top，集群管理员top普通用户的作业。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job0}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid0}    getJobId    ${job0}
+    checkJobStatus    ${jobid0}    RUN
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user2 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user3 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    sleep    2
+    ${topinfo}    runCommand    su jhadmin -c "jctrl top -p 1 ${jobid4}"
+    log    ${topinfo}
+    Should Be Equal    ${topinfo}    Job <${jobid4}> has been moved to position 1 from top
+    sleep    2
+    ${info0}    runCommand    su jhadmin -c "jctrl kill ${jobid0}"
+    log    ${info0}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    ${info1}    runCommand    su jhadmin -c "jctrl kill ${jobid1}"
+    log    ${info1}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    ${info2}    runCommand    su jhadmin -c "jctrl kill ${jobid2}"
+    log    ${info2}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    PEND
+    ${info3}    runCommand    su jhadmin -c "jctrl kill ${jobid3}"
+    log    ${info3}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    EXIT
+    checkJobStatus    ${jobid4}    RUN
+    [Teardown]    killJob
+
+case30.(24)不同用户相同队列，跨用户top，集群管理员top自己的作业。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job0}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid0}    getJobId    ${job0}
+    checkJobStatus    ${jobid0}    RUN
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user2 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su jhadmin -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    sleep    2
+    ${topinfo}    runCommand    su jhadmin -c "jctrl top -p 1 ${jobid4}"
+    log    ${topinfo}
+    Should Be Equal    ${topinfo}    Job <${jobid4}> has been moved to position 1 from top
+    sleep    2
+    ${info0}    runCommand    su jhadmin -c "jctrl kill ${jobid0}"
+    log    ${info0}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    ${info1}    runCommand    su jhadmin -c "jctrl kill ${jobid1}"
+    log    ${info1}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    ${info2}    runCommand    su jhadmin -c "jctrl kill ${jobid2}"
+    log    ${info2}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    PEND
+    ${info3}    runCommand    su jhadmin -c "jctrl kill ${jobid3}"
+    log    ${info3}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    EXIT
+    checkJobStatus    ${jobid4}    RUN
+    [Teardown]    killJob
+
+case31.(25)不同用户相同队列，跨用户top，集群管理员top -c自己作业。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job0}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid0}    getJobId    ${job0}
+    checkJobStatus    ${jobid0}    RUN
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user2 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su jhadmin -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    sleep    2
+    ${topinfo}    runCommand    su jhadmin -c "jctrl top -p 1 -c ${jobid4}"
+    log    ${topinfo}
+    Should Be Equal    ${topinfo}    Job <${jobid4}> has been moved to position 1 from top
+    sleep    2
+    ${info0}    runCommand    su jhadmin -c "jctrl kill ${jobid0}"
+    log    ${info0}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    PEND
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    RUN
+    ${info1}    runCommand    su jhadmin -c "jctrl kill ${jobid4}"
+    log    ${info1}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    EXIT
+    ${info2}    runCommand    su jhadmin -c "jctrl kill ${jobid1}"
+    log    ${info2}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    EXIT
+    ${info3}    runCommand    su jhadmin -c "jctrl kill ${jobid2}"
+    log    ${info3}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    EXIT
+    [Teardown]    killJob
+
+case32.(26)不同用户相同队列，跨用户top，队列管理员top自己的作业。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job0}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid0}    getJobId    ${job0}
+    checkJobStatus    ${jobid0}    RUN
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 -q qadmin sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user2 -c "jsub -n 2 -q qadmin \ sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user3 -c "jsub -n 2 -q qadmin sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user2 -c "jsub -n 2 -q qadmin sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    sleep    2
+    ${topinfo}    runCommand    su user2 -c "jctrl top -p 1 ${jobid4}"
+    log    ${topinfo}
+    Should Be Equal    ${topinfo}    Job <${jobid4}> has been moved to position 1 from top
+    sleep    2
+    ${info0}    runCommand    su jhadmin -c "jctrl kill ${jobid0}"
+    log    ${info0}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    ${info1}    runCommand    su jhadmin -c "jctrl kill ${jobid1}"
+    log    ${info1}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    RUN
+    ${info2}    runCommand    su jhadmin -c "jctrl kill ${jobid4}"
+    log    ${info2}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    EXIT
+    ${info3}    runCommand    su jhadmin -c "jctrl kill ${jobid2}"
+    log    ${info3}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    EXIT
+    [Teardown]    killJob
+
+case33.(27)不同用户相同队列，跨用户top，队列管理员top -c自己作业，报错。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job0}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid0}    getJobId    ${job0}
+    checkJobStatus    ${jobid0}    RUN
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 -q qadmin sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user2 -c "jsub -n 2 -q qadmin \ sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user3 -c "jsub -n 2 -q qadmin sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user2 -c "jsub -n 2 -q qadmin sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    sleep    2
+    ${topinfo}    runCommand    su user2 -c "jctrl top -c -p 1 ${jobid4}"
+    log    ${topinfo}
+    Should Be Equal    ${topinfo}    user2: User permission denied
+    sleep    2
+    ${info0}    runCommand    su jhadmin -c "jctrl kill ${jobid0}"
+    log    ${info0}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    ${info1}    runCommand    su jhadmin -c "jctrl kill ${jobid1}"
+    log    ${info1}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    ${info2}    runCommand    su jhadmin -c "jctrl kill ${jobid2}"
+    log    ${info2}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    PEND
+    ${info3}    runCommand    su jhadmin -c "jctrl kill ${jobid3}"
+    log    ${info3}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    EXIT
+    checkJobStatus    ${jobid4}    RUN
+    [Teardown]    killJob
+
+case34.(28)不同用户相同队列，跨用户top，队列管理员top其它普通用户的作业，报错，命令拒绝。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job0}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid0}    getJobId    ${job0}
+    checkJobStatus    ${jobid0}    RUN
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 -q qadmin sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user2 -c "jsub -n 2 -q qadmin \ sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user3 -c "jsub -n 2 -q qadmin sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user2 -c "jsub -n 2 -q qadmin sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    sleep    2
+    ${topinfo}    runCommand    su user2 -c "jctrl top -p 1 ${jobid3}"
+    log    ${topinfo}
+    Should Be Equal    ${topinfo}    user2: User permission denied
+    sleep    2
+    ${info0}    runCommand    su jhadmin -c "jctrl kill ${jobid0}"
+    log    ${info0}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    ${info1}    runCommand    su jhadmin -c "jctrl kill ${jobid1}"
+    log    ${info1}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    ${info2}    runCommand    su jhadmin -c "jctrl kill ${jobid2}"
+    log    ${info2}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    PEND
+    ${info3}    runCommand    su jhadmin -c "jctrl kill ${jobid3}"
+    log    ${info3}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    EXIT
+    checkJobStatus    ${jobid4}    RUN
+    [Teardown]    killJob
+
+case35.(30)不同用户相同队列，跨用户top，普通用户top其它普通用户的作业，报错。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job0}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid0}    getJobId    ${job0}
+    checkJobStatus    ${jobid0}    RUN
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 -q qadmin sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user2 -c "jsub -n 2 -q qadmin \ sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user3 -c "jsub -n 2 -q qadmin sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user2 -c "jsub -n 2 -q qadmin sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    sleep    2
+    ${topinfo}    runCommand    su user4 -c "jctrl top -p 1 ${jobid3}"
+    log    ${topinfo}
+    Should Be Equal    ${topinfo}    user4: User permission denied
+    sleep    2
+    ${info0}    runCommand    su jhadmin -c "jctrl kill ${jobid0}"
+    log    ${info0}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    ${info1}    runCommand    su jhadmin -c "jctrl kill ${jobid1}"
+    log    ${info1}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    ${info2}    runCommand    su jhadmin -c "jctrl kill ${jobid2}"
+    log    ${info2}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    PEND
+    ${info3}    runCommand    su jhadmin -c "jctrl kill ${jobid3}"
+    log    ${info3}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    EXIT
+    checkJobStatus    ${jobid4}    RUN
+    [Teardown]    killJob
+
+case36.(31)不同用户相同队列，跨用户top，普通用户bot其它普通用户的作业，报错。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job0}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid0}    getJobId    ${job0}
+    checkJobStatus    ${jobid0}    RUN
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 -q qadmin sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user2 -c "jsub -n 2 -q qadmin \ sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user3 -c "jsub -n 2 -q qadmin sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user2 -c "jsub -n 2 -q qadmin sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    sleep    2
+    ${topinfo}    runCommand    su user4 -c "jctrl bot -p 1 ${jobid3}"
+    log    ${topinfo}
+    Should Be Equal    ${topinfo}    user4: User permission denied
+    sleep    2
+    ${info0}    runCommand    su jhadmin -c "jctrl kill ${jobid0}"
+    log    ${info0}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    ${info1}    runCommand    su jhadmin -c "jctrl kill ${jobid1}"
+    log    ${info1}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    ${info2}    runCommand    su jhadmin -c "jctrl kill ${jobid2}"
+    log    ${info2}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    PEND
+    ${info3}    runCommand    su jhadmin -c "jctrl kill ${jobid3}"
+    log    ${info3}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    EXIT
+    checkJobStatus    ${jobid4}    RUN
+    [Teardown]    killJob
+
+case37.(34)重复top一个作业到不同的位置，最后一次生效。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job0}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid0}    getJobId    ${job0}
+    checkJobStatus    ${jobid0}    RUN
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 -q qadmin sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user2 -c "jsub -n 2 -q qadmin \ sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub -n 2 -q qadmin sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su jhadmin -c "jsub -n 2 -q qadmin sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    sleep    2
+    ${topinfo1}    runCommand    su user1 -c "jctrl top -p 1 ${jobid3}"
+    log    ${topinfo1}
+    Should Contain    ${topinfo1}    Job <${jobid3}> has been moved to position 1 from top
+    sleep    3
+    ${topinfo2}    runCommand    su user1 -c "jctrl top -p 2 ${jobid3}"
+    log    ${topinfo2}
+    Should Contain    ${topinfo2}    Job <${jobid3}> has been moved to position 2 from top
+    sleep    3
+    ${info0}    runCommand    su jhadmin -c "jctrl kill ${jobid0}"
+    log    ${info0}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    ${info1}    runCommand    su jhadmin -c "jctrl kill ${jobid1}"
+    log    ${info1}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    ${info2}    runCommand    su jhadmin -c "jctrl kill ${jobid2}"
+    log    ${info2}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    PEND
+    ${info3}    runCommand    su jhadmin -c "jctrl kill ${jobid3}"
+    log    ${info3}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    EXIT
+    checkJobStatus    ${jobid4}    RUN
+    [Teardown]    killJob
+
+case38.(35)一个pend的作业top后，执行jctrl stop和resume后，top/bot能够正常生效。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    jadminJhdsSched
+    checkClusterStatus
+    ${file}    Set Variable    ${filedir}/spooler/input/jctrl.sh
+    ${job0}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid0}    getJobId    ${job0}
+    checkJobStatus    ${jobid0}    RUN
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 ${file}"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su jhadmin -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    checkJobStatus    ${jobid1}    PEND
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    ${topinfo}    runCommand    su user1 -c "jctrl top -p 2 ${jobid3}"
+    log    ${topinfo}
+    Should Contain    ${topinfo}    Job <${jobid3}> has been moved to position 2 from top
+    sleep    3
+    ${info0}    runCommand    su jhadmin -c "jctrl kill ${jobid0}"
+    log    ${info0}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    ${info1}    runCommand    su jhadmin -c "jctrl kill ${jobid1}"
+    log    ${info1}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    PEND
+    ${stopinfo}    runCommand    su user1 -c "jctrl stop ${jobid3}"
+    log    ${stopinfo}
+    checkJobStatus    ${jobid3}    USUSP
+    sleep    2
+    ${job33}    queryjobinfo    ${jobid3}
+    ${reason3}    getjobspndrsn    ${job33}
+    log    ${reason3}
+    should contain    ${reason3}    The job was suspended by user;
+    ${outputdir2}    Set Variable    ${filedir}/spooler/output/jobout${jobid3}.txt
+    ${size3}    Get File Size    ${outputdir2}
+    log    ${size3}
+    sleep    3
+    ${size4}    Get File Size    ${outputdir2}
+    log    ${size4}
+    Should Be Equal As Integers    ${size3}    ${size4}
+    ${resumeinfo}    runCommand    su user1 -c "jctrl resume ${jobid3}"
+    log    ${resumeinfo}
+    checkJobStatus    ${jobid3}    RUN
+    ${outputdir3}    Set Variable    ${filedir}/spooler/output/jobout${jobid3}.txt
+    ${size5}    Get File Size    ${outputdir3}
+    log    ${size5}
+    sleep    3
+    ${size6}    Get File Size    ${outputdir3}
+    log    ${size6}
+    Should Not Be Equal As Integers    ${size5}    ${size6}
+    ${outputdir4}    Set Variable    ${filedir}/spooler/output/jobout${jobid3}.txt
+    ${size7}    Get File Size    ${outputdir4}
+    log    ${size7}
+    sleep    3
+    ${size8}    Get File Size    ${outputdir4}
+    log    ${size8}
+    Should Not Be Equal As Integers    ${size7}    ${size8}
+    runCommand    su jhadmin -c "jctrl kill -u all 0"
+    Remove Files    ${filedir}/spooler/output/*.txt
+    [Teardown]    killJob
+
+case39.(36)重启sched后，top/bot依然生效。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job0}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid0}    getJobId    ${job0}
+    checkJobStatus    ${jobid0}    RUN
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su jhadmin -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    sleep    2
+    ${topinfo2}    runCommand    su user1 -c "jctrl top -p 2 ${jobid3}"
+    log    ${topinfo2}
+    Should Contain    ${topinfo2}    Job <${jobid3}> has been moved to position 2 from top
+    sleep    3
+    ${restart}    runCommand    su jhadmin -c "echo y|jservice restart sched"
+    log    ${restart}
+    checkRestartClusterStatus
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}    PEND
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    ${killinfo}    runCommand    su user1 -c "jctrl kill ${jobid0}"
+    log    ${killinfo}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    ${info1}    runCommand    su jhadmin -c "jctrl kill ${jobid1}"
+    log    ${info1}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    PEND
+    ${info2}    runCommand    su jhadmin -c "jctrl kill ${jobid3}"
+    log    ${info2}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    EXIT
+    checkJobStatus    ${jobid4}    PEND
+    ${info3}    runCommand    su jhadmin -c "jctrl kill ${jobid2}"
+    log    ${info3}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    EXIT
+    checkJobStatus    ${jobid4}    RUN
+    [Teardown]    killJob
+
+case40.(37)reconfig后，top/bot依然生效。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job0}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid0}    getJobId    ${job0}
+    checkJobStatus    ${jobid0}    RUN
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su jhadmin -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    sleep    2
+    ${topinfo2}    runCommand    su user1 -c "jctrl top -p 2 ${jobid3}"
+    log    ${topinfo2}
+    Should Contain    ${topinfo2}    Job <${jobid3}> has been moved to position 2 from top
+    sleep    3
+    jadminJhdsSched
+    checkRestartClusterStatus
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}    PEND
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    ${killinfo}    runCommand    su user1 -c "jctrl kill ${jobid0}"
+    log    ${killinfo}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    ${info1}    runCommand    su jhadmin -c "jctrl kill ${jobid1}"
+    log    ${info1}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    PEND
+    ${info2}    runCommand    su jhadmin -c "jctrl kill ${jobid3}"
+    log    ${info2}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    EXIT
+    checkJobStatus    ${jobid4}    PEND
+    ${info3}    runCommand    su jhadmin -c "jctrl kill ${jobid2}"
+    log    ${info3}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    EXIT
+    checkJobStatus    ${jobid4}    RUN
+    [Teardown]    killJob
+
+case42.(40)top -p指定位置的最大值（等于改值的行为）。
+    [Tags]    p2    boundary
+    [Setup]    readyTest
+    ${job0}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid0}    getJobId    ${job0}
+    checkJobStatus    ${jobid0}    RUN
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user2 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su jhadmin -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    sleep    2
+    ${topinfo}    runCommand    su jhadmin -c "jctrl top -c -p 9223372036854775807 ${jobid3}"
+    log    ${topinfo}
+    Should Contain    ${topinfo}    Warning: position value<9223372036854775807> is beyond movable range
+    Should Contain    ${topinfo}    Job <${jobid3}> has been moved to position 4 from top
+    ${info0}    runCommand    su jhadmin -c "jctrl kill ${jobid0}"
+    log    ${info0}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    ${info1}    runCommand    su jhadmin -c "jctrl kill ${jobid1}"
+    log    ${info1}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    ${info2}    runCommand    su jhadmin -c "jctrl kill ${jobid2}"
+    log    ${info2}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    RUN
+    ${info3}    runCommand    su jhadmin -c "jctrl kill ${jobid4}"
+    log    ${info3}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    EXIT
+    [Teardown]    killJob
+
+case41.(39)top -p指定位置的最大值（超过该值的行为）。
+    [Tags]    p2    boundary
+    [Setup]    readyTest
+    ${job0}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid0}    getJobId    ${job0}
+    checkJobStatus    ${jobid0}    RUN
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user2 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su jhadmin -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    sleep    2
+    ${topinfo}    runCommand    su jhadmin -c "jctrl top -c -p 9223372036854775909 ${jobid3}"
+    log    ${topinfo}
+    Should Contain    ${topinfo}    9223372036854775909: Position value out of range[1-9223372036854775807]
+    ${info0}    runCommand    su jhadmin -c "jctrl kill ${jobid0}"
+    log    ${info0}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    ${info1}    runCommand    su jhadmin -c "jctrl kill ${jobid1}"
+    log    ${info1}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    ${info2}    runCommand    su jhadmin -c "jctrl kill ${jobid2}"
+    log    ${info2}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    PEND
+    ${info3}    runCommand    su jhadmin -c "jctrl kill ${jobid3}"
+    log    ${info3}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    EXIT
+    checkJobStatus    ${jobid4}    RUN
+    [Teardown]    killJob
+
+case43.(41)交替使用top和bot，最后一次生效。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job0}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid0}    getJobId    ${job0}
+    checkJobStatus    ${jobid0}    RUN
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user2 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su jhadmin -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    ${job5}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid5}    getJobId    ${job5}
+    sleep    2
+    ${topinfo}    runCommand    su jhadmin -c "jctrl top -p 1 ${jobid3}"
+    log    ${topinfo}
+    Should Contain    ${topinfo}    Job <${jobid3}> has been moved to position 1 from top
+    sleep    2
+    ${botinfo}    runCommand    su jhadmin -c "jctrl bot -p 1 ${jobid3}"
+    log    ${botinfo}
+    Should Contain    ${botinfo}    Job <${jobid3}> has been moved to position 1 from bottom
+    sleep    2
+    ${info0}    runCommand    su jhadmin -c "jctrl kill ${jobid0}"
+    log    ${info0}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    checkJobStatus    ${jobid5}    PEND
+    ${info1}    runCommand    su jhadmin -c "jctrl kill ${jobid1}"
+    log    ${info1}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    checkJobStatus    ${jobid5}    PEND
+    ${info2}    runCommand    su jhadmin -c "jctrl kill ${jobid2}"
+    log    ${info2}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    RUN
+    checkJobStatus    ${jobid5}    PEND
+    ${info3}    runCommand    su jhadmin -c "jctrl kill ${jobid4}"
+    log    ${info3}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    EXIT
+    checkJobStatus    ${jobid5}    RUN
+    ${info3}    runCommand    su jhadmin -c "jctrl kill ${jobid5}"
+    log    ${info3}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    EXIT
+    checkJobStatus    ${jobid5}    EXIT
+    [Teardown]    killJob
+
+case44.bug11516(42)top指定多个jobid。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job0}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid0}    getJobId    ${job0}
+    checkJobStatus    ${jobid0}    RUN
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user2 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su jhadmin -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    sleep    2
+    ${topinfo}    runCommand    su jhadmin -c "jctrl top -p 1 ${jobid3} ${jobid4}"
+    log    ${topinfo}
+    Should Contain    ${topinfo}    usage: jctrl
+    Should Contain    ${topinfo}    jctrl: error: unrecognized arguments:
+    sleep    2
+    ${topinfo1}    runCommand    su jhadmin -c "jctrl top -c -p 1 ${jobid3} ${jobid4}"
+    log    ${topinfo1}
+    Should Contain    ${topinfo1}    usage: jctrl
+    Should Contain    ${topinfo1}    jctrl: error: unrecognized arguments:
+    sleep    2
+    ${info0}    runCommand    su jhadmin -c "jctrl kill ${jobid0}"
+    log    ${info0}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    ${info1}    runCommand    su jhadmin -c "jctrl kill ${jobid1}"
+    log    ${info1}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    ${info2}    runCommand    su jhadmin -c "jctrl kill ${jobid2}"
+    log    ${info2}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    PEND
+    ${info3}    runCommand    su jhadmin -c "jctrl kill ${jobid3}"
+    log    ${info3}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    EXIT
+    checkJobStatus    ${jobid4}    RUN
+    [Teardown]    killJob
+
+case45.(44)jctrl top 0。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job0}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid0}    getJobId    ${job0}
+    checkJobStatus    ${jobid0}    RUN
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user2 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su jhadmin -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    sleep    2
+    ${topinfo}    runCommand    su jhadmin -c "jctrl top 0"
+    log    ${topinfo}
+    Should Be Equal    ${topinfo}    0: Illegal job Id
+    sleep    2
+    ${info0}    runCommand    su jhadmin -c "jctrl kill ${jobid0}"
+    log    ${info0}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    ${info1}    runCommand    su jhadmin -c "jctrl kill ${jobid1}"
+    log    ${info1}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    ${info2}    runCommand    su jhadmin -c "jctrl kill ${jobid2}"
+    log    ${info2}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    PEND
+    ${info3}    runCommand    su jhadmin -c "jctrl kill ${jobid3}"
+    log    ${info3}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    EXIT
+    checkJobStatus    ${jobid4}    RUN
+    [Teardown]    killJob
+
+case46.(45)top指定RUN、SSUSP、USUSP状态的作业。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job0}    querySubmitInfo    su user1 -c "jsub -m rhela1 -q prelow1 \ sleep 1000"
+    ${jobid0}    getJobId    ${job0}
+    ${job1}    querySubmitInfo    su user1 -c "jsub \ -q low1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}    RUN
+    ${job2}    querySubmitInfo    su user1 -c "jsub -q prehigh1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid0}    SSUSP
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    ${stopinfo}    runCommand    su user1 -c "jctrl stop ${jobid1}"
+    log    ${stopinfo}
+    checkJobStatus    ${jobid0}    SSUSP
+    checkJobStatus    ${jobid1}    USUSP
+    checkJobStatus    ${jobid2}    RUN
+    sleep    2
+    ${topinfo}    runCommand    su jhadmin -c "jctrl top -p 1 ${jobid0}"
+    log    ${topinfo}
+    Should Be Equal    ${topinfo}    Failed to top job: Job has already stopped
+    ${topinfo1}    runCommand    su jhadmin -c "jctrl top -p 1 ${jobid1}"
+    log    ${topinfo1}
+    Should Be Equal    ${topinfo1}    Failed to top job: Job has already stopped
+    ${topinfo2}    runCommand    su jhadmin -c "jctrl top -p 1 ${jobid2}"
+    log    ${topinfo2}
+    Should Be Equal    ${topinfo2}    Failed to top job: Job has already started
+    checkJobStatus    ${jobid0}    SSUSP
+    checkJobStatus    ${jobid1}    USUSP
+    checkJobStatus    ${jobid2}    RUN
+    [Teardown]    killJob
+
+case47.(46)top指定done，exit状态的作业。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job0}    querySubmitInfo    su user1 -c "jsub \ sleep 2"
+    ${jobid0}    getJobId    ${job0}
+    ${job1}    querySubmitInfo    su user1 -c "jsub \ -q low1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid0}    DONE
+    checkJobStatus    ${jobid1}    RUN
+    ${killinfo}    runCommand    su user1 -c "jctrl kill ${jobid1}"
+    log    ${killinfo}
+    checkJobStatus    ${jobid0}    DONE
+    checkJobStatus    ${jobid1}    EXIT
+    sleep    2
+    ${topinfo}    runCommand    su jhadmin -c "jctrl top -p 1 ${jobid0}"
+    log    ${topinfo}
+    Should Be Equal    ${topinfo}    Failed to top job: Job has already finished
+    ${topinfo1}    runCommand    su jhadmin -c "jctrl top -p 1 ${jobid1}"
+    log    ${topinfo1}
+    Should Be Equal    ${topinfo1}    Failed to top job: Job has already finished
+    checkJobStatus    ${jobid0}    DONE
+    checkJobStatus    ${jobid1}    EXIT
+    [Teardown]    killJob
+
+case48.(47)jctrl top -p指定负数，字符串和小数。
+    [Tags]    negative
+    [Setup]    readyTest
+    ${job0}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid0}    getJobId    ${job0}
+    checkJobStatus    ${jobid0}    RUN
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user2 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su jhadmin -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    sleep    2
+    ${topinfo}    runCommand    su jhadmin -c "jctrl top -p s ${jobid3}"
+    log    ${topinfo}
+    Should Contain    ${topinfo}    jctrl top: error: argument -p: invalid int value: 's'
+    Should Contain    ${topinfo}    usage: jctrl top
+    sleep    1
+    ${topinfo1}    runCommand    su jhadmin -c "jctrl top -p -2 ${jobid3}"
+    log    ${topinfo1}
+    Should Contain    ${topinfo1}    -2: Position value out of range[1-9223372036854775807]
+    sleep    1
+    ${topinfo2}    runCommand    su jhadmin -c "jctrl top -p 3.1 ${jobid3}"
+    log    ${topinfo2}
+    Should Contain    ${topinfo2}    usage: jctrl top
+    Should Contain    ${topinfo2}    jctrl top: error: argument -p: invalid int value: '3.1'
+    sleep    1
+    ${info0}    runCommand    su jhadmin -c "jctrl kill ${jobid0}"
+    log    ${info0}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    ${info1}    runCommand    su jhadmin -c "jctrl kill ${jobid1}"
+    log    ${info1}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    ${info2}    runCommand    su jhadmin -c "jctrl kill ${jobid2}"
+    log    ${info2}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    PEND
+    ${info3}    runCommand    su jhadmin -c "jctrl kill ${jobid3}"
+    log    ${info3}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    EXIT
+    checkJobStatus    ${jobid4}    RUN
+    [Teardown]    killJob
+
+case49.(48)top指定done、exit状态的作业。
+    [Tags]    negative
+    [Setup]    readyTest
+    ${job0}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid0}    getJobId    ${job0}
+    checkJobStatus    ${jobid0}    RUN
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user2 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su jhadmin -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    sleep    2
+    ${topinfo}    runCommand    su jhadmin -c "jctrl top s "
+    log    ${topinfo}
+    Should Be Equal    ${topinfo}    s: Illegal job Id
+    sleep    1
+    ${topinfo1}    runCommand    su jhadmin -c "jctrl top \ -2 "
+    log    ${topinfo1}
+    Should Be Equal    ${topinfo1}    -2: Illegal job Id
+    sleep    1
+    ${topinfo2}    runCommand    su jhadmin -c "jctrl top 3.1"
+    log    ${topinfo2}
+    Should Be Equal    ${topinfo2}    3.1: Illegal job Id
+    sleep    1
+    ${info0}    runCommand    su jhadmin -c "jctrl kill ${jobid0}"
+    log    ${info0}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    ${info1}    runCommand    su jhadmin -c "jctrl kill ${jobid1}"
+    log    ${info1}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    ${info2}    runCommand    su jhadmin -c "jctrl kill ${jobid2}"
+    log    ${info2}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    PEND
+    ${info3}    runCommand    su jhadmin -c "jctrl kill ${jobid3}"
+    log    ${info3}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    EXIT
+    checkJobStatus    ${jobid4}    RUN
+    [Teardown]    killJob
+
+case50.(50)jctrl start排在top作业之前的作业。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job0}    querySubmitInfo    su user1 -c "jsub -m rhela1 -q low1 sleep 1000"
+    ${jobid0}    getJobId    ${job0}
+    ${job00}    querySubmitInfo    su user1 -c "jsub -m rhelb -q low1 sleep 1000"
+    ${jobid00}    getJobId    ${job00}
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid00}    RUN
+    ${job1}    querySubmitInfo    su user1 -c "jsub -q low1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user2 -c "jsub -q low1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub \ -q low1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su jhadmin -c "jsub -q low1 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    sleep    2
+    ${topinfo}    runCommand    su jhadmin -c "jctrl top -c -p 3 ${jobid4} "
+    log    ${topinfo}
+    Should Be Equal    ${topinfo}    Job <${jobid4}> has been moved to position 3 from top
+    sleep    2
+    ${startinfo1}    runCommand    su jhadmin -c "jctrl start -m rhela1 ${jobid3}"
+    log    ${startinfo1}
+    ${topinfo2}    runCommand    su jhadmin -c "jctrl start -m rhela1 ${jobid1}"
+    log    ${topinfo2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    ${info0}    runCommand    su jhadmin -c "jctrl kill ${jobid00}"
+    log    ${info0}
+    checkJobStatus    ${jobid00}    EXIT
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    PEND
+    ${info1}    runCommand    su jhadmin -c "jctrl kill ${jobid2}"
+    log    ${info1}
+    checkJobStatus    ${jobid00}    EXIT
+    checkJobStatus    ${jobid0}    RUN
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    RUN
+    [Teardown]    killJob
+
+case51.(53)总的pend job 5，user1有2个pend，集群管理员执行top -p 3user1的作业。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job0}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid0}    getJobId    ${job0}
+    checkJobStatus    ${jobid0}    RUN
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user2 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su jhadmin -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user3 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    ${job5}    querySubmitInfo    su user1 -c "jsub -n 2 -q low1 sleep 1000"
+    ${jobid5}    getJobId    ${job5}
+    sleep    2
+    ${topinfo}    runCommand    su user4 -c "jctrl bot -p 3 ${jobid5}"
+    log    ${topinfo}
+    sleep    2
+    ${info0}    runCommand    su jhadmin -c "jctrl kill ${jobid0}"
+    log    ${info0}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    checkJobStatus    ${jobid5}    PEND
+    ${info1}    runCommand    su jhadmin -c "jctrl kill ${jobid1}"
+    log    ${info1}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    ${info2}    runCommand    su jhadmin -c "jctrl kill ${jobid2}"
+    log    ${info2}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    PEND
+    checkJobStatus    ${jobid5}    PEND
+    ${info3}    runCommand    su jhadmin -c "jctrl kill ${jobid3}"
+    log    ${info3}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    EXIT
+    checkJobStatus    ${jobid4}    RUN
+    checkJobStatus    ${jobid5}    PEND
+    ${info4}    runCommand    su jhadmin -c "jctrl kill ${jobid4}"
+    log    ${info4}
+    checkJobStatus    ${jobid0}    EXIT
+    checkJobStatus    ${jobid1}    EXIT
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    EXIT
+    checkJobStatus    ${jobid4}    EXIT
+    checkJobStatus    ${jobid5}    RUN
+    [Teardown]    killJob

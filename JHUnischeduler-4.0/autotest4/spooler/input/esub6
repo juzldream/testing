@@ -1,0 +1,4 @@
+#!/bin/sh
+. $JH_SUB_PARM_FILE
+echo 'JH_SUB_QUEUE="q2"'>>$JH_SUB_MODIFY_FILE
+#exec 1>&2

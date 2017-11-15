@@ -1,0 +1,8 @@
+#!/bin/sh
+#. $JH_SUB_PARM_FILE
+exec 1>&2
+USER=`whoami`
+if [ $USER != "user1" ];then
+    echo "JH Unischeduler is Rejecting your job submission"
+    exit 97
+fi

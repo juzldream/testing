@@ -1,0 +1,8 @@
+HTTP/1.1 200 OK
+Server: Apache-Coyote/1.1
+Transfer-Encoding: chunked
+Content-Disposition: filename=60885091623519.vnc
+Content-Type: VncViewer/Config
+Transfer-Encoding: chunked
+Date: Wed, 15 Mar 2017 06:43:45 GMT
+

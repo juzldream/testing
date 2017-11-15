@@ -1,0 +1,334 @@
+*** Settings ***
+Suite Setup       preSuite    spooler/conf/conf-job-control
+Suite Teardown    postSuite
+Library           /apps/autotest4/lib/clusterKeyword.py
+Library           /apps/autotest4/lib/clusterLib.py
+Library           /apps/autotest4/lib/common.py
+Library           /apps/autotest4/lib/hostKeyword.py
+Library           /apps/autotest4/lib/hostLib.py
+Library           /apps/autotest4/lib/hostsConfLib.py
+Library           /apps/autotest4/lib/jobKeyword.py
+Library           /apps/autotest4/lib/jobLib.py
+Library           /apps/autotest4/lib/myUtils.py
+Library           /apps/autotest4/lib/OperatingSystem.py
+Library           /apps/autotest4/lib/queueKeyword.py
+Library           /apps/autotest4/lib/queueLib.py
+Library           /apps/autotest4/lib/paramsConfLib.py
+Library           /apps/autotest4/lib/queuesConfLib.py
+Library           /apps/autotest4/lib/retry.py
+Library           /apps/autotest4/lib/schedulerConfLib.py
+Library           /apps/autotest4/lib/userGroupKeyword.py
+Library           /apps/autotest4/lib/userGroupLib.py
+Library           /apps/autotest4/lib/userKeyword.py
+Library           /apps/autotest4/lib/usersConfLib.py
+Library           /apps/autotest4/lib/userLib.py
+
+*** Test Cases ***
+case1.在队列中配置SUSPEND action，当作业被手动stop时，SUSPEND action会执行。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${jctrl}    Set Variable    ${filedir}/spooler/input/jctrl.sh
+    ${outfile}    Set Variable    ${filedir}/spooler/output/jobstop.txt
+    Remove Files    ${filedir}/spooler/output/*.txt
+    ${job1}    querySubmitInfo    su user1 -c "jsub -q q1 ${jctrl}"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    sleep    2
+    runCommand    su user1 -c "jctrl stop ${jobid1}"
+    checkJobStatus    ${jobid1}    USUSP
+    ${job33}    queryjobinfo    ${jobid1}
+    ${reason3}    getjobspndrsn    ${job33}
+    log    ${reason3}
+    should contain    ${reason3}    The job was suspended by user;
+    ${infoa}    Get File    ${outfile}
+    log    ${infoa}
+    Should Contain    ${infoa}    stop ${jobid1}
+    ${outputdir1}    Set Variable    ${filedir}/spooler/output/jobout${jobid1}.txt
+    ${size1}    Get File Size    ${outputdir1}
+    log    ${size1}
+    sleep    3
+    ${size2}    Get File Size    ${outputdir1}
+    log    ${size2}
+    Should Be Equal As Integers    ${size1}    ${size2}
+    runCommand    su user1 -c "jctrl resume ${jobid1}"
+    checkJobStatus    ${jobid1}    RUN
+    ${outputdir2}    Set Variable    ${filedir}/spooler/output/jobout${jobid1}.txt
+    ${result3}    Get File    ${outputdir2}
+    log    ${result3}
+    ${size3}    Get File Size    ${outputdir2}
+    log    ${size3}
+    sleep    3
+    ${size4}    Get File Size    ${outputdir2}
+    log    ${size4}
+    Should Not Be Equal As Integers    ${size3}    ${size4}
+    Remove Files    ${filedir}/spooler/output/*.txt
+    [Teardown]    killJob
+
+case2.在队列中配置SSUSP action,提交作业，作业为pend，将队列的SSUSP action去掉。
+    [Tags]    p1    long-time
+    [Setup]    readyTest
+    ${filedirtmp}    getFileDir
+    ${filedir}    normalPath    ${filedirtmp}
+    ${outfile}    Set Variable    ${filedir}/spooler/output/jobstop.txt
+    Remove Files    ${filedir}/spooler/output/*.txt
+    ${qinfo}    getString    PRIORITY=20\nJOB_CONTROLS=SUSPEND[${filedir}/spooler/input/jobstop.sh]
+    addOrModifyQueue    jobctrl1    ${qinfo}
+    jadminSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 \ sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${job2}    querySubmitInfo    su user1 -c "jsub \ -q jobctrl1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid2}    PEND
+    sleep    2
+    ${qinfo}    getString    PRIORITY=20\n
+    addOrModifyQueue    jobctrl1    ${qinfo}
+    jadminSched
+    checkJobStatus    ${jobid1}    RUN
+    runCommand    su user1 -c "jctrl kill ${jobid1}"
+    checkJobStatus    ${jobid2}    RUN
+    runCommand    su user1 -c "jctrl stop ${jobid2}"
+    checkJobStatus    ${jobid2}    USUSP
+    sleep    1
+    File Should Not Exist    ${outfile}
+    Remove Files    ${filedir}/spooler/output/*.txt
+    [Teardown]    delQueue    jobctrl1
+
+case3.在队列中配置SSUSPEND action,当作业被抢占时，SSUSPEND action会执行。
+    [Tags]    p1    long-time
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file}    Set Variable    ${filedir}/spooler/input/jctrl.sh
+    ${file1}    normalPath    ${file}
+    ${outfile}    Set Variable    ${filedir}/spooler/output/jobstop.txt
+    Remove Files    ${filedir}/spooler/output/*.txt
+    ${job1}    querySubmitInfo    su user1 -c "jsub -q prelow1 ${file1}"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 2 -q prehigh1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    SSUSP
+    checkJobStatus    ${jobid2}    RUN
+    ${job33}    queryjobinfo    ${jobid1}
+    ${reason3}    getjobspndrsn    ${job33}
+    log    ${reason3}
+    should contain    ${reason3}    The job was preempted by a higher priority job;
+    ${infoa}    Get File    ${outfile}
+    log    ${infoa}
+    Should Contain    ${infoa}    stop ${jobid1}
+    ${outputdir1}    Set Variable    ${filedir}/spooler/output/jobout${jobid1}.txt
+    ${size1}    Get File Size    ${outputdir1}
+    log    ${size1}
+    sleep    3
+    ${size2}    Get File Size    ${outputdir1}
+    log    ${size2}
+    Should Be Equal As Integers    ${size1}    ${size2}
+    runCommand    su user1 -c "jctrl kill ${jobid2}"
+    checkJobStatus    ${jobid1}    RUN
+    ${outputdir2}    Set Variable    ${filedir}/spooler/output/jobout${jobid1}.txt
+    ${result3}    Get File    ${outputdir2}
+    log    ${result3}
+    ${size3}    Get File Size    ${outputdir2}
+    log    ${size3}
+    sleep    3
+    ${size4}    Get File Size    ${outputdir2}
+    log    ${size4}
+    Should Not Be Equal As Integers    ${size3}    ${size4}
+    Remove Files    ${filedir}/spooler/output/*.txt
+    [Teardown]    killJob
+
+case4.在队列中配置RESUME action，当作业被手动resume时，RESUME action会执行。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file}    Set Variable    ${filedir}/spooler/input/jctrl.sh
+    ${file1}    normalPath    ${file}
+    ${outfile}    Set Variable    ${filedir}/spooler/output/jobresume.txt
+    Remove Files    ${filedir}/spooler/output/*.txt
+    ${job1}    querySubmitInfo    su user1 -c "jsub -q q2 ${file1}"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    sleep    2
+    runCommand    su user1 -c "jctrl stop ${jobid1}"
+    checkJobStatus    ${jobid1}    USUSP
+    ${job33}    queryjobinfo    ${jobid1}
+    ${reason3}    getjobspndrsn    ${job33}
+    log    ${reason3}
+    should contain    ${reason3}    The job was suspended by user;
+    sleep    30
+    ${outputdir1}    Set Variable    ${filedir}/spooler/output/jobout${jobid1}.txt
+    ${size1}    Get File Size    ${outputdir1}
+    log    ${size1}
+    sleep    3
+    ${size2}    Get File Size    ${outputdir1}
+    log    ${size2}
+    Should Be Equal As Integers    ${size1}    ${size2}
+    runCommand    su user1 -c "jctrl resume ${jobid1}"
+    checkJobStatus    ${jobid1}    RUN
+    ${outputdir2}    Set Variable    ${filedir}/spooler/output/jobout${jobid1}.txt
+    ${result3}    Get File    ${outputdir2}
+    log    ${result3}
+    ${size3}    Get File Size    ${outputdir2}
+    log    ${size3}
+    sleep    3
+    ${size4}    Get File Size    ${outputdir2}
+    log    ${size4}
+    Should Not Be Equal As Integers    ${size3}    ${size4}
+    ${infoa}    Get File    ${outfile}
+    log    ${infoa}
+    Should Contain    ${infoa}    resume ${jobid1}
+    Remove Files    ${filedir}/spooler/output/*.txt
+    [Teardown]    killJob
+
+case5.在队列中配置RESUME action,提交作业，作业为pend，将队列的RESUME action去掉。
+    [Tags]    p1    long-time
+    [Setup]    readyTest
+    ${filedirtmp}    getFileDir
+    ${filedir}    normalPath    ${filedirtmp}
+    ${outfile}    Set Variable    ${filedir}/spooler/output/jobresume.txt
+    Remove Files    ${filedir}/spooler/output/*.txt
+    ${qinfo}    getString    PRIORITY=20\nJOB_CONTROLS=RESUME[${filedir}/spooler/input/jobresume.sh]
+    addOrModifyQueue    jobresume1    ${qinfo}
+    jadminSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 \ sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${job2}    querySubmitInfo    su user1 -c "jsub \ -q jobresume1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid2}    PEND
+    sleep    2
+    ${qinfo}    getString    PRIORITY=20\n
+    addOrModifyQueue    jobresume1    ${qinfo}
+    jadminSched
+    checkJobStatus    ${jobid1}    RUN
+    runCommand    su user1 -c "jctrl kill ${jobid1}"
+    checkJobStatus    ${jobid2}    RUN
+    runCommand    su user1 -c "jctrl stop ${jobid2}"
+    checkJobStatus    ${jobid2}    USUSP
+    sleep    1
+    File Should Not Exist    ${outfile}
+    Remove Files    ${filedir}/spooler/output/*.txt
+    [Teardown]    delQueue    jobresume1
+
+case6.在队列中配置RESUME action,当作业被抢占时，RESUME action会执行。
+    [Tags]    p1    long-time
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file}    Set Variable    ${filedir}/spooler/input/jctrl.sh
+    ${file1}    normalPath    ${file}
+    ${outfile}    Set Variable    ${filedir}/spooler/output/jobresume.txt
+    Remove Files    ${filedir}/spooler/output/*.txt
+    ${job1}    querySubmitInfo    su user1 -c "jsub -q prelow2 ${file1}"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 2 -q prehigh1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    SSUSP
+    checkJobStatus    ${jobid2}    RUN
+    ${job33}    queryjobinfo    ${jobid1}
+    ${reason3}    getjobspndrsn    ${job33}
+    log    ${reason3}
+    should contain    ${reason3}    The job was preempted by a higher priority job;
+    ${outputdir1}    Set Variable    ${filedir}/spooler/output/jobout${jobid1}.txt
+    ${size1}    Get File Size    ${outputdir1}
+    log    ${size1}
+    sleep    3
+    ${size2}    Get File Size    ${outputdir1}
+    log    ${size2}
+    Should Be Equal As Integers    ${size1}    ${size2}
+    runCommand    su user1 -c "jctrl kill ${jobid2}"
+    checkJobStatus    ${jobid1}    RUN
+    ${outputdir2}    Set Variable    ${filedir}/spooler/output/jobout${jobid1}.txt
+    ${result3}    Get File    ${outputdir2}
+    log    ${result3}
+    ${size3}    Get File Size    ${outputdir2}
+    log    ${size3}
+    sleep    3
+    ${size4}    Get File Size    ${outputdir2}
+    log    ${size4}
+    Should Not Be Equal As Integers    ${size3}    ${size4}
+    ${infoa}    Get File    ${outfile}
+    log    ${infoa}
+    Should Contain    ${infoa}    resume ${jobid1}
+    Remove Files    ${filedir}/spooler/output/*.txt
+    [Teardown]    killJob
+
+case7.在队列中配置TERMINATE action，kill队列中的run状态的作业。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${outfile}    Set Variable    ${filedir}/spooler/output/jobkill.txt
+    Remove Files    ${filedir}/spooler/output/*.txt
+    ${job1}    querySubmitInfo    su user1 -c "jsub -q q3 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    sleep    2
+    runCommand    su user1 -c "jctrl kill ${jobid1}"
+    checkJobStatus    ${jobid1}    EXIT
+    ${infoa}    Get File    ${outfile}
+    log    ${infoa}
+    Should Contain    ${infoa}    kill ${jobid1}
+    Remove Files    ${filedir}/spooler/output/*.txt
+    [Teardown]    killJob
+
+case8.在队列中配置TERMINATE action，kill队列中的pend状态的作业。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${outfile}    Set Variable    ${filedir}/spooler/output/jobkill.txt
+    Remove Files    ${filedir}/spooler/output/*.txt
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${job2}    querySubmitInfo    su user1 -c "jsub -q q3 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid2}    PEND
+    sleep    2
+    runCommand    su user1 -c "jctrl kill ${jobid2}"
+    checkJobStatus    ${jobid2}    EXIT
+    File Should Not Exist    ${outfile}
+    Remove Files    ${filedir}/spooler/output/*.txt
+    [Teardown]    killJob
+
+case9.在队列中配置TERMINATE action，对队列中的作业执行jctrl requeue操作。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${outfile}    Set Variable    ${filedir}/spooler/output/jobkill.txt
+    Remove Files    ${filedir}/spooler/output/*.txt
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 -q q3 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 2 -q q3 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid2}    PEND
+    sleep    2
+    runCommand    su user1 -c "jctrl requeue ${jobid1}"
+    checkJobStatus    ${jobid1}    PEND
+    checkJobStatus    ${jobid2}    RUN
+    ${infoa}    Get File    ${outfile}
+    log    ${infoa}
+    Should Contain    ${infoa}    kill ${jobid1}
+    Remove Files    ${filedir}/spooler/output/*.txt
+    [Teardown]    killJob
+
+case10.在队列中配置TERMINATE action，向JH_JOBPGIDS发信号。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${outfile}    Set Variable    ${filedir}/spooler/output/jobkill1.txt
+    Remove Files    ${filedir}/spooler/output/*.txt
+    ${job1}    querySubmitInfo    su user1 -c "jsub -q q4 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    sleep    2
+    runCommand    su user1 -c "jctrl kill ${jobid1}"
+    checkJobStatus    ${jobid1}    EXIT
+    ${infoa}    Get File    ${outfile}
+    log    ${infoa}
+    Should Contain    ${infoa}    kill ${jobid1}
+    Remove Files    ${filedir}/spooler/output/*.txt
+    [Teardown]    killJob

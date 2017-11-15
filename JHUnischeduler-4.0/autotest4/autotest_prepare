@@ -1,0 +1,86 @@
+#!/bin/sh -x
+#begin
+#please input the autotest dir
+export AUTOTEST_TOP="/apps/autotest4/"
+
+#please input the cluster admin user.
+export CLUSTER_ADMIN="jhadmin"
+
+#please input the master of cluster.
+MASTER_HOST="rhela1"
+
+#please input the slave of cluster.
+SLAVE_LINUX="rhelb"
+
+#please input the user for testcase and fairshare policy.
+USER1="user1"
+USER2="user2"
+USER3="user3"
+USER4="user4"
+USER5="user5"
+USER6="user6"
+USER7="user7"
+USER8="user8"
+USER9="user9"
+USER10="user10"
+#end
+
+
+
+
+
+MASTER=$(echo $MASTER_HOST | tr '[A-Z]' '[a-z]')
+SLAVE=$(echo $SLAVE_LINUX | tr '[A-Z]' '[a-z]')
+
+chmod -R 777 $AUTOTEST_TOP
+
+prepare_file='autotest_prepare'
+host_file='hosts.conf'
+
+if [ "x"$JHSCHEDULER_TOP != "x" -a "x"$JHSCHEDULER_CONF != "x" ];then
+    for j in $(find $JHSCHEDULER_CONF -type f |grep -v .git|grep -v .svn)
+    do
+        file_host=`basename $j`
+        if [[ "$file_host" != "$host_file" ]];then
+            echo $j
+            sed -i "s/$MASTER/$MASTER/ig" $j
+            sed -i "s/$SLAVE/$SLAVE/ig" $j
+            sed -i "s/\#*CLI_COMPATIBLE/#CLI_COMPATIBLE/g" $j
+        else
+            echo $file_host
+            sed -i "s/^\#*/\#/g" $j
+            echo "[Host]">>$j
+            echo "HOSTNAME          MXJ    RESOURCES">>$j
+            echo "default 1 ()">>$j
+            echo "$MASTER  1 ()">>$j
+        fi
+    done
+else
+    echo "Error: please source the environment of JHSCHEDULER_TOP and JHSCHEDULER_CONF"   
+    return 1
+fi
+
+
+for i in $(find $AUTOTEST_TOP -type f |grep -v .git|grep -v .svn )
+do
+    file_name=`basename $i`
+    if [[ "$file_name" != "$prepare_file" ]];then
+        echo $i
+        sed -i "s/rhela1/$MASTER/ig" $i
+        sed -i "s/rhelb/$SLAVE/ig" $i
+        sed -i "s/jhadmin/$CLUSTER_ADMIN/g" $i
+        sed -i "s/user1/$USER1/g" $i
+        sed -i "s/user2/$USER2/g" $i
+        sed -i "s/user3/$USER3/g" $i
+        sed -i "s/user4/$USER4/g" $i
+        sed -i "s/user5/$USER5/g" $i
+        sed -i "s/user6/$USER6/g" $i
+        sed -i "s/user7/$USER7/g" $i
+        sed -i "s/user8/$USER8/g" $i
+        sed -i "s/user9/$USER9/g" $i
+        sed -i "s/user10/$USER10/g" $i
+        sed -i "s#/apps/autotest4/#$AUTOTEST_TOP#g" $i
+        sed -i "s#AUTOTEST_ESUB#$AUTOTEST_TOP#g" $i
+    fi
+done
+

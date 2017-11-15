@@ -1,0 +1,13 @@
+[t35]
+SnapshotXmlFile=snapshot_35.xml
+ContentType=text/html
+StepName=Rest Request: GET: {uurl}/jobsbystatu...
+Total=1
+FileName1=t35.html
+RequestHeaderFile=t35_RequestHeader.txt
+ResponseHeaderFile=t35_ResponseHeader.txt
+RawStepEndTime=1489560229541
+RawStepName=GET: {uurl}/jobsbystatu...
+RequestBodyFile=t35_RequestBody.txt
+RawStepStartTime=1489560229414
+URL1=http://192.168.149.131:8080/appform/ws/jobsbystatus/pend?token=5593C3BE599B55BBB8B8ED18B9817545445B5D69C7BAA46EEAE948791D7AFD8066C49C89199580BD460A381305F1F6AFE8D3E669AA2ADA5B6FF8798B95BF243FA36CD8D4D299A75D77F4EC18E5909F310915A19660E8A7B95B2A9D758B4EB2AD

@@ -1,0 +1,19 @@
+usage: jctrl resume [-h] [-m host_name] [-q queue_name]
+                    [-u user_name | -u all] [-J job_name]
+                    jobId | jobId[index_list] | 0 [jobId | jobId[index_list] |
+                    0 ...]
+
+positional arguments:
+  jobId | jobId[index_list] | 0
+                        resume only jobs that are specified by JobIds or
+                        JobId[index_list]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -m host_name          resume only jobs dispatched to the specified host or
+                        host group
+  -q queue_name         resume only jobs in the specified queue
+  -u user_name | -u all
+                        resume only jobs owned by the specified user or user
+                        group, or all users if the keyword all is specified
+  -J job_name           resume only jobs with the specified name

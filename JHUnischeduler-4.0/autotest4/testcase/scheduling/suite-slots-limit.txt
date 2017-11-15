@@ -1,0 +1,529 @@
+*** Settings ***
+Suite Setup       preSuite    spooler/conf/conf-slots-limit
+Suite Teardown    postSuite
+Library           /apps/autotest4/lib/clusterKeyword.py
+Library           /apps/autotest4/lib/clusterLib.py
+Library           /apps/autotest4/lib/common.py
+Library           /apps/autotest4/lib/hostKeyword.py
+Library           /apps/autotest4/lib/hostLib.py
+Library           /apps/autotest4/lib/hostsConfLib.py
+Library           /apps/autotest4/lib/jobKeyword.py
+Library           /apps/autotest4/lib/jobLib.py
+Library           /apps/autotest4/lib/myUtils.py
+Library           /apps/autotest4/lib/OperatingSystem.py
+Library           /apps/autotest4/lib/queueKeyword.py
+Library           /apps/autotest4/lib/queueLib.py
+Library           /apps/autotest4/lib/paramsConfLib.py
+Library           /apps/autotest4/lib/queuesConfLib.py
+Library           /apps/autotest4/lib/retry.py
+Library           /apps/autotest4/lib/schedulerConfLib.py
+Library           /apps/autotest4/lib/userGroupKeyword.py
+Library           /apps/autotest4/lib/userGroupLib.py
+Library           /apps/autotest4/lib/userKeyword.py
+Library           /apps/autotest4/lib/usersConfLib.py
+Library           /apps/autotest4/lib/userLib.py
+
+*** Test Cases ***
+case1.测试队列上配置UJOB_LIMIT
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHost    rhelb    4 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -q limit1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -q limit1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    sleep    5
+    ${job22}    queryJobInfo    ${jobid2}
+    ${reason1}    getJobPndRsn    ${job22}
+    log    ${reason1}
+    Should Contain    ${reason1}    User has reached the per-user job slot limit of the queue;
+    ${job3}    querySubmitInfo    su jhadmin -c "jsub -q limit1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su jhadmin -c "jsub -q limit1 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    PEND
+    sleep    5
+    ${job44}    queryJobInfo    ${jobid4}
+    ${reason2}    getJobPndRsn    ${job44}
+    log    ${reason2}
+    Should Contain    ${reason2}    User has reached the per-user job slot limit of the queue;
+    [Teardown]    modHostInfo    rhelb=1 ()
+
+case2.测试队列上配置UJOB_LIMIT，当作业pend时，删除该配置。
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyQueue    limitno    PRIORITY=10\nUJOB_LIMIT=1\n
+    jadminSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su jhadmin -c "jsub -m rhela1 -q limitno sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${job2}    querySubmitInfo    su jhadmin -c "jsub -q limitno sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    sleep    3
+    checkJobStatus    ${jobid2}    PEND
+    ${job22}    queryJobInfo    ${jobid2}
+    ${reason1}    getJobPndRsn    ${job22}
+    log    ${reason1}
+    Should Contain    ${reason1}    User has reached the per-user job slot limit of the queue;
+    checkHostStatus    rhela1    closed_Full
+    checkHostStatus    rhelb    ok
+    addOrModifyQueue    limitno    PRIORITY=10\n
+    jadminSched
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkHostStatus    rhela1    closed_Full
+    checkHostStatus    rhelb    closed_Full
+    [Teardown]    delQueue    limitno
+
+case3.测试当一个作业pend时，将一个UJOB_LIMIT队列中的作业jmod到一个UJOB_LIMIT队列中。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su jhadmin -c "jsub -q limit1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${job2}    querySubmitInfo    su jhadmin -c "jsub \ -q limit1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid2}    PEND
+    sleep    3
+    ${job22}    queryJobInfo    ${jobid2}
+    ${reason1}    getJobPndRsn    ${job22}
+    log    ${reason1}
+    runCommand    su jhadmin -c "jmod -q normal ${jobid2}"
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    [Teardown]    killJob
+
+case4.测试队列上配置HJOB_LIMIT
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHost    rhela1    \ 2 ()
+    addOrModifyHost    rhelb    \ 3 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -q hlimit1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -q hlimit1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub -q hlimit1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    PEND
+    sleep    3
+    ${job33}    queryJobInfo    ${jobid3}
+    ${reason1}    getJobPndRsn    ${job33}
+    log    ${reason1}
+    Should Contain    ${reason1}    Queue's per-host job slot limit reached;
+    ${job4}    querySubmitInfo    su jhadmin -c "jsub -q limit1 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    ${job5}    querySubmitInfo    su jhadmin -c "jsub -q limit1 sleep 1000"
+    ${jobid5}    getJobId    ${job5}
+    checkJobStatus    ${jobid4}    RUN
+    checkJobStatus    ${jobid5}    PEND
+    sleep    5
+    ${job55}    queryjobinfo    ${jobid5}
+    ${reason3}    getjobpndrsn    ${job55}
+    log    ${reason3}
+    Should Contain    ${reason3}    User has reached the per-user job slot limit of the queue;
+    [Teardown]    modHostInfo    rhela1= 1 ()    rhelb= 1 ()
+
+case5.测试队列上配置的HJOB_LIMIT,结合使用span[ptile]
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHost    rhela1    \ 2 ()
+    addOrModifyHost    rhelb    \ 3 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 -R "span[ptile=1]" -q hlimit1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    [Teardown]    modHostInfo    rhela1= 1 ()    rhelb= 1 ()
+
+case6.bug10791测试队列上配置HJOB_LIMIT,结合使用span[ptile]
+    [Tags]    p1
+    addOrModifyHost    rhela1    \ 2 ()
+    addOrModifyHost    rhelb    \ 3 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${subinfo}    RUN    su user1 -c "jsub -n 3 -R "span[ptile=2]" -q hlimit1 sleep 1000"
+    log    ${subinfo}
+    Should Contain    ${subinfo}    hlimit1: Queue does not have enough per-host job slots. Job not submitted
+    [Teardown]    modHostInfo    rhela1= 1 ()    rhelb= 1 ()
+
+case7.测试队列上配置HJOB_LIMIT=2,jsub -m指定host
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHost    rhela1    \ 2 ()
+    addOrModifyHost    rhelb    \ 3 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -q hlimit2 -m rhelb sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -q hlimit2 -m rhelb sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    ${job3}    querySubmitInfo    su user1 -c "jsub -q hlimit2 -m rhelb sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    sleep    5
+    checkJobStatus    ${jobid3}    PEND
+    ${job33}    queryJobInfo    ${jobid3}
+    ${reason1}    getJobPndRsn    ${job33}
+    log    ${reason1}
+    Should Contain    ${reason1}    Queue's per-host job slot limit reached;
+    [Teardown]    modHostInfo    rhela1= 1 ()    rhelb= 1 ()
+
+case8.同时配置UJOB_LIMIT,QJOB_LIMIT和HJOB_LIMIT,同时生效。
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHost    rhela1    \ 2 ()
+    addOrModifyHost    rhelb    \ 3 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -q hlimit3 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -q hlimit3 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user2 -c "jsub -q hlimit3 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user2 -c "jsub -q hlimit3 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    ${job5}    querySubmitInfo    su user3 -c "jsub -q hlimit3 sleep 1000"
+    ${jobid5}    getJobId    ${job5}
+    ${job6}    querySubmitInfo    su user3 -c "jsub -q hlimit3 sleep 1000"
+    ${jobid6}    getJobId    ${job6}
+    checkJobStatus    ${jobid1}    RUN
+    sleep    5
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    checkJobStatus    ${jobid5}    PEND
+    checkJobStatus    ${jobid6}    PEND
+    ${job22}    queryJobInfo    ${jobid2}
+    ${reason2}    getJobPndRsn    ${job22}
+    log    ${reason2}
+    Should Contain    ${reason2}    User has reached the per-user job slot limit of the queue;
+    ${job33}    queryJobInfo    ${jobid3}
+    ${reason3}    getJobPndRsn    ${job33}
+    log    ${reason3}
+    Should Contain    ${reason3}    The queue has reached its job slot limit;
+    ${job44}    queryJobInfo    ${jobid4}
+    ${reason4}    getJobPndRsn    ${job44}
+    log    ${reason4}
+    Should Contain    ${reason4}    The queue has reached its job slot limit;
+    ${job55}    queryJobInfo    ${jobid5}
+    ${reason5}    getJobPndRsn    ${job55}
+    log    ${reason5}
+    Should Contain    ${reason5}    The queue has reached its job slot limit;
+    ${job66}    queryJobInfo    ${jobid6}
+    ${reason6}    getJobPndRsn    ${job66}
+    log    ${reason6}
+    Should Contain    ${reason6}    The queue has reached its job slot limit;
+    [Teardown]    modHostInfo    rhela1= 1 ()    rhelb= 1 ()
+
+case9.在users.conf文件中配置用户组的MAX_JOB。
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHost    rhelb    5 ()
+    addOrModifyUserA    user1    1 -
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user2 -c "jsub sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user2 -c "jsub sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    RUN
+    sleep    5
+    ${job22}    queryJobInfo    ${jobid2}
+    ${reason1}    getJobPndRsn    ${job22}
+    log    ${reason1}
+    Should Contain    ${reason1}    The user has reached his/her job slot limit;
+    [Teardown]    delUserAndHost    user1    rhelb=1 ()
+
+case10.在users.conf文件中配置用户组的MAX_JOB。
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHost    rhelb    5 ()
+    addOrModifyUserGroupA    group1    (user1 jhadmin) (jhadmin) ([jhadmin,5])
+    addOrModifyUserA    group1    2 -
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su jhadmin -c "jsub sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su jhadmin -c "jsub sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    PEND
+    checkJobStatus    ${jobid4}    PEND
+    sleep    5
+    ${job33}    queryJobInfo    ${jobid3}
+    ${reason3}    getJobPndRsn    ${job33}
+    log    ${reason3}
+    Should Contain    ${reason3}    One of the user's groups has reached its job slot limit;
+    ${job44}    queryJobInfo    ${jobid4}
+    ${reason4}    getJobPndRsn    ${job44}
+    log    ${reason4}
+    Should Contain    ${reason4}    One of the user's groups has reached its job slot limit;
+    [Teardown]    delUserAndUserGroupAndHost    group1    group1    rhelb=1 ()
+
+case11.在users.conf文件中配置用户和用户组的MAX_JOBS，用户组中包含该用户，用户小于用户组。
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHost    rhelb    5 ()
+    addOrModifyUserGroupA    group1    (user1 jhadmin) (jhadmin) ([jhadmin,5])
+    addOrModifyUserA    group1    2 -
+    addOrModifyUserA    user1    1 -
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su jhadmin -c "jsub sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su jhadmin -c "jsub sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    PEND
+    sleep    5
+    ${job22}    queryJobInfo    ${jobid2}
+    ${reason2}    getJobPndRsn    ${job22}
+    log    ${reason2}
+    Should Contain    ${reason2}    The user has reached his/her job slot limit;
+    ${job44}    queryJobInfo    ${jobid4}
+    ${reason4}    getJobPndRsn    ${job44}
+    log    ${reason4}
+    Should Contain    ${reason4}    One of the user's groups has reached its job slot limit;
+    [Teardown]    delUserAndUserGroupAndHost    user1,group1    group1    rhelb=1 ()
+
+case12.在users.conf文件中配置用户和用户组的MAX_JOBS,一个用户同时属于两个用户组。
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyUserGroupA    group1    (user1 jhadmin) (jhadmin) ([jhadmin,5])
+    addOrModifyUserGroupA    group2    (user1 user2) (user2) ([user2,5])
+    addOrModifyUserA    group1    3 -
+    addOrModifyUserA    group2    2 -
+    addOrModifyHost    rhelb    4 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su jhadmin -c "jsub sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user2 -c "jsub sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    PEND
+    sleep    5
+    ${job44}    queryJobInfo    ${jobid4}
+    ${reason4}    getJobPndRsn    ${job44}
+    log    ${reason4}
+    Should Contain    ${reason4}    One of the user's groups has reached its job slot limit;
+    [Teardown]    delUserAndUserGroupAndHost    group2,group1    group2,group1    rhelb=1 ()
+
+case13.在users.conf文件中配置用户和用户组的MAX_JOBS,一个用户同时属于两个用户组。
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyUserGroupA    group1    (user1 jhadmin) (jhadmin) ([jhadmin,5])
+    addOrModifyUserGroupA    group2    (user1 user2) (user2) ([user2,5])
+    addOrModifyUserA    group1@    2 -
+    addOrModifyUserA    group2@    1 -
+    addOrModifyHost    rhelb    4 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su jhadmin -c "jsub sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user2 -c "jsub sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    ${job5}    querySubmitInfo    su jhadmin -c "jsub sleep 1000"
+    ${jobid5}    getJobId    ${job5}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    PEND
+    checkJobStatus    ${jobid5}    RUN
+    sleep    5
+    ${job44}    queryJobInfo    ${jobid4}
+    ${reason4}    getJobPndRsn    ${job44}
+    log    ${reason4}
+    Should Contain    ${reason4}    The user has reached his/her job slot limit;
+    [Teardown]    delUserAndUserGroupAndHost    group2@,group1@    group2,group1    rhelb=1 ()
+
+case14.在users.conf文件中配置多个用户组+@，配置用户限制大于用户组。
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyUserGroupA    group1    (user1 jhadmin) (jhadmin) ([jhadmin,5])
+    addOrModifyUserGroupA    group2    (user1 user2) (user2) ([user2,5])
+    addOrModifyUserA    group1@    2 -
+    addOrModifyUserA    user1    3 -
+    addOrModifyHost    rhelb    4 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    sleep    4
+    checkJobStatus    ${jobid4}    PEND
+    ${job33}    queryJobInfo    ${jobid4}
+    ${reason3}    getJobPndRsn    ${job33}
+    log    ${reason3}
+    Should Contain    ${reason3}    The user has reached his/her job slot limit;
+    [Teardown]    delUserAndUserGroupAndHost    user1,group1@    group2,group1    rhelb=1 ()
+
+case15.当达到limit限制时执行jctrl start。
+    [Setup]    readyTest
+    addOrModifyUserGroupA    group1    (user1 jhadmin) (jhadmin) ([jhadmin,5])
+    addOrModifyUserGroupA    group2    (user1 user2) (user2) ([user2,5])
+    addOrModifyUserA    default    1 -
+    addOrModifyUserA    group1@    2 -
+    addOrModifyUserA    user1    3 -
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -q qlimit1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -q qlimit1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    sleep    4
+    checkJobStatus    ${jobid2}    PEND
+    ${job22}    queryJobInfo    ${jobid2}
+    ${reason2}    getJobPndRsn    ${job22}
+    log    ${reason2}
+    Should Contain    ${reason2}    The queue has reached its job slot limit;
+    runCommand    su jhadmin -c "jctrl start -m rhela1 ${jobid2}"
+    checkJobStatus    ${jobid2}    RUN
+    [Teardown]    delUserAndUserGroupAndHost    user1,group1@,default    group2,group1
+
+case16.bug11409 SSUSP的作业是否算入限制。
+    [Tags]    p1
+    [Setup]    readyTest
+    [Template]
+    addOrModifyUserGroupA    group1    (all) (jhadmin) ([jhadmin,5])
+    addOrModifyUserGroupA    group2    (user2 group1) (user2) ([user2,5])
+    addOrModifyUserA    user1    2 -
+    addOrModifyHost    rhela1    2 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${info}    runCommand    jusers all
+    log    ${info}
+    ${job1}    querySubmitInfo    su user1 -c "jsub -q prelow1 -n 2 -R "span[ptile=1]" sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user3 -c "jsub \ sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    ${job3}    querySubmitInfo    su user2 -c "jsub -q prehigh1 -n 2 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid1}    SSUSP
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    ${job4}    querySubmitInfo    su user1 -c "jsub -q prelow1 sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    ${job5}    querySubmitInfo    su user1 -c "jsub -q prehigh1 sleep 1000"
+    ${jobid5}    getJobId    ${job5}
+    runCommand    su jhadmin -c "jctrl kill ${jobid2}"
+    sleep    4
+    ${job44}    queryJobInfo    ${jobid4}
+    ${reason4}    getJobPndRsn    ${job44}
+    log    ${reason4}
+    Should Contain    ${reason4}    Job slot limit reached: 2 hosts;
+    ${job55}    queryJobInfo    ${jobid5}
+    ${reason5}    getJobPndRsn    ${job55}
+    log    ${reason5}
+    Should Contain    ${reason5}    The user has reached his/her job slot limit;
+    [Teardown]    delUserAndUserGroupAndHost    user1    group2,group1    rhela1=1 ()
+
+case17.bug11409 该行为需要讨论，是否预留，现在结果是没有预留，reservation调度配置。
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHost    rhela1    2 ()
+    addOrModifyHost    rhelb    3 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -q resv1 -n 2 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -q resv1 -n 4 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    sleep    5
+    ${job22}    queryJobInfo    ${jobid2}
+    ${reason2}    getJobPndRsn    ${job22}
+    log    ${reason2}
+    Should Contain    ${reason2}    The queue has reached its job slot limit;
+    [Teardown]    modHostInfo    rhelb=1 ()    rhela1=1 ()
+
+case18.bug 11409 讨论当提交请求的slots数大于队列配置的qjob_limit,是否可以提交成功。修改QJOB_LIMIT.
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyQueue    qlimitno    PRIORITY=10\nQJOB_LIMIT=2\n
+    addOrModifyHost    rhela1    4 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${subinfo}    runCommand    su user1 -c "jsub -q \ qlimitno -n 3 sleep 1000"
+    log    ${subinfo}
+    Should Contain    ${subinfo}    qlimitno: The destination queue has reached its job limit. Job not submitted
+    ${job1}    querySubmitInfo    su user1 -c "jsub -m rhela1 \ -q qlimitno sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 2 -q qlimitno sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    sleep    5
+    ${job22}    queryJobInfo    ${jobid2}
+    ${reason2}    getJobPndRsn    ${job22}
+    log    ${reason2}
+    Should Contain    ${reason2}    The queue has reached its job slot limit;
+    addOrModifyQueue    qlimitno    PRIORITY=10\nQJOB_LIMIT=3\n
+    jadminSched
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    ${queinfo}    runCommand    su jhadmin -c "jqueues -l qlimitno"
+    log    ${queinfo}
+    ${job3}    querySubmitInfo    su user1 -c "jsub -q qlimitno sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    PEND
+    sleep    5
+    ${job22}    queryJobInfo    ${jobid3}
+    ${reason3}    getJobPndRsn    ${job22}
+    log    ${reason3}
+    Should Contain    ${reason3}    The queue has reached its job slot limit;
+    [Teardown]    delQueueAndHost    qlimitno    rhela1=1 ()

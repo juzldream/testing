@@ -1,0 +1,694 @@
+*** Settings ***
+Suite Setup       preSuite    spooler/conf/conf-msg
+Suite Teardown    postSuite
+Library           /apps/autotest4/lib/clusterKeyword.py
+Library           /apps/autotest4/lib/clusterLib.py
+Library           /apps/autotest4/lib/common.py
+Library           /apps/autotest4/lib/hostKeyword.py
+Library           /apps/autotest4/lib/hostLib.py
+Library           /apps/autotest4/lib/hostsConfLib.py
+Library           /apps/autotest4/lib/jobKeyword.py
+Library           /apps/autotest4/lib/jobLib.py
+Library           /apps/autotest4/lib/myUtils.py
+Library           /apps/autotest4/lib/OperatingSystem.py
+Library           /apps/autotest4/lib/queueKeyword.py
+Library           /apps/autotest4/lib/queueLib.py
+Library           /apps/autotest4/lib/paramsConfLib.py
+Library           /apps/autotest4/lib/queuesConfLib.py
+Library           /apps/autotest4/lib/retry.py
+Library           /apps/autotest4/lib/schedulerConfLib.py
+Library           /apps/autotest4/lib/userGroupKeyword.py
+Library           /apps/autotest4/lib/userGroupLib.py
+Library           /apps/autotest4/lib/userKeyword.py
+Library           /apps/autotest4/lib/usersConfLib.py
+Library           /apps/autotest4/lib/userLib.py
+Library           /apps/autotest4/lib/msgLib.py
+Library           /apps/autotest4/lib/msgKeyword.py
+
+*** Test Cases ***
+case1.普通用户权限（只能对自己的作业执行jputmsg、jgetmsg）
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user2 -c "jsub sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    ${result1}    RUN    su user2 -c "jputmsg -i 0 ${jobid1}"
+    log    ${result1}
+    Should Be Equal    ${result1}    Job <${jobid1}>: User permission denied
+    ${result2}    RUN    su user2 -c "jgetmsg -i 0 ${jobid1}"
+    log    ${result2}
+    Should Be Equal    ${result1}    Job <${jobid1}>: User permission denied
+    ${result3}    RUN    su user2 -c "jputmsg -i 0 ${jobid2}"
+    log    ${result3}
+    Should Be Equal    ${result3}    Job <${jobid2}>: Put message successfully
+    ${result4}    RUN    su user2 -c "jputmsg -d "aa" ${jobid2}"
+    log    ${result4}
+    Should Be Equal    ${result4}    Job <${jobid2}>: Put message successfully
+    ${msg}    queryMsgInfo    su user2 -c "jgetmsg ${jobid2}"
+    ${index}    getMsgIndex    ${msg}
+    log    ${index}
+    Should Be Equal    ${index}    0
+    ${desc}    getMsgDesc    ${msg}
+    Should Be Equal    ${desc}    aa
+    [Teardown]    killJob
+
+case2.集群管理员可以jputmsg和jgetmsg所有用户的作业，组管理员可以jputmsg和jgetmsg本组用户的作业，队列管理员可以jputmsg和jgetmsg本队列的所有作业。
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyUserGroupA    group1    (user1 user2) (user2) ([default,1])
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -q qadmin sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user2 -c "jsub sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user2 -c "jsub -q qadmin sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    ${job5}    querySubmitInfo    su user3 -c "jsub sleep 1000"
+    ${jobid5}    getJobId    ${job5}
+    ${job6}    querySubmitInfo    su user3 -c "jsub -q qadmin sleep 1000"
+    ${jobid6}    getJobId    ${job6}
+    ${job7}    querySubmitInfo    su jhadmin -c "jsub sleep 1000"
+    ${jobid7}    getJobId    ${job7}
+    ${job8}    querySubmitInfo    su jhadmin -c "jsub -q qadmin sleep 1000"
+    ${jobid8}    getJobId    ${job8}
+    ${result1}    runCommand    su jhadmin -c "jputmsg -i 0 -d a1 ${jobid1}"
+    Should Be Equal    ${result1}    Job <${jobid1}>: Put message successfully
+    ${result2}    runCommand    su jhadmin -c "jputmsg -i 0 -d a2 ${jobid2}"
+    Should Be Equal    ${result2}    Job <${jobid2}>: Put message successfully
+    ${result3}    runCommand    su jhadmin -c "jputmsg -i 0 -d a3 ${jobid3}"
+    Should Be Equal    ${result3}    Job <${jobid3}>: Put message successfully
+    ${result4}    runCommand    su jhadmin -c "jputmsg -i 0 -d a4 ${jobid4}"
+    Should Be Equal    ${result4}    Job <${jobid4}>: Put message successfully
+    ${result5}    runCommand    su jhadmin -c "jputmsg -i 0 -d a5 ${jobid5}"
+    Should Be Equal    ${result5}    Job <${jobid5}>: Put message successfully
+    ${result6}    runCommand    su jhadmin -c "jputmsg -i 0 -d a6 ${jobid6}"
+    Should Be Equal    ${result6}    Job <${jobid6}>: Put message successfully
+    ${result7}    runCommand    su jhadmin -c "jputmsg -i 0 -d a7 ${jobid7}"
+    Should Be Equal    ${result7}    Job <${jobid7}>: Put message successfully
+    ${result8}    runCommand    su jhadmin -c "jputmsg -i 0 -d a8 ${jobid8}"
+    Should Be Equal    ${result8}    Job <${jobid8}>: Put message successfully
+    ${msg1}    queryMsgInfo    su jhadmin -c "jgetmsg -i 0 ${jobid1}"
+    ${desc1}    getMsgDesc    ${msg1}
+    Should Be Equal    ${desc1}    a1
+    ${msg2}    queryMsgInfo    su jhadmin -c "jgetmsg -i 0 ${jobid2}"
+    ${desc2}    getMsgDesc    ${msg2}
+    Should Be Equal    ${desc2}    a2
+    ${msg3}    queryMsgInfo    su jhadmin -c "jgetmsg -i 0 ${jobid3}"
+    ${desc3}    getMsgDesc    ${msg3}
+    Should Be Equal    ${desc3}    a3
+    ${msg4}    queryMsgInfo    su jhadmin -c "jgetmsg -i 0 ${jobid4}"
+    ${desc4}    getMsgDesc    ${msg4}
+    Should Be Equal    ${desc4}    a4
+    ${msg5}    queryMsgInfo    su jhadmin -c "jgetmsg -i 0 ${jobid5}"
+    ${desc5}    getMsgDesc    ${msg5}
+    Should Be Equal    ${desc5}    a5
+    ${msg6}    queryMsgInfo    su jhadmin -c "jgetmsg -i 0 ${jobid6}"
+    ${desc6}    getMsgDesc    ${msg6}
+    Should Be Equal    ${desc6}    a6
+    ${msg7}    queryMsgInfo    su jhadmin -c "jgetmsg -i 0 ${jobid7}"
+    ${desc7}    getMsgDesc    ${msg7}
+    Should Be Equal    ${desc7}    a7
+    ${msg8}    queryMsgInfo    su jhadmin -c "jgetmsg -i 0 ${jobid8}"
+    ${desc8}    getMsgDesc    ${msg8}
+    Should Be Equal    ${desc8}    a8
+    ${result1}    runCommand    su user2 -c "jputmsg -i 1 -d a1 ${jobid1}"
+    Should Be Equal    ${result1}    Job <${jobid1}>: Put message successfully
+    ${result2}    runCommand    su user2 -c "jputmsg -i 1 -d a2 ${jobid2}"
+    Should Be Equal    ${result2}    Job <${jobid2}>: Put message successfully
+    ${result3}    runCommand    su user2 -c "jputmsg -i 1 -d a3 ${jobid3}"
+    Should Be Equal    ${result3}    Job <${jobid3}>: Put message successfully
+    ${result4}    runCommand    su user2 -c "jputmsg -i 1 -d a4 ${jobid4}"
+    Should Be Equal    ${result4}    Job <${jobid4}>: Put message successfully
+    ${result5}    runCommand    su user2 -c "jputmsg -i 1 -d a5 ${jobid5}"
+    Should Be Equal    ${result5}    Job <${jobid5}>: User permission denied
+    ${result6}    runCommand    su user2 -c "jputmsg -i 1 -d a6 ${jobid6}"
+    Should Be Equal    ${result6}    Job <${jobid6}>: User permission denied
+    ${result7}    runCommand    su user2 -c "jputmsg -i 1 -d a7 ${jobid7}"
+    Should Be Equal    ${result7}    Job <${jobid7}>: User permission denied
+    ${result8}    runCommand    su user2 -c "jputmsg -i 1 -d a8 ${jobid8}"
+    Should Be Equal    ${result8}    Job <${jobid8}>: User permission denied
+    ${msg1}    queryMsgInfo    su user2 -c "jgetmsg -i 1 ${jobid1}"
+    ${desc1}    getMsgDesc    ${msg1}
+    Should Be Equal    ${desc1}    a1
+    ${msg2}    queryMsgInfo    su user2 -c "jgetmsg -i 1 ${jobid2}"
+    ${desc2}    getMsgDesc    ${msg2}
+    Should Be Equal    ${desc2}    a2
+    ${msg3}    queryMsgInfo    su user2 -c "jgetmsg -i 1 ${jobid3}"
+    ${desc3}    getMsgDesc    ${msg3}
+    Should Be Equal    ${desc3}    a3
+    ${msg4}    queryMsgInfo    su user2 -c "jgetmsg -i 1 ${jobid4}"
+    ${desc4}    getMsgDesc    ${msg4}
+    Should Be Equal    ${desc4}    a4
+    ${result5}    runCommand    su user2 -c "jgetmsg -i 1 ${jobid5}"
+    Should Be Equal    ${result5}    Job <${jobid5}>: User permission denied
+    ${result6}    runCommand    su user2 -c "jgetmsg -i 1 ${jobid6}"
+    Should Be Equal    ${result6}    Job <${jobid6}>: User permission denied
+    ${result7}    runCommand    su user2 -c "jgetmsg -i 1 ${jobid7}"
+    Should Be Equal    ${result7}    Job <${jobid7}>: User permission denied
+    ${result8}    runCommand    su user2 -c "jgetmsg -i 1 ${jobid8}"
+    Should Be Equal    ${result8}    Job <${jobid8}>: User permission denied
+    ${result1}    runCommand    su user3 -c "jputmsg -i 2 -d a1 ${jobid1}"
+    Should Be Equal    ${result1}    Job <${jobid1}>: User permission denied
+    ${result2}    runCommand    su user3 -c "jputmsg -i 2 -d a2 ${jobid2}"
+    Should Be Equal    ${result2}    Job <${jobid2}>: Put message successfully
+    ${result3}    runCommand    su user3 -c "jputmsg -i 2 -d a3 ${jobid3}"
+    Should Be Equal    ${result3}    Job <${jobid3}>: User permission denied
+    ${result4}    runCommand    su user3 -c "jputmsg -i 2 -d a4 ${jobid4}"
+    Should Be Equal    ${result4}    Job <${jobid4}>: Put message successfully
+    ${result5}    runCommand    su user3 -c "jputmsg -i 2 -d a5 ${jobid5}"
+    Should Be Equal    ${result5}    Job <${jobid5}>: Put message successfully
+    ${result6}    runCommand    su user3 -c "jputmsg -i 2 -d a6 ${jobid6}"
+    Should Be Equal    ${result6}    Job <${jobid6}>: Put message successfully
+    ${result7}    runCommand    su user3 -c "jputmsg -i 2 -d a7 ${jobid7}"
+    Should Be Equal    ${result7}    Job <${jobid7}>: User permission denied
+    ${result8}    runCommand    su user3 -c "jputmsg -i 2 -d a8 ${jobid8}"
+    Should Be Equal    ${result8}    Job <${jobid8}>: Put message successfully
+    ${msg2}    queryMsgInfo    su user3 -c "jgetmsg -i 2 ${jobid2}"
+    ${desc2}    getMsgDesc    ${msg2}
+    Should Be Equal    ${desc2}    a2
+    ${msg4}    queryMsgInfo    su user3 -c "jgetmsg -i 2 ${jobid4}"
+    ${desc4}    getMsgDesc    ${msg4}
+    Should Be Equal    ${desc4}    a4
+    ${msg5}    queryMsgInfo    su user3 -c "jgetmsg -i 2 ${jobid5}"
+    ${desc5}    getMsgDesc    ${msg5}
+    Should Be Equal    ${desc5}    a5
+    ${msg6}    queryMsgInfo    su user3 -c "jgetmsg -i 2 ${jobid6}"
+    ${desc6}    getMsgDesc    ${msg6}
+    Should Be Equal    ${desc6}    a6
+    ${msg8}    queryMsgInfo    su user3 -c "jgetmsg -i 2 ${jobid8}"
+    ${desc8}    getMsgDesc    ${msg8}
+    Should Be Equal    ${desc8}    a8
+    ${result1}    runCommand    su user3 -c "jgetmsg -i 2 ${jobid1}"
+    Should Be Equal    ${result1}    Job <${jobid1}>: User permission denied
+    ${result3}    runCommand    su user3 -c "jgetmsg -i 2 ${jobid3}"
+    Should Be Equal    ${result3}    Job <${jobid3}>: User permission denied
+    ${result7}    runCommand    su user3 -c "jgetmsg -i 2 ${jobid7}"
+    Should Be Equal    ${result7}    Job <${jobid7}>: User permission denied
+    [Teardown]    delUserGroup    group1
+
+case3.jputmsg第二次put的信息覆盖第一次put的信息。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${result1}    runCommand    su user1 -c "jputmsg -i 0 -d aa ${jobid1}"
+    log    ${result1}
+    Should Be Equal    ${result1}    Job <${jobid1}>: Put message successfully
+    ${msg}    queryMsgInfo    su user1 -c "jgetmsg ${jobid1}"
+    ${index}    getMsgIndex    ${msg}
+    log    ${index}
+    Should Be Equal    ${index}    0
+    ${desc}    getMsgDesc    ${msg}
+    Should Be Equal    ${desc}    aa
+    ${result2}    runCommand    su user1 -c "jputmsg -i 0 ${jobid1}"
+    log    ${result2}
+    Should Be Equal    ${result2}    Job <${jobid1}>: Put message successfully
+    ${msg2}    queryMsgInfo    su user1 -c "jgetmsg ${jobid1}"
+    ${index2}    getMsgIndex    ${msg2}
+    log    ${index2}
+    Should Be Equal    ${index2}    0
+    ${desc2}    getMsgDesc    ${msg2}
+    Should Be Equal    ${desc2}    no description
+    [Teardown]    killJob
+
+case4.作业没有jputmsg，执行jgetmsg。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${result1}    runCommand    su user1 -c "jgetmsg ${jobid1}"
+    log    ${result1}
+    Should Be Equal    ${result1}    Job <${jobid1}>: No message available
+    [Teardown]    killJob
+
+case5.jputmsg -i/jgetmsg -i。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${result1}    runCommand    su user1 -c "jputmsg -i 0 ${jobid1}"
+    log    ${result1}
+    Should Be Equal    ${result1}    Job <${jobid1}>: Put message successfully
+    ${msg}    queryMsgInfo    su user1 -c "jgetmsg -i 0 ${jobid1}"
+    ${index}    getMsgIndex    ${msg}
+    log    ${index}
+    Should Be Equal    ${index}    0
+    ${result2}    runCommand    su user1 -c "jputmsg -i 1 ${jobid1}"
+    log    ${result2}
+    Should Be Equal    ${result2}    Job <${jobid1}>: Put message successfully
+    ${msg1}    queryMsgInfo    su user1 -c "jgetmsg -i 1 ${jobid1}"
+    ${index1}    getMsgIndex    ${msg1}
+    log    ${index1}
+    Should Be Equal    ${index1}    1
+    [Teardown]    killJob
+
+case6.对数组作业执行jputmsg、jgetmsg。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub -J arr[1-2] sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -J arr[2-4] sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}[1]    RUN
+    checkJobStatus    ${jobid2}[2]    PEND
+    ${result1}    runCommand    su user1 -c "jputmsg -i 1 -d aa ${jobid1}"
+    log    ${result1}
+    Should Be Equal    ${result1}    Job <${jobid1}[1]>: Put message successfully
+    ${msg}    queryMsgInfo    su user1 -c "jgetmsg -i 1 ${jobid1}"
+    ${index}    getMsgIndex    ${msg}
+    log    ${index}
+    Should Be Equal    ${index}    1
+    ${desc}    getMsgDesc    ${msg}
+    Should Be Equal    ${desc}    aa
+    ${result2}    runCommand    su user1 -c "jputmsg -i 1 -d bb ${jobid2}"
+    log    ${result2}
+    Should Be Equal    ${result2}    Job <${jobid2}[2]>: Put message successfully
+    ${msg2}    queryMsgInfo    su user1 -c "jgetmsg -i 1 ${jobid2}"
+    ${index2}    getMsgIndex    ${msg2}
+    log    ${index2}
+    Should Be Equal    ${index2}    1
+    ${desc2}    getMsgDesc    ${msg2}
+    Should Be Equal    ${desc2}    bb
+    [Teardown]    killJob
+
+case7.对作业执行jputmsg/jgetmsg -i -d。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub \ sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${result1}    runCommand    su user1 -c "jputmsg -i 1 -d aa ${jobid1}"
+    log    ${result1}
+    Should Be Equal    ${result1}    Job <${jobid1}>: Put message successfully
+    ${msg1}    queryMsgInfo    su user1 -c "jgetmsg -i 1 ${jobid1}"
+    ${index1}    getMsgIndex    ${msg1}
+    Should Be Equal    ${index1}    1
+    ${desc1}    getMsgDesc    ${msg1}
+    Should Be Equal    ${desc1}    aa
+    ${time1}    getMsgPutTime    ${msg1}
+    sleep    60
+    ${result2}    runCommand    su user1 -c "jputmsg -i 1 -d bb ${jobid1}"
+    Should Be Equal    ${result2}    Job <${jobid1}>: Put message successfully
+    ${msg2}    queryMsgInfo    su user1 -c "jgetmsg -i 1 ${jobid1}"
+    ${index2}    getMsgIndex    ${msg2}
+    Should Be Equal    ${index2}    1
+    ${desc2}    getMsgDesc    ${msg2}
+    Should Be Equal    ${desc2}    bb
+    ${time2}    getMsgPutTime    ${msg2}
+    Should Not Be Equal    ${time1}    ${time2}
+    ${result2}    runCommand    su user1 -c "jgetmsg -i 3 ${jobid1}"
+    Should Be Equal    ${result2}    Job <${jobid1}>: No message available
+    [Teardown]    killJob
+
+case8.作业被jputmsg后，执行jctrl requeue，查看put的信息是否存在。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${result1}    runCommand    su user1 -c "jputmsg -i 1 -d aa ${jobid1}"
+    log    ${result1}
+    Should Be Equal    ${result1}    Job <${jobid1}>: Put message successfully
+    ${msg1}    queryMsgInfo    su user1 -c "jgetmsg -i 1 ${jobid1}"
+    ${index1}    getMsgIndex    ${msg1}
+    Should Be Equal    ${index1}    1
+    ${desc1}    getMsgDesc    ${msg1}
+    Should Be Equal    ${desc1}    aa
+    ${time1}    getMsgPutTime    ${msg1}
+    runCommand    su jhadmin -c "jctrl requeue ${jobid1}"
+    ${msg2}    queryMsgInfo    su user1 -c "jgetmsg -i 1 ${jobid1}"
+    ${index2}    getMsgIndex    ${msg2}
+    Should Be Equal    ${index2}    1
+    ${desc2}    getMsgDesc    ${msg2}
+    Should Be Equal    ${desc2}    aa
+    ${time2}    getMsgPutTime    ${msg2}
+    Should Be Equal    ${time1}    ${time2}
+    [Teardown]    killJob
+
+case9.jputmsg -d空字符。
+    [Tags]    p1    tmp
+    [Setup]
+    killJob
+    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${result1}    runCommand    su user1 -c "jputmsg -i 2 -d '' ${jobid1}"
+    log    ${result1}
+    Should Be Equal    ${result1}    Arguments is empty, too few arguments
+    ${result2}    runCommand    su user1 -c "jputmsg -i 3 -d ' \ ' ${jobid1}"
+    Should Be Equal    ${result2}    Arguments is empty, too few arguments
+    ${msga}    runCommand    su user1 -c "jgetmsg \ ${jobid1}"
+    log    ${msga}
+    Should Contain    ${msga}    Job <${jobid1}>: No message available
+    runCommand    su jhadmin -c "jctrl requeue ${jobid1}"
+    ${msgb}    runCommand    su user1 -c "jgetmsg \ ${jobid1}"
+    log    ${msgb}
+    Should Contain    ${msgb}    Job <${jobid1}>: No message available
+    [Teardown]    killJob
+
+case10.jgetmsg -h.
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file}    Set Variable    ${filedir}/spooler/input/jgetmsg-help.txt
+    log    ${file}
+    ${getmsghelp}    runCommand    jgetmsg -h
+    log    ${getmsghelp}
+    ${getmsgfile}    Get File    ${file}
+    log    ${getmsgfile}
+    Should Be Equal    ${getmsgfile}    ${getmsghelp}
+
+case11.jputmsg -h.
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file}    Set Variable    ${filedir}/spooler/input/jputmsg-help.txt
+    log    ${file}
+    ${jputmsghelp}    runCommand    jputmsg -h
+    log    ${jputmsghelp}
+    ${putmsgfile}    Get File    ${file}
+    log    ${putmsgfile}
+    Should Be Equal    ${jputmsghelp}    ${putmsgfile}
+
+case12.jgetmsg -V
+    [Tags]    p1
+    [Setup]    readyTest
+    ${version}    checkVersion    jgetmsg -V
+
+case13.jputmsg -V
+    [Tags]    p1
+    [Setup]    readyTest
+    ${version}    checkVersion    jgetmsg -V
+
+case14.如果不指定-i，默认-i为0.
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${result1}    runCommand    su user1 -c "jputmsg ${jobid1}"
+    log    ${result1}
+    Should Be Equal    ${result1}    Job <${jobid1}>: Put message successfully
+    ${msg}    queryMsgInfo    su user1 -c "jgetmsg ${jobid1}"
+    ${index}    getMsgIndex    ${msg}
+    log    ${index}
+    Should Be Equal    ${index}    0
+    ${descr}    getMsgDesc    ${msg}
+    log    ${descr}
+    Should Be Equal    ${descr}    no description
+    ${msg1}    queryMsgInfo    su user1 -c "jgetmsg -i 0 ${jobid1}"
+    ${index1}    getMsgIndex    ${msg1}
+    log    ${index1}
+    Should Be Equal    ${index1}    0
+    ${descr1}    getMsgDesc    ${msg1}
+    log    ${descr1}
+    Should Be Equal    ${descr1}    no description
+    ${result2}    runCommand    su user1 -c "jputmsg -d aa ${jobid1}"
+    log    ${result2}
+    Should Be Equal    ${result2}    Job <${jobid1}>: Put message successfully
+    ${msg2}    queryMsgInfo    su user1 -c "jgetmsg ${jobid1}"
+    ${index2}    getMsgIndex    ${msg2}
+    log    ${index2}
+    Should Be Equal    ${index2}    0
+    ${descr2}    getMsgDesc    ${msg2}
+    log    ${descr2}
+    Should Be Equal    ${descr2}    aa
+    ${msg3}    queryMsgInfo    su user1 -c "jgetmsg -i 0 ${jobid1}"
+    ${index3}    getMsgIndex    ${msg3}
+    log    ${index3}
+    Should Be Equal    ${index3}    0
+    ${descr3}    getMsgDesc    ${msg3}
+    log    ${descr3}
+    Should Be Equal    ${descr3}    aa
+    [Teardown]    killJob
+
+case15.jputmsg -i、jgetmsg -i的范围（0-127）。
+    [Tags]    p2    boundary
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${result2}    runCommand    su user1 -c "jputmsg -i 1.5 -d aa ${jobid1}"
+    log    ${result2}
+    Should Contain    ${result2}    jputmsg: error: argument -i: invalid int value: '1.5'
+    ${result3}    runCommand    su user1 -c "jputmsg -i '~!@#$%^&*()_+' -d aa ${jobid1}"
+    log    ${result3}
+    Should Contain    ${result3}    jputmsg: error: argument -i: invalid int value: '~!@#$%^&*()_+'
+    ${result4}    runCommand    su user1 -c "jputmsg -i 126 \ -d a1 ${jobid1}"
+    log    ${result4}
+    Should Be Equal    ${result4}    Job <${jobid1}>: Put message successfully
+    ${result5}    runCommand    su user1 -c "jputmsg -i 127 -d a2 ${jobid1}"
+    log    ${result5}
+    Should Be Equal    ${result5}    Job <${jobid1}>: Put message successfully
+    ${result6}    runCommand    su user1 -c "jputmsg -i 128 -d a3 ${jobid1}"
+    log    ${result6}
+    Should Be Equal    ${result6}    Error index: The range of index is 0-127
+    ${result12}    runCommand    su user1 -c "jgetmsg -i 1.5 ${jobid1}"
+    log    ${result12}
+    Should Contain    ${result12}    jgetmsg: error: argument -i: invalid int value: '1.5'
+    ${result13}    runCommand    su user1 -c "jgetmsg -i '~!@#$%^&*()_+' \ ${jobid1}"
+    log    ${result13}
+    Should Contain    ${result13}    jgetmsg: error: argument -i: invalid int value: '~!@#$%^&*()_+'
+    ${result14}    runCommand    su user1 -c "jgetmsg -i 126 \ \ ${jobid1}"
+    log    ${result14}
+    Should Match Regexp    ${result14}    ${jobid1}\\s+126\\s+\\w+\\s+\\w+\\s+\\w+\\:\\w+\\:\\w+\\s+user1\\s+a1
+    ${result15}    runCommand    su user1 -c "jgetmsg -i 127 \ ${jobid1}"
+    log    ${result15}
+    Should Match Regexp    ${result15}    ${jobid1}\\s+127\\s+\\w+\\s+\\w+\\s+\\w+\\:\\w+\\:\\w+\\s+user1\\s+a2
+    ${result16}    runCommand    su user1 -c "jgetmsg -i 128 \ ${jobid1}"
+    log    ${result16}
+    Should Be Equal    ${result16}    Error index: The range of index is 0-127
+    ${result17}    runCommand    su user1 -c "jgetmsg -i 100000000000000000000000 \ ${jobid1}"
+    log    ${result17}
+    Should Be Equal    ${result17}    Error index: The range of index is 0-127
+    ${result7}    runCommand    su user1 -c "jputmsg -i 100000000000000000000000 -d aa ${jobid1}"
+    log    ${result7}
+    Should Be Equal    ${result7}    Error index: The range of index is 0-127
+    ${result1}    runCommand    su user1 -c "jputmsg -i -1 -d aa ${jobid1}"
+    log    ${result1}
+    Should Be Equal    ${result1}    Error index: The range of index is 0-127
+    ${result11}    runCommand    su user1 -c "jgetmsg -i -1 \ ${jobid1}"
+    log    ${result11}
+    Should Be Equal    ${result11}    Error index: The range of index is 0-127
+    [Teardown]    killJob
+
+case16.jputmsg -d/jgetmsg -d
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${result2}    runCommand    su user1 -c "jputmsg -d a1 ${jobid1}"
+    log    ${result2}
+    ${msg}    queryMsgInfo    su user1 -c "jgetmsg \ ${jobid1}"
+    ${index}    getMsgIndex    ${msg}
+    log    ${index}
+    Should Be Equal    ${index}    0
+    ${descr}    getMsgDesc    ${msg}
+    log    ${descr}
+    Should Be Equal    ${descr}    a1
+    ${result2}    runCommand    su user1 -c "jputmsg -d a2 ${jobid1}"
+    log    ${result2}
+    Should Be Equal    ${result2}    Job <${jobid1}>: Put message successfully
+    ${msg2}    queryMsgInfo    su user1 -c "jgetmsg ${jobid1}"
+    ${index2}    getMsgIndex    ${msg2}
+    log    ${index2}
+    Should Be Equal    ${index2}    0
+    ${descr2}    getMsgDesc    ${msg2}
+    log    ${descr2}
+    Should Be Equal    ${descr2}    a2
+    [Teardown]    killJob
+
+case17.对各种状态的作业执行jputmsg，然后重启，查看put的msg是否丢失。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub sleep 1"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid2}    RUN
+    runCommand    jctrl kill ${jobid2}
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid1}    DONE
+    ${job3}    querySubmitInfo    su user1 -c "jsub -q q1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    checkJobStatus    ${jobid3}    RUN
+    checkJobStatus    ${jobid4}    RUN
+    ${job5}    querySubmitInfo    su user1 -c "jsub \ -q q3 sleep 1000"
+    ${jobid5}    getJobId    ${job5}
+    ${job6}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid6}    getJobId    ${job6}
+    ${job7}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid7}    getJobId    ${job7}
+    runCommand    su user1 -c "jctrl stop ${jobid4} ${jobid6}"
+    checkJobStatus    ${jobid1}    DONE
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    SSUSP
+    checkJobStatus    ${jobid4}    USUSP
+    checkJobStatus    ${jobid5}    RUN
+    checkJobStatus    ${jobid6}    PSUSP
+    checkJobStatus    ${jobid7}    PEND
+    @{jobids3}    queryUserJobInfo    su user1 -c "jjobs -a -l"
+    ${string3}    Catenate    @{jobids3}
+    log    ${string3}
+    ${result1}    runCommand    su user1 -c "jputmsg -i 1 -d a1 ${jobid1}"
+    log    ${result1}
+    ${result2}    runCommand    su user1 -c "jputmsg -i 2 -d a2 ${jobid2}"
+    log    ${result2}
+    ${result3}    runCommand    su user1 -c "jputmsg -i 3 -d a3 ${jobid3}"
+    log    ${result3}
+    ${result4}    runCommand    su user1 -c "jputmsg -i 4 -d a4 ${jobid4}"
+    log    ${result4}
+    ${result5}    runCommand    su user1 -c "jputmsg -i 5 -d a5 ${jobid5}"
+    log    ${result5}
+    ${result6}    runCommand    su user1 -c "jputmsg -i 6 -d a6 ${jobid6}"
+    log    ${result6}
+    ${result7}    runCommand    su user1 -c "jputmsg -i 7 -d a7 ${jobid7}"
+    log    ${result7}
+    ${msg1}    queryMsgInfo    su user1 -c "jgetmsg -i 1 ${jobid1}"
+    ${descr1}    getMsgDesc    ${msg1}
+    log    ${descr1}
+    Should Be Equal    ${descr1}    a1
+    ${msg2}    queryMsgInfo    su user1 -c "jgetmsg -i 2 ${jobid2}"
+    ${descr2}    getMsgDesc    ${msg2}
+    log    ${descr2}
+    Should Be Equal    ${descr2}    a2
+    ${msg3}    queryMsgInfo    su user1 -c "jgetmsg -i 3 ${jobid3}"
+    log    ${msg3}
+    ${descr3}    getMsgDesc    ${msg3}
+    log    ${descr3}
+    Should Be Equal    ${descr3}    a3
+    ${msg4}    queryMsgInfo    su user1 -c "jgetmsg -i 4 ${jobid4}"
+    log    ${msg4}
+    ${descr4}    getMsgDesc    ${msg4}
+    log    ${descr4}
+    Should Be Equal    ${descr4}    a4
+    ${msg5}    queryMsgInfo    su user1 -c "jgetmsg -i 5 ${jobid5}"
+    log    ${msg5}
+    ${descr5}    getMsgDesc    ${msg5}
+    log    ${descr5}
+    Should Be Equal    ${descr5}    a5
+    ${msg6}    queryMsgInfo    su user1 -c "jgetmsg -i 6 ${jobid6}"
+    log    ${msg6}
+    ${descr6}    getMsgDesc    ${msg6}
+    log    ${descr6}
+    Should Be Equal    ${descr6}    a6
+    ${msg7}    queryMsgInfo    su user1 -c "jgetmsg -i 7 ${jobid7}"
+    log    ${msg6}
+    ${descr7}    getMsgDesc    ${msg7}
+    log    ${descr7}
+    Should Be Equal    ${descr7}    a7
+    ${info}    runCommand    JadminJhdsSched
+    log    ${info}
+    checkRestartClusterStatus
+    checkJobStatus    ${jobid1}    DONE
+    checkJobStatus    ${jobid2}    EXIT
+    checkJobStatus    ${jobid3}    SSUSP
+    checkJobStatus    ${jobid4}    USUSP
+    checkJobStatus    ${jobid5}    RUN
+    checkJobStatus    ${jobid6}    PSUSP
+    checkJobStatus    ${jobid7}    PEND
+    ${msg11}    queryMsgInfo    su user1 -c "jgetmsg -i 1 ${jobid1}"
+    ${descr11}    getMsgDesc    ${msg11}
+    log    ${descr11}
+    Should Be Equal    ${descr11}    a1
+    ${msg12}    queryMsgInfo    su user1 -c "jgetmsg -i 2 ${jobid2}"
+    ${descr12}    getMsgDesc    ${msg12}
+    log    ${descr12}
+    Should Be Equal    ${descr12}    a2
+    ${msg13}    queryMsgInfo    su user1 -c "jgetmsg -i 3 ${jobid3}"
+    log    ${msg13}
+    ${descr13}    getMsgDesc    ${msg13}
+    log    ${descr13}
+    Should Be Equal    ${descr3}    a3
+    ${msg14}    queryMsgInfo    su user1 -c "jgetmsg -i 4 ${jobid4}"
+    log    ${msg14}
+    ${descr14}    getMsgDesc    ${msg14}
+    log    ${descr14}
+    Should Be Equal    ${descr14}    a4
+    ${msg15}    queryMsgInfo    su user1 -c "jgetmsg -i 5 ${jobid5}"
+    log    ${msg15}
+    ${descr15}    getMsgDesc    ${msg15}
+    log    ${descr15}
+    Should Be Equal    ${descr15}    a5
+    ${msg16}    queryMsgInfo    su user1 -c "jgetmsg -i 6 ${jobid6}"
+    log    ${msg16}
+    ${descr16}    getMsgDesc    ${msg16}
+    log    ${descr16}
+    Should Be Equal    ${descr16}    a6
+    ${msg17}    queryMsgInfo    su user1 -c "jgetmsg -i 7 ${jobid7}"
+    log    ${msg16}
+    ${descr17}    getMsgDesc    ${msg17}
+    log    ${descr17}
+    Should Be Equal    ${descr17}    a7
+    [Teardown]    killJob
+
+case18.对不存在的作业执行jputmsg、jgetmsg。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${result1}    runCommand    su user1 -c "jputmsg -i 1 -d aa 1000000000"
+    log    ${result1}
+    Should Be Equal    ${result1}    Job <1000000000>: No matching job found
+    [Teardown]    killJob
+
+case19.jgetmsg当不指定索引号，得到所有的索引信息。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${result1}    runCommand    su user1 -c "jputmsg -i 1 -d aa ${jobid1}"
+    log    ${result1}
+    Should Be Equal    ${result1}    Job <${jobid1}>: Put message successfully
+    ${result2}    runCommand    su user1 -c "jputmsg -i 2 -d bb ${jobid1}"
+    log    ${result2}
+    Should Be Equal    ${result2}    Job <${jobid1}>: Put message successfully
+    ${result3}    runCommand    su user1 -c "jputmsg -i 5 -d ee ${jobid1}"
+    log    ${result3}
+    Should Be Equal    ${result3}    Job <${jobid1}>: Put message successfully
+    ${msg}    runCommand    su user1 -c "jgetmsg ${jobid1}"
+    log    ${msg}
+    Should Match Regexp    ${msg}    ${jobid1}\\s+1\\s+\\w+\\s+\\w+\\s+\\w+\\:\\w+\\:\\w+\\s+user1\\s+aa
+    Should Match Regexp    ${msg}    ${jobid1}\\s+2\\s+\\w+\\s+\\w+\\s+\\w+\\:\\w+\\:\\w+\\s+user1\\s+bb
+    Should Match Regexp    ${msg}    ${jobid1}\\s+5\\s+\\w+\\s+\\w+\\s+\\w+\\:\\w+\\:\\w+\\s+user1\\s+ee
+    [Teardown]    killJob
+
+case20.当队列配置的requeue_exit_value后，jputmsg信息是否还在。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${string1}    getString    \\#!/bin/sh\nsleep 15\nexit 30\nsleep 100
+    log    ${string1}
+    Append to file    ${filedir}/spooler/input/msgx.sh    ${string1}
+    ${chmodfile}    runCommand    chmod 777 ${filedir}/spooler/input/msgx.sh
+    log    ${chmodfile}
+    ${filetext}    Get File    ${filedir}/spooler/input/msgx.sh
+    log    ${filetext}
+    ${job1}    querySubmitInfo    su user1 -c "jsub -q q4 ${filedir}/spooler/input/msgx.sh"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${string2}    getString    \\#!/bin/sh\nsleep 100
+    log    ${string2}
+    Append to file    ${filedir}/spooler/input/msgx.sh    ${string2}
+    ${info}    runCommand    su user1 -c "jputmsg -i 2 -d aa ${jobid1}"
+    log    ${info}
+    ${msg1}    queryMsgInfo    su user1 -c "jgetmsg -i 2 ${jobid1}"
+    ${descr1}    getMsgDesc    ${msg1}
+    log    ${descr1}
+    Should Be Equal    ${descr1}    aa
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 2 -q q5 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    sleep    18
+    checkHistContain    jhist -l ${jobid1}    1
+    ${msg11}    queryMsgInfo    su user1 -c "jgetmsg -i 2 ${jobid1}"
+    ${descr11}    getMsgDesc    ${msg11}
+    log    ${descr11}
+    Should Be Equal    ${descr11}    aa
+    Remove Files    ${filedir}/spooler/input/msgx.sh
+    [Teardown]    killJob

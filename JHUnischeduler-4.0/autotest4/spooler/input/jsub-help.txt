@@ -1,0 +1,37 @@
+usage: jsub [-h] [-V] [-x] [-P project_name] [-R res_req] [-q queue_name ...]
+            [-m "host_name[+[pref_level]] | host_group[+[pref_level]]..."]
+            [-n min_processors[,max_processors]] [-J job_name] [-i in_file]
+            [-o out_file] [-e err_file] [-E pre_exec_command[argument...]]
+            [-Ep post_exec_command[argument...]]
+            command [command ...]
+
+description: submits a job to cluster
+
+positional arguments:
+  command               specify the job command line argument
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -V                    print JH UniScheduler release version and exit
+  -x                    puts host running the job into exclusive execution
+                        mode
+  -P project_name       specify the job's project name
+  -R res_req            run the job on a host that meets the specified
+                        resource requirements
+  -q queue_name ...     submit the job to one of the specified queues
+  -m "host_name[+[pref_level]] | host_group[+[pref_level]]..."
+                        submit the job to one of the specified hosts
+  -n min_processors[,max_processors]
+                        specify the minimum and maximum numbers of processors
+  -J job_name           specify the job name or specify the job arrays
+  -i in_file            specify the direction of the job's standard input file
+  -o out_file           specify the direction of the job's standard output
+                        file
+  -e err_file           specify the direction of the job's standard error
+                        output file
+  -E pre_exec_command[argument...]
+                        runs the specified pre-exec command before actually
+                        running the job
+  -Ep post_exec_command[argument...]
+                        runs the specified post-exec command after actually
+                        running the job

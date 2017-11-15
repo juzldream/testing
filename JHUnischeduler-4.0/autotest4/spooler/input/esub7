@@ -1,0 +1,11 @@
+#!/bin/sh
+. $JH_SUB_PARM_FILE
+exec 1>&2
+if [ $JH_SUB_QUEUE == "q1" ]
+then
+#echo 'JH_SUB_RLIMIT_RSS=200'>>$JH_SUB_MODIFY_FILE
+echo 'JH_SUB_QUEUE="q2"'>>$JH_SUB_MODIFY_FILE
+echo 'JH_SUB_OUT_FILE="AUTOTEST_ESUB/spooler/output/esub2.out"'>>$JH_SUB_MODIFY_FILE
+#exec 1>&2
+fi
+

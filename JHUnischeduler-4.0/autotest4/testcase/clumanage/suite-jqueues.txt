@@ -1,0 +1,259 @@
+*** Settings ***
+Suite Setup       preSuite    spooler/conf/conf-jqueues
+Suite Teardown    postSuite
+Library           /apps/autotest4/lib/clusterKeyword.py
+Library           /apps/autotest4/lib/clusterLib.py
+Library           /apps/autotest4/lib/common.py
+Library           /apps/autotest4/lib/hostKeyword.py
+Library           /apps/autotest4/lib/hostLib.py
+Library           /apps/autotest4/lib/hostsConfLib.py
+Library           /apps/autotest4/lib/jobKeyword.py
+Library           /apps/autotest4/lib/jobLib.py
+Library           /apps/autotest4/lib/myUtils.py
+Library           /apps/autotest4/lib/OperatingSystem.py
+Library           /apps/autotest4/lib/queueKeyword.py
+Library           /apps/autotest4/lib/queueLib.py
+Library           /apps/autotest4/lib/paramsConfLib.py
+Library           /apps/autotest4/lib/queuesConfLib.py
+Library           /apps/autotest4/lib/retry.py
+Library           /apps/autotest4/lib/schedulerConfLib.py
+Library           /apps/autotest4/lib/userGroupKeyword.py
+Library           /apps/autotest4/lib/userGroupLib.py
+Library           /apps/autotest4/lib/userKeyword.py
+Library           /apps/autotest4/lib/usersConfLib.py
+Library           /apps/autotest4/lib/userLib.py
+
+*** Test Cases ***
+case1.jqueues
+    [Tags]    p1
+    [Setup]    readyTest
+    ${queinfo}    runCommand    jqueues
+    log    ${queinfo}
+    Should Contain    ${queinfo}    QUEUE_NAME \ \ \ \ \ PRIO STATUS \ \ \ \ \ \ \ \ \ MAX JL/U JL/P JL/H NJOBS \ PEND \ \ RUN \ SUSP \ RSV
+    Should Contain    ${queinfo}    normal \ \ \ \ \ \ \ \ \ \ 10 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    userq1 \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    userq2 \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    userq3 \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    hostq1 \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    hostq2 \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    hostq3 \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    abcdefghijklmno \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    gq1 \ \ \ \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    gq2 \ \ \ \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    muq1 \ \ \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    muq2 \ \ \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    ${queinfo1}    runCommand    jqueues hostq1
+    log    ${queinfo1}
+    Should Contain    ${queinfo1}    hostq1 \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    [Teardown]    killJob
+
+case2.jqueues -w
+    [Tags]    p1
+    [Setup]    readyTest
+    ${queinfo}    runCommand    jqueues -w
+    log    ${queinfo}
+    Should Contain    ${queinfo}    QUEUE_NAME \ \ \ \ \ PRIO STATUS \ \ \ \ \ \ \ \ \ MAX JL/U JL/P JL/H NJOBS \ PEND \ \ RUN \ SUSP \ RSV
+    Should Contain    ${queinfo}    normal \ \ \ \ \ \ \ \ \ \ 10 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    userq1 \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    userq2 \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    userq3 \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    hostq1 \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    hostq2 \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    hostq3 \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    abcdefghijklmnopq \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    gq1 \ \ \ \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    gq2 \ \ \ \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    muq1 \ \ \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    muq2 \ \ \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    ${queinfo1}    runCommand    jqueues -w \ abcdefghijklmnopq
+    log    ${queinfo1}
+    Should Contain    ${queinfo1}    abcdefghijklmnopq \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    [Teardown]    killJob
+
+case3.jqueues -l
+    [Tags]    p1
+    [Setup]    readyTest
+    ${queinfo}    runCommand    jqueues -l
+    log    ${queinfo}
+    Should Contain    ${queinfo}    QUEUE: normal
+    Should Contain    ${queinfo}    QUEUE: userq1
+    Should Contain    ${queinfo}    QUEUE: userq2
+    Should Contain    ${queinfo}    QUEUE: userq3
+    Should Contain    ${queinfo}    QUEUE: hostq1
+    Should Contain    ${queinfo}    QUEUE: hostq2
+    Should Contain    ${queinfo}    QUEUE: hostq3
+    Should Contain    ${queinfo}    QUEUE: abcdefghijklmnopq
+    Should Contain    ${queinfo}    QUEUE: gq1
+    Should Contain    ${queinfo}    QUEUE: gq2
+    Should Contain    ${queinfo}    QUEUE: muq1
+    Should Contain    ${queinfo}    QUEUE: muq2
+    ${queinfo1}    runCommand    jqueues -l hostq1
+    log    ${queinfo1}
+    Should Contain    ${queinfo}    Hosts = rhela1
+    ${queinfo2}    runCommand    jqueues -l normal
+    log    ${queinfo2}
+    Should Contain    ${queinfo2}    QUEUE: normal
+    Should Contain    ${queinfo2}    Description = No description provided
+    Should Contain    ${queinfo2}    stat.Prio = 10
+    Should Contain    ${queinfo2}    stat.Nice = 0
+    Should Contain    ${queinfo2}    stat.Status = Open:Active
+    Should Contain    ${queinfo2}    stat.JobsNum = 0
+    Should Contain    ${queinfo2}    stat.Pend = 0
+    Should Contain    ${queinfo2}    stat.Run = 0
+    Should Contain    ${queinfo2}    stat.SSUSP = 0
+    Should Contain    ${queinfo2}    stat.USUSP = 0
+    Should Contain    ${queinfo2}    stat.Rsv = 0
+    Should Contain    ${queinfo2}    Users = all users
+    Should Contain    ${queinfo2}    Hosts = all hosts used by the scheduler system
+    [Teardown]    killJob
+
+case4.jqueues -m host
+    [Tags]    p1
+    [Setup]    readyTest
+    ${queinfo}    runCommand    jqueues -m rhela1
+    log    ${queinfo}
+    Should Contain    ${queinfo}    QUEUE_NAME \ \ \ \ \ PRIO STATUS \ \ \ \ \ \ \ \ \ MAX JL/U JL/P JL/H NJOBS \ PEND \ \ RUN \ SUSP \ RSV
+    Should Contain    ${queinfo}    normal \ \ \ \ \ \ \ \ \ \ 10 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    userq1 \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    userq2 \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    userq3 \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    hostq1 \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Not Contain    ${queinfo}    hostq2 \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    hostq3 \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    abcdefghijklmno \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    gq1 \ \ \ \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    gq2 \ \ \ \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Not Contain    ${queinfo}    muq1 \ \ \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    muq2 \ \ \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    [Teardown]    killJob
+
+case5.jqueues -m "host1 host2"
+    [Tags]    p1
+    [Setup]    readyTest
+    ${queinfo}    runCommand    jqueues -m "rhela1 rhelb"
+    log    ${queinfo}
+    Should Contain    ${queinfo}    QUEUE_NAME \ \ \ \ \ PRIO STATUS \ \ \ \ \ \ \ \ \ MAX JL/U JL/P JL/H NJOBS \ PEND \ \ RUN \ SUSP \ RSV
+    Should Contain    ${queinfo}    normal \ \ \ \ \ \ \ \ \ \ 10 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    userq1 \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    userq2 \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    userq3 \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Not Contain    ${queinfo}    hostq1 \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Not Contain    ${queinfo}    hostq2 \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    hostq3 \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    abcdefghijklmno \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    gq1 \ \ \ \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    gq2 \ \ \ \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Not Contain    ${queinfo}    muq1 \ \ \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Not Contain    ${queinfo}    muq2 \ \ \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    [Teardown]    killJob
+
+case6.jqueues -u user
+    [Tags]    p1
+    [Setup]    readyTest
+    ${queinfo}    runCommand    jqueues -u user1
+    log    ${queinfo}
+    Should Contain    ${queinfo}    QUEUE_NAME \ \ \ \ \ PRIO STATUS \ \ \ \ \ \ \ \ \ MAX JL/U JL/P JL/H NJOBS \ PEND \ \ RUN \ SUSP \ RSV
+    Should Contain    ${queinfo}    normal \ \ \ \ \ \ \ \ \ \ 10 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    userq1 \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Not Contain    ${queinfo}    userq2 \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    userq3 \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    hostq1 \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    hostq2 \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    hostq3 \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    abcdefghijklmno \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    gq1 \ \ \ \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    gq2 \ \ \ \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    muq1 \ \ \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    muq2 \ \ \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    [Teardown]    killJob
+
+case7. jqueues -u usergroup
+    [Tags]    p1
+    [Setup]    readytest
+    addormodifyusergroupa    group1    (user1 user2 user3) (user1) ([default,1])
+    jadminJhdsSched
+    checkclusterstatus
+    ${queinfo}    runCommand    jqueues -u group1
+    log    ${queinfo}
+    Should Contain    ${queinfo}    QUEUE_NAME \ \ \ \ \ PRIO STATUS \ \ \ \ \ \ \ \ \ MAX JL/U JL/P JL/H NJOBS \ PEND \ \ RUN \ SUSP \ RSV
+    Should Contain    ${queinfo}    normal \ \ \ \ \ \ \ \ \ \ 10 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Not Contain    ${queinfo}    userq1 \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Not Contain    ${queinfo}    userq2 \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    userq3 \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    hostq1 \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    hostq2 \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    hostq3 \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    abcdefghijklmno \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    gq1 \ \ \ \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    gq2 \ \ \ \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Not Contain    ${queinfo}    muq1 \ \ \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    muq2 \ \ \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    [Teardown]    delUserGroup    group1
+
+case8.jqueues -u -m -w
+    [Tags]    p1
+    [Setup]    readytest
+    addormodifyusergroupa    group1    (user1 user2 user3) (user1) ([default,1])
+    jadminJhdsSched
+    checkclusterstatus
+    ${queinfo}    runCommand    jqueues -u user1 -m rhela1 -w
+    log    ${queinfo}
+    Should Contain    ${queinfo}    QUEUE_NAME \ \ \ \ \ PRIO STATUS \ \ \ \ \ \ \ \ \ MAX JL/U JL/P JL/H NJOBS \ PEND \ \ RUN \ SUSP \ RSV
+    Should Contain    ${queinfo}    normal \ \ \ \ \ \ \ \ \ \ 10 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    userq1 \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Not Contain    ${queinfo}    userq2 \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    userq3 \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    hostq1 \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Not Contain    ${queinfo}    hostq2 \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    hostq3 \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    abcdefghijklmnopq \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    gq1 \ \ \ \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    gq2 \ \ \ \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Not Contain    ${queinfo}    muq1 \ \ \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo}    muq2 \ \ \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    ${queinfo1}    runCommand    jqueues -u user2 -m rhelb -w
+    log    ${queinfo1}
+    Should Contain    ${queinfo1}    QUEUE_NAME \ \ \ \ \ PRIO STATUS \ \ \ \ \ \ \ \ \ MAX JL/U JL/P JL/H NJOBS \ PEND \ \ RUN \ SUSP \ RSV
+    Should Contain    ${queinfo1}    normal \ \ \ \ \ \ \ \ \ \ 10 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Not Contain    ${queinfo1}    userq1 \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo1}    userq2 \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo1}    userq3 \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Not Contain    ${queinfo1}    hostq1 \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo1}    hostq2 \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo1}    hostq3 \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo1}    abcdefghijklmnopq \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo1}    gq1 \ \ \ \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo1}    gq2 \ \ \ \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Not Contain    ${queinfo1}    muq1 \ \ \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Not Contain    ${queinfo1}    muq2 \ \ \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    ${queinfo2}    runCommand    jqueues -u group1 -m rhelb -w
+    log    ${queinfo2}
+    Should Contain    ${queinfo2}    QUEUE_NAME \ \ \ \ \ PRIO STATUS \ \ \ \ \ \ \ \ \ MAX JL/U JL/P JL/H NJOBS \ PEND \ \ RUN \ SUSP \ RSV
+    Should Contain    ${queinfo2}    normal \ \ \ \ \ \ \ \ \ \ 10 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Not Contain    ${queinfo2}    userq1 \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Not Contain    ${queinfo2}    userq2 \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo2}    userq3 \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Not Contain    ${queinfo2}    hostq1 \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo2}    hostq2 \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo2}    hostq3 \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo2}    abcdefghijklmnopq \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo2}    gq1 \ \ \ \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo2}    gq2 \ \ \ \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Not Contain    ${queinfo2}    muq1 \ \ \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Not Contain    ${queinfo2}    muq2 \ \ \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    [Teardown]    delUserGroup    group1
+
+case9.jqueues qname
+    [Tags]    p1
+    [Setup]    readyTest
+    ${queinfo}    runCommand    jqueues normal
+    log    ${queinfo}
+    Should Contain    ${queinfo}    QUEUE_NAME \ \ \ \ \ PRIO STATUS \ \ \ \ \ \ \ \ \ MAX JL/U JL/P JL/H NJOBS \ PEND \ \ RUN \ SUSP \ RSV
+    ${queinfo1}    runCommand    jqueues normal gq1
+    log    ${queinfo1}
+    Should Contain    ${queinfo1}    normal \ \ \ \ \ \ \ \ \ \ 10 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    Should Contain    ${queinfo1}    gq1 \ \ \ \ \ \ \ \ \ \ \ \ \ 40 \ Open:Active \ \ \ \ \ \ - \ \ \ - \ \ \ - \ \ \ - \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ \ 0 \ \ \ 0
+    ${queinfo2}    runCommand    jqueues "normal gq1"
+    log    ${queinfo2}
+    Should Be Equal    ${queinfo2}    normal gq1: No such queue
+    [Teardown]    killJob

@@ -1,0 +1,924 @@
+*** Settings ***
+Suite Setup       preSuite    spooler/conf/conf-sub
+Suite Teardown    postSuite
+Library           /apps/autotest4/lib/clusterKeyword.py
+Library           /apps/autotest4/lib/clusterLib.py
+Library           /apps/autotest4/lib/common.py
+Library           /apps/autotest4/lib/hostKeyword.py
+Library           /apps/autotest4/lib/hostLib.py
+Library           /apps/autotest4/lib/hostsConfLib.py
+Library           /apps/autotest4/lib/jobKeyword.py
+Library           /apps/autotest4/lib/jobLib.py
+Library           /apps/autotest4/lib/myUtils.py
+Library           /apps/autotest4/lib/OperatingSystem.py
+Library           /apps/autotest4/lib/queueKeyword.py
+Library           /apps/autotest4/lib/queueLib.py
+Library           /apps/autotest4/lib/paramsConfLib.py
+Library           /apps/autotest4/lib/queuesConfLib.py
+Library           /apps/autotest4/lib/retry.py
+Library           /apps/autotest4/lib/schedulerConfLib.py
+Library           /apps/autotest4/lib/userGroupKeyword.py
+Library           /apps/autotest4/lib/userGroupLib.py
+Library           /apps/autotest4/lib/userKeyword.py
+Library           /apps/autotest4/lib/usersConfLib.py
+Library           /apps/autotest4/lib/userLib.py
+
+*** Test Cases ***
+case1.jsub -q
+    [Tags]    p1    tmp
+    [Setup]
+    killJob
+    readyTest
+    ${job1}    querySubmitInfo    su jhadmin -c "jsub -q q1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${que1}    getJobQueue    ${job1}
+    ${job2}    querySubmitInfo    su jhadmin -c "jsub -q q2 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${que2}    getJobQueue    ${job2}
+    Should Be Equal    ${que1}    q1
+    Should Be Equal    ${que2}    q2
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    ${joba}    queryJobInfo    ${jobid1}
+    ${quea}    getJobQueue    ${joba}
+    ${jobb}    queryJobInfo    ${jobid2}
+    ${queb}    getJobQueue    ${jobb}
+    Should Be Equal    ${que1}    q1
+    Should Be Equal    ${que2}    q2
+    [Teardown]    killJob
+
+case2.jsub -m
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHostGroup    group0    (rhelb)
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su jhadmin -c "jsub -m group0 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su jhadmin -c "jsub -m rhela1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su jhadmin -c "jsub -m rhelb sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    PEND
+    ${exechost1}    getAndCheckJobExecHost    ${jobid1}
+    ${exechost2}    getAndCheckJobExecHost    ${jobid2}
+    Should Be Equal    ${exechost1}    rhelb
+    Should Be Equal    ${exechost2}    rhela1
+    [Teardown]    delHostGroup    group0
+
+case3.jsub -x
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHost    rhela1    2 ()
+    addOrModifyHost    rhelb    2 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su jhadmin -c "jsub -x -q clulow1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su jhadmin -c "jsub -x -q clulow1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su jhadmin -c "jsub sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    PEND
+    ${exechost1}    getAndCheckJobExecHost    ${jobid1}
+    ${exechost2}    getAndCheckJobExecHost    ${jobid2}
+    checkHostStatus    ${exechost1}    closed_Excl
+    checkHostStatus    ${exechost2}    closed_Excl
+    [Teardown]    modHostInfo    rhela1= 1 ()    rhelb= 1 \ ()
+
+case4.jsub -x -n
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHost    rhela1    2 ()
+    addOrModifyHost    rhelb    2 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su jhadmin -c "jsub -n 2 -R span[ptile=1] -x -q clulow1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${job2}    querySubmitInfo    su jhadmin -c "jsub sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    sleep    3
+    checkJobStatus    ${jobid2}    PEND
+    @{exechost}    getAndCheckJobExecHost    ${jobid1}
+    checkHostStatus    @{exechost}[0]    closed_Excl
+    checkHostStatus    @{exechost}[1]    closed_Excl
+    ${info}    queryJobInfo    ${jobid2}
+    ${reason}    getJobPndRsn    ${info}
+    log    ${reason}
+    Should Contain    ${reason}    Closed by running an exclusive job:
+    [Teardown]    modHostInfo    rhela1= 1 ()    rhelb= 1 \ ()
+
+case5.jsub -P
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su jhadmin -c "jsub -P project1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su jhadmin -c "jsub -P project2 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    ${joba}    queryJobInfo    ${jobid1}
+    ${project1}    getJobProject    ${joba}
+    ${jobb}    queryJobInfo    ${jobid2}
+    ${project2}    getJobProject    ${jobb}
+    Should Be Equal    ${project1}    project1
+    Should Be Equal    ${project2}    project2
+    [Teardown]    killJob
+
+case6.bug11162 jsub -R rusage
+    [Tags]    p1    bug-random
+    [Setup]    readyTest
+    addOrModifyHost    rhela1    2 ()
+    addOrModifyHost    rhelb    2 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su jhadmin -c "jsub -n 2 -R 'rusage[mem=50]' sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su jhadmin -c "jsub -R 'rusage[mem=100]' sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    sleep    30
+    ${exechost1}    getAndCheckJobExecHost    ${jobid1}
+    ${exechost2}    getAndCheckJobExecHost    ${jobid2}
+    ${used1}    getAndCheckJobRusageInfo    ${jobid1}    MEM
+    ${used2}    getAndCheckJobRusageInfo    ${jobid2}    MEM
+    ${host1}    QueryHostInfo    ${exechost1}
+    ${host2}    QueryHostInfo    ${exechost2}
+    ${resv1}    getHostReserved    ${host1}    mem
+    ${resv2}    getHostReserved    ${host2}    mem
+    checkRusageValue    100    ${resv1}    ${used1}
+    checkRusageValue    100    ${resv2}    ${used2}
+    [Teardown]    modHostInfo    rhela1= 1 ()    rhelb= 1 ()
+
+case7.jsub -R span
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHost    rhela1    2 \ ()
+    addOrModifyHost    rhelb    2 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su jhadmin -c "jsub -n 2 -R 'span[ptile=1]' sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su jhadmin -c "jsub -n 2 -R 'span[hosts=1]' sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    PEND
+    @{exechost1}    getAndCheckJobExecHost    ${jobid1}
+    Log Many    @{exechost1}
+    Length Should Be    ${exechost1}    2
+    ${string1}=    Catenate    @{exechost1}
+    Should Contain    ${string1}    rhela1
+    Should Contain    ${string1}    rhelb
+    log    @{exechost1}[0]
+    log    @{exechost1}[1]
+    runCommand    jctrl kill ${jobid1}
+    checkJobStatus    ${jobid2}    RUN
+    [Teardown]    modHostInfo    rhela1= 1 ()    rhelb= 1 ()
+
+case8.jsub -J
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su jhadmin -c "jsub -J name1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su jhadmin -c "jsub -J name2 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    ${joba}    queryJobInfo    ${jobid1}
+    ${jobname1}    getJobName    ${joba}
+    ${jobb}    queryJobInfo    ${jobid2}
+    ${jobname2}    getJobName    ${jobb}
+    Should Be Equal    ${jobname1}    name1
+    Should Be Equal    ${jobname2}    name2
+    [Teardown]    killJob
+
+case9.jsub -i/-e
+    [Tags]    p1
+    [Setup]    readyTest
+    ${autodir}    getFileDir
+    ${outputdir}    Set Variable    ${autodir}/spooler/output/sub-mod-err-9.txt
+    ${inputdir}    Set Variable    ${autodir}/spooler/input/sub-mod-in-9.txt
+    ${testfile}    Set Variable    ${autodir}/spooler/input/sub-mod-9.sh
+    Remove Files    ${autodir}/spooler/output/*.txt
+    checkClusterStatus
+    ${localhost}    runCommand    hostname
+    log    ${localhost}
+    ${job1}    querySubmitInfo    su jhadmin -c "jsub -m ${localhost} -i ${inputdir} -e ${outputdir} ${testfile}"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    EXIT
+    ${outputdir1}    NormalPath    ${outputdir}
+    ${result}    Get File    ${outputdir1}
+    log    ${result}
+    Should Match Regexp    ${result}    cp: cannot stat .*: No such file or directory
+    File Should Not Be Empty    ${outputdir1}
+    Remove Files    ${autodir}/spooler/output/*.txt
+    [Teardown]    killJob
+
+case10.jsub -i/-o
+    [Tags]    p1
+    [Setup]    readyTest
+    ${autodir}    getFileDir
+    ${outputdir}    Set Variable    ${autodir}/spooler/output/sub-mod-out-10.txt
+    ${inputdir}    Set Variable    ${autodir}/spooler/input/sub-mod-in-10.txt
+    ${testfile}    Set Variable    ${autodir}/spooler/input/sub-mod-10.sh
+    Remove Files    ${autodir}/spooler/output/*.txt
+    checkClusterStatus
+    ${localhost}    runCommand    hostname
+    log    ${localhost}
+    ${job1}    querySubmitInfo    su jhadmin -c "jsub -m ${localhost} -i ${inputdir} -o ${outputdir} ${testfile}"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    DONE
+    ${outputdir1}    NormalPath    ${outputdir}
+    ${result}    Get File    ${outputdir1}
+    log    ${result}
+    containOneKeyword    ${result}    input1
+    Remove Files    ${autodir}/spooler/output/*.txt
+    [Teardown]    killJob
+
+case11.jsub -E
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${inputdir}    Set Variable    ${filedir}/spooler/input/sub-mod-11.sh
+    ${outputdir}    Set Variable    ${filedir}/spooler/output/sub-mod-out-11.txt
+    delFile    ${outputdir}
+    checkClusterStatus
+    ${localhost}    runCommand    hostname
+    ${job1}    QuerySubmitInfo    su jhadmin -c "jsub -m ${localhost} -E ${inputdir} sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    sleep    2
+    ${result}    Get File    ${outputdir}
+    log    ${result}
+    Should Contain    ${result}    jhadmin
+    ${log}    delFile    ${outputdir}
+    [Teardown]    killJob
+
+case12.jsub -E queue
+    [Tags]    p1    long-time
+    [Setup]    readyTest
+    ${autodir}    getFileDir
+    ${inputdir}    Set Variable    ${autodir}/spooler/input/sub-mod-12.sh
+    ${outputdir}    Set Variable    ${autodir}/spooler/output/sub-mod-out-12.txt
+    Remove Files    ${autodir}/spooler/output/*.txt
+    checkClusterStatus
+    ${qinfo}    getString    PRIORITY= 40\nPRE_EXEC=${inputdir}>${outputdir}\n
+    addOrModifyQueue    pre1    ${qinfo}
+    jadminSched
+    checkClusterStatus
+    ${localhost}    runCommand    hostname
+    ${job1}    QuerySubmitInfo    su jhadmin -c "jsub -m ${localhost} -q pre1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    sleep    10
+    ${outputdir1}    NormalPath    ${outputdir}
+    ${result}    Get File    ${outputdir1}
+    log    ${result}
+    Should Contain    ${result}    jhadmin
+    Remove Files    ${autodir}/spooler/output/*.txt
+    [Teardown]    delQueue    pre1
+
+case13.jsub -Ep
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${inputdir}    Set Variable    ${filedir}/spooler/input/sub-mod-13.sh
+    ${outputdir}    Set Variable    ${filedir}/spooler/output/sub-mod-out-13.txt
+    delFile    ${outputdir}
+    checkClusterStatus
+    ${localhost}    runCommand    hostname
+    ${job1}    QuerySubmitInfo    su jhadmin -c "jsub -m ${localhost} -Ep ${inputdir} sleep 5"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    DONE
+    sleep    2
+    ${result}    Get File    ${outputdir}
+    log    ${result}
+    Should Contain    ${result}    jhadmin
+    ${log}    delFile    ${outputdir}
+    [Teardown]    killJob
+
+case14.jsub -Ep queue
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${inputdir}    Set Variable    ${filedir}/spooler/input/sub-mod-14.sh
+    ${outputdir}    Set Variable    ${filedir}/spooler/output/sub-mod-out-14.txt
+    Remove Files    ${filedir}/spooler/output/*.txt
+    checkClusterStatus
+    ${qinfo}    getString    PRIORITY= 40\nPOST_EXEC=${inputdir}>${outputdir}\n
+    addOrModifyQueue    post1    ${qinfo}
+    jadminSched
+    checkClusterStatus
+    ${localhost}    RUN    hostname
+    ${job1}    QuerySubmitInfo    su jhadmin -c "jsub -m ${localhost} -q post1 hostname"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    DONE
+    sleep    2
+    ${outputdir1}    NormalPath    ${outputdir}
+    ${result}    Get File    ${outputdir1}
+    log    ${result}
+    Should Contain    ${result}    jhadmin
+    Remove Files    ${filedir}/spooler/output/*.txt
+    [Teardown]    delQueue    post1
+
+case15.jsub -J arr[1-3]
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su jhadmin -c "jsub -J arr[1-3] sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}[1]    RUN
+    checkJobStatus    ${jobid1}[2]    RUN
+    checkJobStatus    ${jobid1}[3]    PEND
+    [Teardown]    killJob
+
+case16.jsub -m指定节点组优先级
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHostGroup    group1    (rhela1)
+    addOrModifyHostGroup    group2    (rhelb group1)
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -m 'rhela1+60 rhelb+70 group2+50 group1+100' sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${host1}    getAndCheckJobExecHost    ${jobid1}
+    log    ${host1}
+    Should Contain    ${host1}    rhelb
+    [Teardown]    delHostGroup    group1,group2
+
+case17.jsub -m节点排它
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub -m '~rhela1 rhelb' sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${host1}    getAndCheckJobExecHost    ${jobid1}
+    log    ${host1}
+    Should Contain    ${host1}    rhelb
+    [Teardown]    killJob
+
+case18.jsub -m -q作业级和队列级均指定优先级（作业级覆盖队列级）
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub -m 'rhela1+100 rhelb' \ sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -m \ 'rhela1+100 rhelb+50' \ sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    ${host1}    getAndCheckJobExecHost    ${jobid1}
+    log    ${host1}
+    Should Contain    ${host1}    rhela1
+    runCommand    jctrl kill ${jobid1}
+    checkJobStatus    ${jobid2}    RUN
+    ${host1}    getAndCheckJobExecHost    ${jobid1}
+    log    ${host1}
+    Should Contain    ${host1}    rhela1
+    [Teardown]    killJob
+
+case19.jsub -h
+    [Tags]    p2
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file}    Set Variable    ${filedir}/spooler/input/jsub-help.txt
+    log    ${file}
+    ${subhelp}    runCommand    jsub -h
+    log    ${subhelp}
+    ${helpfile}    Get File    ${file}
+    log    ${helpfile}
+    Should Be Equal    ${subhelp}    ${helpfile}
+
+case20.jsub -V
+    [Tags]    p2
+    [Setup]    readyTest
+    ${version}    checkVersion    jsub -V
+
+case21.jsub -q 指定的队列不存在。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${subinfo}    runCommand    su user1 -c "jsub -q no sleep \ 1000"
+    log    ${subinfo}
+    Should Be Equal    ${subinfo}    no: No such queue. Job not submitted
+
+case22.jsub -q 指定空队列""。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${jobinfo1}    runCommand    su user1 -c 'jsub -q "" sleep 1000'
+    log    ${jobinfo1}
+    Should Contain    ${jobinfo1}    Arguments is empty, too few arguments
+    ${jobinfo2}    runCommand    su user1 -c 'jsub -q " \ " sleep 1000'
+    log    ${jobinfo2}
+    Should Contain    ${jobinfo2}    Arguments is empty, too few arguments
+    ${jobinfo3}    runCommand    su user1 -c "jsub -q '' sleep 1000"
+    log    ${jobinfo3}
+    Should Contain    ${jobinfo3}    Arguments is empty, too few arguments
+    [Teardown]    killJob
+
+case23.jsub -q指定两个队列名。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${subinfo}    runCommand    su user1 -c 'jsub -q "q1 q2" sleep 1000'
+    log    ${subinfo}
+    Should Contain    ${subinfo}    q1 q2: No such queue. Job not submitted
+    [Teardown]    killJob
+
+case24.jsub -q指定队列用引号""引起来，并且队列名前后有空格。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su jhadmin -c 'jsub -q " q1 \ \ \ " sleep 1000'
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${joba}    queryJobInfo    ${jobid1}
+    ${que}    getJobQueue    ${joba}
+    log    ${que}
+    Should Be Equal    ${que}    q1
+    [Teardown]    killJob
+
+case25.jsub -m指定(指定单节点、多节点和节点组)。
+    [Tags]    p2
+    [Setup]    readyTest
+    addOrModifyHostGroup    group0    (rhelb)
+    addOrModifyHost    rhela1    2 ()
+    addOrModifyHost    rhelb    2 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -m group0 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${host1}    getAndCheckJobExecHost    ${jobid1}
+    log    ${host1}
+    Should Contain    ${host1}    rhelb
+    ${job2}    querySubmitInfo    su user1 -c "jsub -m rhela1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    ${host2}    getAndCheckJobExecHost    ${jobid2}
+    log    ${host2}
+    Should Contain    ${host2}    rhela1
+    ${job3}    querySubmitInfo    su user1 -c 'jsub -n 2 -m "rhela1 rhelb" sleep 1000'
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid1}    RUN
+    @{host3}    getAndCheckJobExecHost    ${jobid3}
+    ${string1}=    Catenate    @{host3}
+    Should Contain    ${string1}    rhela1
+    Should Contain    ${string1}    rhelb
+    [Teardown]    delHostGroupAndHost    group0    rhelb= 1 ()    rhela1=1 ()
+
+case26.jsub -m指定节点优先级。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c 'jsub -m "rhela1 rhelb+100" sleep 1000'
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${host1}    getAndCheckJobExecHost    ${jobid1}
+    log    ${host1}
+    Should Contain    ${host1}    rhelb
+    [Teardown]    killJob
+
+case27.jsub -m指定节点组优先级。
+    [Tags]    p2    docker-not-run
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file0}    Set Variable    ${filedir}/spooler/input/pi.sh
+    ${file}    normalPath    ${file0}
+    addOrModifyHostGroup    group1    (rhela1)
+    addOrModifyHostGroup    group2    (rhelb group1)
+    jadminJhdsSched
+    checkClusterStatus
+    usedUt    rhela1    ${file}    80%
+    ${hostx}    runCommand    jhosts -l
+    log    ${hostx}
+    ${job1}    querySubmitInfo    su user1 -c "jsub -m 'group1+50 group2+100' sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    killDefault
+    ${host1}    getAndCheckJobExecHost    ${jobid1}
+    log    ${host1}
+    Should Contain    ${host1}    rhelb
+    [Teardown]    delHostGroup    group2,group1    rhelb= 1 ()    rhela1=1 ()
+
+case28.jsub -m节点排它。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub -m '~rhela1' sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${host1}    getAndCheckJobExecHost    ${jobid1}
+    log    ${host1}
+    Should Contain    ${host1}    rhelb
+    [Teardown]    killJob
+
+case29.jsub -m节点排它。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${subinfo}    runCommand    su user1 -c "jsub -m '~rhela1 ~rhelb' sleep 1000"
+    log    ${subinfo}
+    Should Be Equal    ${subinfo}    ~rhela1 ~rhelb: Host or host group is not used by the queue. Job not submitted
+    [Teardown]
+
+case30.jsub -m节点排它加权重。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub -m '~rhela1 rhelb+100' sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${host1}    getAndCheckJobExecHost    ${jobid1}
+    log    ${host1}
+    Should Contain    ${host1}    rhelb
+    [Teardown]    killJob
+
+case31.jsub -m节点排它加权重。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub -m '~rhelb rhelb+200 rhela1+100' sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${host1}    getAndCheckJobExecHost    ${jobid1}
+    log    ${host1}
+    Should Contain    ${host1}    rhela1
+    ${job2}    querySubmitInfo    su user1 -c "jsub -m '~rhela1 rhela1+200 rhelb+100' sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid2}    RUN
+    ${host2}    getAndCheckJobExecHost    ${jobid2}
+    log    ${host2}
+    Should Contain    ${host2}    rhelb
+    [Teardown]    killJob
+
+case32.bug11346 jsub -m节点组排它处理。
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHostGroup    group1    (rhelb)
+    addOrModifyHostGroup    group2    (rhela1 group1)
+    jadminJhdsSched
+    checkClusterStatus
+    ${info1}    runCommand    su user1 -c "jsub -m '~group2' sleep 1000"
+    log    ${info1}
+    Should Be Equal    ${info1}    ~group2: Host or host group is not used by the queue. Job not submitted
+    ${info2}    runCommand    su user1 -c 'jsub -m "~group1 ~group2" sleep 1000'
+    log    ${info2}
+    Should Be Equal    ${info2}    ~group1 ~group2: Host or host group is not used by the queue. Job not submitted
+    ${job0}    querySubmitInfo    su user1 -c 'jsub -m "group1 ~rhela1" sleep 1000'
+    ${jobid0}    getJobId    ${job0}
+    checkJobStatus    ${jobid0}    RUN
+    ${host0}    getAndCheckJobExecHost    ${jobid0}
+    log    ${host0}
+    should Be Equal    ${host0}    rhelb
+    ${job1}    querySubmitInfo    su user1 -c 'jsub -m "group2 ~group1" sleep 1000'
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${host1}    getAndCheckJobExecHost    ${jobid1}
+    log    ${host1}
+    should Be Equal    ${host1}    rhela1
+    ${info3}    runCommand    su user1 -c 'jsub -m "group1 ~rhelb" sleep 1000'
+    log    ${info3}
+    Should Be Equal    ${info3}    group1 ~rhelb: Host or host group is not used by the queue. Job not submitted
+    [Teardown]    delHostGroupAndHost    group1,group2    rhelb= 1 ()    rhela1=1 ()
+
+case33.jsub -m 节点和节点组的排它处理以及优先级的混合case。
+    [Tags]    p2
+    [Setup]    readyTest
+    addOrModifyHostGroup    group1    (rhelb)
+    addOrModifyHostGroup    group2    (rhela1 group1)
+    jadminJhdsSched
+    checkClusterStatus
+    ${groupinfo}    runCommand    jhostgroup
+    log    ${groupinfo}
+    ${job1}    querySubmitInfo    su user1 -c 'jsub -m "group2+1000 ~group1 rhelb+200 rhela1+20" sleep 1000'
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${host1}    getAndCheckJobExecHost    ${jobid1}
+    log    ${host1}
+    should Be Equal    ${host1}    rhela1
+    [Teardown]    delHostGroupAndHost    group1,group2    rhelb= 1 ()    rhela1=1 ()
+
+case34.jsub -m指定的节点不存在
+    [Tags]    p2
+    [Setup]    readyTest
+    ${subinfo}    runCommand    su user1 -c "jsub -m 'hostnoxwf' sleep 1000"
+    log    ${subinfo}
+    Should Be Equal    ${subinfo}    hostnoxwf: Bad host name, host group name or cluster name. Job not submitted
+    [Teardown]
+
+case35.bug11429 jsub -m -q节点和节点组的排它处理。
+    [Tags]    p2
+    [Setup]    readyTest
+    addOrModifyHostGroup    group1    (rhelb)
+    addOrModifyHostGroup    group2    (rhela1 group1)
+    addOrModifyHostGroup    group3    (rhela1)
+    jadminJhdsSched
+    checkClusterStatus
+    ${groupinfo}    runCommand    jhostgroup
+    log    ${groupinfo}
+    ${subinfo1}    runCommand    su user1 -c 'jsub -q m2 -m "~group2 rhelb+1000" sleep 1000'
+    log    ${subinfo1}
+    Should Be Equal    ${subinfo1}    ~group2 rhelb+1000: Host or host group is not used by the queue. Job not submitted
+    ${subinfo2}    runCommand    su user1 -c 'jsub -q m2 -m "~group2 rhelb+1000" sleep 1000'
+    log    ${subinfo2}
+    Should Be Equal    ${subinfo2}    ~group2 rhelb+1000: Host or host group is not used by the queue. Job not submitted
+    ${subinfo3}    runCommand    su user1 -c 'jsub -q m2 -m "~group3 rhelb+1000" sleep 1000'
+    log    ${subinfo3}
+    Should Be Equal    ${subinfo3}    ~group3 rhelb+1000: Host or host group is not used by the queue. Job not submitted
+    [Teardown]    delHostGroupAndHost    group3,group2,group1    rhelb= 1 ()    rhela1=1 ()
+
+case36.jsub -x提交作业到一个非独占队列中。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${info1}    runCommand    su user1 -c "jsub -x -q q1 sleep 1000"
+    log    ${info1}
+    Should Be Equal    ${info1}    Queue does not accept EXCLUSIVE jobs. Job not submitted
+    [Teardown]    killJob
+
+case37.jsub -R "rusage"支持符号||、&&和：。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${inputdir}    Set Variable    ${filedir}/spooler/input/res3
+    ${sbindir}    getSbinPath
+    Copy File    ${inputdir}    ${sbindir}/res3
+    addOrModifyHost    rhela1    3 ()
+    addOrModifyHost    rhelb    3 ()
+    jadminJhdsSched
+    checkClusterStatus
+    checkHostResTotal    rhela1    res5    8
+    checkHostResTotal    rhelb    res5    3
+    ${hostinfo}    runCommand    jhosts -l
+    log    ${hostinfo}
+    ${job1}    querySubmitInfo    su jhadmin -c "jsub \ -R 'rusage[tmp=50&&swap=50]' sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su jhadmin -c "jsub -R 'rusage[res5=2||tmp=100]' sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su jhadmin -c "jsub -R 'rusage[mem=50:duration=15s:decay=1]' sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    Remove files    ${sbindir}/res3
+    sleep    5
+    ${exechost3}    getAndCheckJobExecHost    ${jobid3}
+    ${hostinfox}    runCommand    jhosts -l \ ${exechost3}
+    log    ${hostinfox}
+    ${host3}    QueryHostInfo    ${exechost3}
+    ${resv4}    getHostReserved    ${host3}    mem
+    ${used4}    getAndCheckJobRusageInfo    ${jobid3}    MEM
+    Should Low    1    ${resv4}
+    Should Low    1    ${used4}
+    ${exechost1}    getAndCheckJobExecHost    ${jobid1}
+    ${exechost2}    getAndCheckJobExecHost    ${jobid2}
+    ${used1}    getAndCheckJobRusageInfo    ${jobid1}    SWAP
+    ${host1}    QueryHostInfo    ${exechost1}
+    ${host2}    QueryHostInfo    ${exechost2}
+    ${resv1}    getHostReserved    ${host1}    swap
+    ${resv2}    getHostReserved    ${host1}    tmp
+    ${resv3}    getHostReserved    ${host2}    res5
+    log    ${resv1}
+    log    ${used1}
+    log    ${resv4}
+    log    ${used4}
+    checkRusageValue    50    ${resv1}    ${used1}
+    Should Be Equal As Integers    ${resv2}    50
+    Should Be Equal As Integers    ${resv3}    2
+    sleep    10
+    ${used5}    getAndCheckJobRusageInfo    ${jobid3}    MEM
+    ${host3}    QueryHostInfo    ${exechost3}
+    ${resv5}    getHostReserved    ${host3}    mem
+    Should Be Equal As Integers    ${resv5}    0
+    [Teardown]    modHostInfo    rhela1= 1 ()    rhelb= 1 ()
+
+case38.bug11817jsub -R不指定select、rusage、order关键字。
+    [Tags]    p1    bug
+    [Setup]    readyTest
+    ${res2info}    checkHostResTotal    rhela1    res2    10
+    log    ${res2info}
+    ${res2info1}    checkHostResTotal    rhelb    res2    10
+    log    ${res2info1}
+    ${job1}    querySubmitInfo    su user1 -c "jsub -R 'res2>3' sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${host1}    getAndCheckJobExecHost    ${jobid1}
+    log    ${host1}
+    ${subinfo}    runCommand    su user1 -c "jsub -R 'res2=5' sleep 1000"
+    log    ${subinfo}
+    Should Be Equal    ${subinfo}    select[res2=5]: Bad resource requirement syntax. Job not submitted
+    [Teardown]    killJob
+
+case39.jsub -R "select"。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${inputdir}    Set Variable    ${filedir}/spooler/input/res3
+    ${sbindir}    getSbinPath
+    Copy File    ${inputdir}    ${sbindir}/res3
+    jadminJhdsSched
+    checkClusterStatus
+    checkHostResTotal    rhela1    res3    3
+    checkHostResTotal    rhelb    res3    0
+    ${info}    runCommand    jhosts -l
+    log    ${info}
+    ${job1}    querySubmitInfo    su user1 -c "jsub -R 'select[res3>1&&mem>50]' sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${host1}    getAndCheckJobExecHost    ${jobid1}
+    log    ${host1}
+    ${job2}    querySubmitInfo    su user1 -c 'jsub -R "select[res3>15||mem>50]" sleep 1000'
+    ${jobid2}    getJobId    ${job2}
+    Remove files    ${sbindir}/res3
+    checkJobStatus    ${jobid2}    RUN
+    [Teardown]    killJob
+
+case40.jsub -R "order"。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${inputdir}    Set Variable    ${filedir}/spooler/input/res3
+    ${sbindir}    getSbinPath
+    Copy File    ${inputdir}    ${sbindir}/res3
+    addOrModifyHost    rhela1    3 ()
+    addOrModifyHost    rhelb    3 ()
+    jadminJhdsSched
+    checkClusterStatus
+    checkHostResTotal    rhela1    res5    8
+    checkHostResTotal    rhelb    res5    3
+    ${hostinfo}    runCommand    jhosts -l
+    log    ${hostinfo}
+    ${job1}    querySubmitInfo    su user1 -c "jsub -R 'order[res5]' sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${host1}    getAndCheckJobExecHost    ${jobid1}
+    log    ${host1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -R 'order[-res5]' sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid2}    RUN
+    ${host2}    getAndCheckJobExecHost    ${jobid2}
+    log    ${host2}
+    Remove files    ${sbindir}/res3
+    Should Be Equal    ${host1}    rhela1
+    Should Be Equal    ${host2}    rhelb
+    [Teardown]    modHostInfo    rhela1= 1 ()    rhelb= 1 \ ()
+
+case41.jsub -J指定空字符。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${info}    runCommand    jhosts -l
+    log    ${info}
+    ${jobinfo1}    runCommand    su user1 -c 'jsub -J "" sleep 1000'
+    log    ${jobinfo1}
+    Should Contain    ${jobinfo1}    Arguments is empty, too few arguments
+    ${jobinfo2}    runCommand    su user1 -c 'jsub -J " \ \ " sleep 1000'
+    log    ${jobinfo2}
+    Should Contain    ${jobinfo2}    Arguments is empty, too few arguments
+    [Teardown]    killJob
+
+case42.11728 jsub -J arr[0-2],数组作业的索引id是正整数。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${info}    runCommand    jhosts -l
+    log    ${info}
+    ${subinfo}    runCommand    su user1 -c 'jsub -J arr[0-2] sleep 1000'
+    log    ${subinfo}
+    Should Be Equal    ${subinfo}    arr[0-2]: Bad job name. Job not submitted
+    [Teardown]    killJob
+
+case43.11728 jsub -J arr[3-6,9]数组作业的索引不连续，不支持。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${info}    runCommand    jhosts -l
+    log    ${info}
+    ${subinfo}    runCommand    su user1 -c 'jsub -J arr[3-5,9] sleep 1000'
+    log    ${subinfo}
+    Should Be Equal    ${subinfo}    arr[3-5,9]: Bad job name. Job not submitted
+    [Teardown]    killJob
+
+case44.11728 jsub -J当数组索引指定不正确时。
+    [Tags]    p2
+    [Setup]    readyTest
+    addOrModifyHost    rhela1    5 ()
+    addOrModifyHost    rhelb    5 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${info}    runCommand    jhosts -l
+    log    ${info}
+    ${subinfo1}    runCommand    su user1 -c 'jsub -J arr[2-7,5] sleep 1000'
+    log    ${subinfo1}
+    Should Be Equal    ${subinfo1}    arr[2-7,5]: Bad job name. Job not submitted
+    ${subinfo2}    runCommand    su user1 -c 'jsub -J arr[-1-2,3] sleep 1000'
+    log    ${subinfo2}
+    Should Be Equal    ${subinfo2}    arr[-1-2,3]: Bad job name. Job not submitted
+    ${subinfo3}    runCommand    su user1 -c 'jsub -J arr[1-3,3] sleep 1000'
+    log    ${subinfo3}
+    Should Be Equal    ${subinfo3}    arr[1-3,3]: Bad job name. Job not submitted
+    ${subinfo4}    runCommand    su user1 -c 'jsub -J arr[5-3] sleep 1000'
+    log    ${subinfo4}
+    Should Be Equal    ${subinfo4}    arr[5-3]: Bad job name. Job not submitted
+    ${subinfo5}    runCommand    su user1 -c 'jsub -J arr[] sleep 1000'
+    log    ${subinfo5}
+    Should Be Equal    ${subinfo5}    arr[]: Bad job name. Job not submitted
+    ${job6}    querySubmitInfo    su user1 -c 'jsub -J a,b[1-2] sleep 1000'
+    ${jobid6}    getJobId    ${job6}
+    ${job7}    querySubmitInfo    su user1 -c 'jsub -J a/b[1-2] sleep 1000'
+    ${jobid7}    getJobId    ${job7}
+    ${job8}    querySubmitInfo    su user1 -c 'jsub -J a~b^c[1-2] sleep 1000'
+    ${jobid8}    getJobId    ${job8}
+    ${subinfo9}    runCommand    su user1 -c 'jsub -J arr[2 3] sleep 1000'
+    log    ${subinfo9}
+    ${alljob}    runCommand    jjobs -u all
+    log    ${alljob}
+    checkJobStatus    ${jobid6}[1]    RUN
+    checkJobStatus    ${jobid6}[2]    RUN
+    checkJobStatus    ${jobid7}[1]    RUN
+    checkJobStatus    ${jobid7}[2]    RUN
+    checkJobStatus    ${jobid8}[1]    RUN
+    checkJobStatus    ${jobid8}[2]    RUN
+    [Teardown]    modHostInfo    rhela1= 1 ()    rhelb= 1 \ ()
+
+case44.数组作业可指定的最大索引，默认是一千。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${info}    runCommand    jhosts -l
+    log    ${info}
+    ${subinfo}    runCommand    su user1 -c 'jsub -J arr[1-1001] sleep 1000'
+    log    ${subinfo}
+    Should Contain    ${subinfo}    Job array index too large. Job not submitted
+    ${job1}    querySubmitInfo    su user1 -c 'jsub -J arr[1-1000] sleep 1000'
+    ${jobid1}    getJobId    ${job1}
+    ${alljob}    runCommand    jjobs -u all
+    log    ${alljob}
+    checkJobStatus    ${jobid1}[1]    RUN
+    checkJobStatus    ${jobid1}[2]    RUN
+    checkJobStatus    ${jobid1}[3-1000]    PEND
+    [Teardown]    killJob
+
+case45.jsub -n。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${info}    runCommand    jhosts -l
+    log    ${info}
+    ${job0}    querySubmitInfo    su user1 -c 'jsub -n 3 \ sleep 1000'
+    ${jobid0}    getJobId    ${job0}
+    sleep    5
+    checkJobStatus    ${jobid0}    PEND
+    ${joba}    queryJobInfo    ${jobid0}
+    ${reason0}    getJobPndRsn    ${joba}
+    log    ${reason0}
+    Should Contain    ${reason0}    Not enough job slot(s)
+    ${info}    runCommand    jhosts -l
+    log    ${info}
+    ${job1}    querySubmitInfo    su user1 -c 'jsub -n 2 sleep 1000'
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid0}    PEND
+    [Teardown]    killJob
+
+case46.jsub -n支持的格式。
+    [Tags]    p2
+    [Setup]    readyTest
+    addOrModifyHost    rhela1    6 ()
+    addOrModifyHost    rhelb    6 ()
+    jadminJhdsSched
+    checkClusterStatus
+    ${info}    runCommand    jhosts -l
+    log    ${info}
+    ${job1}    querySubmitInfo    su user1 -c 'jsub -n 2,3 \ sleep 1000'
+    ${jobid1}    getJobId    ${job1}
+    ${proc1}    getAndCheckJobUsedProc    ${jobid1}
+    log    ${proc1}
+    Should Contain    ${proc1}    3 Processors
+    ${job2}    querySubmitInfo    su user1 -c 'jsub -n ,3 sleep 1000'
+    ${jobid2}    getJobId    ${job2}
+    ${proc2}    getAndCheckJobUsedProc    ${jobid2}
+    log    ${proc2}
+    Should Contain    ${proc2}    3 Processors
+    ${job3}    querySubmitInfo    su user1 -c 'jsub -n 2, sleep 1000'
+    ${jobid3}    getJobId    ${job3}
+    ${proc3}    getAndCheckJobUsedProc    ${jobid3}
+    log    ${proc3}
+    Should Contain    ${proc3}    2 Processors
+    ${killinfo}    runCommand    su jhadmin -c "jctrl kill -u all 0"
+    log    ${killinfo}
+    checkHostStatus    rhela1    ok
+    checkHostStatus    rhelb    ok
+    sleep    2
+    ${job4}    querySubmitInfo    su user1 -c 'jsub -n "2" sleep 1000'
+    ${jobid4}    getJobId    ${job4}
+    ${proc4}    getAndCheckJobUsedProc    ${jobid4}
+    log    ${proc4}
+    Should Contain    ${proc4}    2 Processors
+    ${job5}    querySubmitInfo    su user1 -c 'jsub -n " \ 2 , \ \ " sleep 1000'
+    ${jobid5}    getJobId    ${job5}
+    ${proc5}    getAndCheckJobUsedProc    ${jobid4}
+    log    ${proc5}
+    Should Contain    ${proc5}    2 Processors
+    ${job6}    querySubmitInfo    su user1 -c 'jsub -n " \ , \ 3 \ \ " sleep 1000'
+    ${jobid6}    getJobId    ${job6}
+    ${proc6}    getAndCheckJobUsedProc    ${jobid6}
+    log    ${proc6}
+    Should Contain    ${proc6}    3 Processors
+    ${job7}    querySubmitInfo    su user1 -c 'jsub -n " \ 2 , \ 3 \ \ " sleep 1000'
+    ${jobid7}    getJobId    ${job7}
+    ${proc7}    getAndCheckJobUsedProc    ${jobid7}
+    log    ${proc7}
+    Should Contain    ${proc7}    3 Processors
+    [Teardown]    modHostInfo    rhela1= 1 ()    rhelb= 1 \ ()

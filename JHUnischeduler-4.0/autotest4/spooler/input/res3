@@ -1,0 +1,8 @@
+#!/bin/sh 
+echo '{"res6":3}'
+host1=$(echo `hostname` | tr [A-Z] [a-z])
+if [ "x$host1" = "xrhela1" ];then
+    echo '{"res3":3,"res5":8,"res7":3,"res8":3}'
+elif [ "x$host1" = "xrhelb" ];then
+    echo '{"res5":3,"res7":3,"res8":8}'
+fi

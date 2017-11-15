@@ -1,0 +1,61 @@
+*** Settings ***
+Suite Setup       preSuite    spooler/conf/conf-cpulimit
+Suite Teardown    postSuite
+Library           /apps/autotest4/lib/clusterKeyword.py
+Library           /apps/autotest4/lib/clusterLib.py
+Library           /apps/autotest4/lib/common.py
+Library           /apps/autotest4/lib/hostKeyword.py
+Library           /apps/autotest4/lib/hostLib.py
+Library           /apps/autotest4/lib/hostsConfLib.py
+Library           /apps/autotest4/lib/jobKeyword.py
+Library           /apps/autotest4/lib/jobLib.py
+Library           /apps/autotest4/lib/myUtils.py
+Library           /apps/autotest4/lib/OperatingSystem.py
+Library           /apps/autotest4/lib/queueKeyword.py
+Library           /apps/autotest4/lib/queueLib.py
+Library           /apps/autotest4/lib/paramsConfLib.py
+Library           /apps/autotest4/lib/queuesConfLib.py
+Library           /apps/autotest4/lib/retry.py
+Library           /apps/autotest4/lib/schedulerConfLib.py
+Library           /apps/autotest4/lib/userGroupKeyword.py
+Library           /apps/autotest4/lib/userGroupLib.py
+Library           /apps/autotest4/lib/userKeyword.py
+Library           /apps/autotest4/lib/usersConfLib.py
+Library           /apps/autotest4/lib/userLib.py
+Library           /apps/autotest4/lib/jhistKeyword.py
+
+*** Test Cases ***
+case1.在queues.conf文件中配置CPULIMIT=1，当作业的cpu时间超出1min时，作业将会被终止。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file0}    Set Variable    ${filedir}/spooler/input/pi.sh
+    ${file}    normalPath    ${file0}
+    ${job1}    querySubmitInfo    su jhadmin -c "jsub -q cpulimit1 ${file}"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    EXIT    120
+    ${job1}    queryJobInfo    ${jobid1}
+    ${cputime}    getJobCpuTimeHist    ${jobid1}
+    log    ${cputime}
+    shouldAlmostEqual    ${cputime}    60    30
+    ${job1}    queryJobInfo    ${jobid1}
+    ${cputime1}    getJobCpuTime    ${job1}
+    log    ${cputime1}
+    shouldAlmostEqual    ${cputime1}    60    30
+    killDefault
+    [Teardown]    killUtProc    pi.sh
+
+case2.在queues.conf文件中配置CPULIMIT=1，当作业的cpu时间超出1min时，作业将会被终止。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su jhadmin -c "jsub -q cpulimit1 sleep 10"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    DONE    60
+    ${cputime}    getJobCpuTimeHist    ${jobid1}
+    log    ${cputime}
+    shouldLow    ${cputime}    60
+    ${job1}    queryJobInfo    ${jobid1}
+    ${time1}    getJobCpuTime    ${job1}
+    log    ${time1}
+    shouldLow    ${cputime}    60
+    [Teardown]    killJob

@@ -1,0 +1,12 @@
+usage: jputmsg [-h] [-V] [-i index] [-d "description"] jobId | jobId[index]
+
+description: sends messages to a job
+
+positional arguments:
+  jobId | jobId[index]  operates on the specified job
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -V                    print JH UniScheduler release version and exit
+  -i index              operates on the specified message index
+  -d "description"      places your own status text as a message to the job

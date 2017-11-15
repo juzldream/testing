@@ -1,0 +1,14 @@
+HTTP/1.1 200 OK
+Server: Apache-Coyote/1.1
+X-Atmosphere-first-request: true
+X-Atmosphere-tracking-id: 57f06e5e-1006-485b-ab2d-427eb440590b
+Expires: Thu, 01 Jan 1970 00:00:00 GMT
+Cache-Control: no-cache
+Pragma: no-cache
+Cache-Control: no-store
+Content-Type: text/html;charset=UTF-8
+Transfer-Encoding: chunked
+Content-Encoding: gzip
+Vary: Accept-Encoding
+Date: Wed, 15 Mar 2017 06:43:43 GMT
+

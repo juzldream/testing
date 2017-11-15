@@ -1,0 +1,115 @@
+*** Settings ***
+Suite Setup       preSuiteBack
+Suite Teardown    postSuite
+Library           /apps/autotest4/lib/clusterKeyword.py
+Library           /apps/autotest4/lib/clusterLib.py
+Library           /apps/autotest4/lib/common.py
+Library           /apps/autotest4/lib/hostKeyword.py
+Library           /apps/autotest4/lib/hostLib.py
+Library           /apps/autotest4/lib/hostsConfLib.py
+Library           /apps/autotest4/lib/jobKeyword.py
+Library           /apps/autotest4/lib/jobLib.py
+Library           /apps/autotest4/lib/myUtils.py
+Library           /apps/autotest4/lib/OperatingSystem.py
+Library           /apps/autotest4/lib/queueKeyword.py
+Library           /apps/autotest4/lib/queueLib.py
+Library           /apps/autotest4/lib/paramsConfLib.py
+Library           /apps/autotest4/lib/queuesConfLib.py
+Library           /apps/autotest4/lib/retry.py
+Library           /apps/autotest4/lib/schedulerConfLib.py
+Library           /apps/autotest4/lib/userGroupKeyword.py
+Library           /apps/autotest4/lib/userGroupLib.py
+Library           /apps/autotest4/lib/userKeyword.py
+Library           /apps/autotest4/lib/usersConfLib.py
+Library           /apps/autotest4/lib/userLib.py
+
+*** Test Cases ***
+case1.jhostgroup -r
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHostGroup    group0    (rhelb)
+    addOrModifyHostGroup    group1    (rhela1 group0)
+    jadminJhdsSched
+    checkClusterStatus
+    ${hginfo}    runCommand    su jhadmin -c "jhostgroup -r"
+    log    ${hginfo}
+    ${host1}    getSubString    rhela1    0    8
+    log    ${host1}
+    ${host2}    getSubString    rhelb    0    8
+    log    ${host2}
+    Should Match Regexp    ${hginfo}    GROUP_NAME\\s+HOSTS
+    Should Match Regexp    ${hginfo}    group0\\s+${host2}
+    Should Match Regexp    ${hginfo}    group1\\s+(${host1}|${host2})\\s+(${host1}|${host2})
+    [Teardown]    delHostGroup    group0,group1
+
+case2.jhostgroup -w
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHostGroup    group0    (rhelb)
+    addOrModifyHostGroup    group1    (rhela1 group0)
+    jadminJhdsSched
+    checkClusterStatus
+    ${hginfo}    runCommand    su jhadmin -c "jhostgroup -w"
+    log    ${hginfo}
+    Should Match Regexp    ${hginfo}    GROUP_NAME\\s+HOSTS
+    Should Match Regexp    ${hginfo}    group0\\s+rhelb
+    Should Match Regexp    ${hginfo}    group1\\s+(rhela1|group0\/)\\s+(rhela1|group0\/)
+    [Teardown]    delHostGroup    group0,group1
+
+case3.jhostgroup -r -w
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHostGroup    group0    (rhelb)
+    addOrModifyHostGroup    group1    (rhela1 group0)
+    jadminJhdsSched
+    checkClusterStatus
+    ${hginfo}    runCommand    su jhadmin -c "jhostgroup -r -w"
+    log    ${hginfo}
+    Should Match Regexp    ${hginfo}    GROUP_NAME\\s+HOSTS
+    Should Match Regexp    ${hginfo}    group0\\s+rhelb
+    Should Match Regexp    ${hginfo}    group1\\s+(rhela1|rhelb)\\s+(rhela1|rhelb)
+    [Teardown]    delHostGroup    group0,group1
+
+case4.jhostgroup group
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHostGroup    group0    (rhelb)
+    addOrModifyHostGroup    group1    (rhela1 group0)
+    jadminJhdsSched
+    checkClusterStatus
+    ${hginfo}    runCommand    su jhadmin -c "jhostgroup -w group1"
+    log    ${hginfo}
+    Should Match Regexp    ${hginfo}    GROUP_NAME\\s+HOSTS
+    Should Match Regexp    ${hginfo}    group1\\s+(rhela1|group0\/)\\s+(rhela1|group0\/)
+    ${hginfo1}    runCommand    su jhadmin -c "jhostgroup -w group0"
+    log    ${hginfo1}
+    Should Match Regexp    ${hginfo1}    GROUP_NAME\\s+HOSTS
+    Should Match Regexp    ${hginfo1}    group0\\s+rhelb
+    ${hginfo2}    runCommand    su jhadmin -c "jhostgroup -w group0 group1"
+    log    ${hginfo2}
+    Should Match Regexp    ${hginfo2}    GROUP_NAME\\s+HOSTS
+    Should Match Regexp    ${hginfo2}    group0\\s+rhelb
+    Should Match Regexp    ${hginfo2}    group1\\s+(rhela1|group0\/)\\s+(rhela1|group0\/)
+    [Teardown]    delHostGroup    group0,group1
+
+case5.jhostgroup -r group
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHostGroup    group0    (rhelb)
+    addOrModifyHostGroup    group1    (rhela1 group0)
+    jadminJhdsSched
+    checkClusterStatus
+    ${hginfo}    runCommand    su jhadmin -c "jhostgroup -r -w group1"
+    log    ${hginfo}
+    Should Match Regexp    ${hginfo}    GROUP_NAME\\s+HOSTS
+    Should Match Regexp    ${hginfo}    group1\\s+(rhela1|rhelb)\\s+(rhela1|rhelb)
+    ${hginfo1}    runCommand    su jhadmin -c "jhostgroup -r -w group0"
+    log    ${hginfo1}
+    Should Match Regexp    ${hginfo1}    GROUP_NAME\\s+HOSTS
+    Should Match Regexp    ${hginfo1}    group0\\s+rhelb
+    ${hginfo2}    runCommand    su jhadmin -c "jhostgroup -r -w group0 group1"
+    log    ${hginfo2}
+    Should Match Regexp    ${hginfo2}    GROUP_NAME\\s+HOSTS
+    Should Match Regexp    ${hginfo2}    group0\\s+rhelb
+    Should Match Regexp    ${hginfo2}    group1\\s+(rhela1|rhelb)\\s+(rhela1|rhelb)
+    [Teardown]    delHostGroup    group0,group1

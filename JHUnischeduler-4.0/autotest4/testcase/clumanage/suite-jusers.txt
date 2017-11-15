@@ -1,0 +1,81 @@
+*** Settings ***
+Suite Setup       preSuite    spooler/conf/conf-jusers
+Suite Teardown    postSuite
+Library           /apps/autotest4/lib/clusterKeyword.py
+Library           /apps/autotest4/lib/clusterLib.py
+Library           /apps/autotest4/lib/common.py
+Library           /apps/autotest4/lib/hostKeyword.py
+Library           /apps/autotest4/lib/hostLib.py
+Library           /apps/autotest4/lib/hostsConfLib.py
+Library           /apps/autotest4/lib/jobKeyword.py
+Library           /apps/autotest4/lib/jobLib.py
+Library           /apps/autotest4/lib/myUtils.py
+Library           /apps/autotest4/lib/OperatingSystem.py
+Library           /apps/autotest4/lib/queueKeyword.py
+Library           /apps/autotest4/lib/queueLib.py
+Library           /apps/autotest4/lib/paramsConfLib.py
+Library           /apps/autotest4/lib/queuesConfLib.py
+Library           /apps/autotest4/lib/retry.py
+Library           /apps/autotest4/lib/schedulerConfLib.py
+Library           /apps/autotest4/lib/userGroupKeyword.py
+Library           /apps/autotest4/lib/userGroupLib.py
+Library           /apps/autotest4/lib/userKeyword.py
+Library           /apps/autotest4/lib/usersConfLib.py
+Library           /apps/autotest4/lib/userLib.py
+
+*** Test Cases ***
+case1.jusers
+    [Tags]    p1
+    [Setup]    readyTest
+    ${hostinfo}    runCommand    su user1 -c "jusers"
+    log    ${hostinfo}
+    Should Match Regexp    ${hostinfo}    USER\\/GROUP \ \ \ \ \ \ \ \ \ JL\\/P \ \ \ \ MAX \ \ NJOBS \ \ \ PEND \ \ \ \ RUN \ \ SSUSP \ \ USUSP \ \ \ \ RSV\\s*\\nuser1 \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ - \ \ \ \ \ \ - \ \ \ \ \ \ 0 \ \ \ \ \ \ 0 \ \ \ \ \ \ 0 \ \ \ \ \ \ 0 \ \ \ \ \ \ 0 \ \ \ \ \ \ 0
+
+case2.jusers user1
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyUserA    user1    2 -
+    addOrModifyUserA    user2    4 -
+    jadminJhdsSched
+    checkClusterStatus
+    ${hostinfo}    runCommand    su jhadmin -c "jusers user1 user2"
+    log    ${hostinfo}
+    Should Match Regexp    ${hostinfo}    USER/GROUP \ \ \ \ \ \ \ \ \ JL/P \ \ \ \ MAX \ \ NJOBS \ \ \ PEND \ \ \ \ RUN \ \ SSUSP \ \ USUSP \ \ \ \ RSV\\s*\\nuser1 \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ - \ \ \ \ \ \ 2 \ \ \ \ \ \ 0 \ \ \ \ \ \ 0 \ \ \ \ \ \ 0 \ \ \ \ \ \ 0 \ \ \ \ \ \ 0 \ \ \ \ \ \ 0\\s* \\nuser2 \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ - \ \ \ \ \ \ 4 \ \ \ \ \ \ 0 \ \ \ \ \ \ 0 \ \ \ \ \ \ 0 \ \ \ \ \ \ 0 \ \ \ \ \ \ 0 \ \ \ \ \ \ 0
+    [Teardown]    delUser    user1,user2
+
+case3.jusers usergroup
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyUserGroupA    group0    (user1 user2) (user1) ([user1,5])
+    addOrModifyUserGroupA    group1    (user1 user3) (user1) ([user1,5])
+    addOrModifyUserA    group0    2 -
+    addOrModifyUserA    group1@    4 -
+    jadminJhdsSched
+    checkClusterStatus
+    ${info1}    runCommand    su jhadmin -c "jusers group0"
+    log    ${info1}
+    ${info2}    runCommand    su jhadmin -c "jusers group1"
+    log    ${info2}
+    Should Match Regexp    ${info1}    USER/GROUP \ \ \ \ \ \ \ \ \ JL/P \ \ \ \ MAX \ \ NJOBS \ \ \ PEND \ \ \ \ RUN \ \ SSUSP \ \ USUSP \ \ \ \ RSV\\s*\\ngroup0 \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ - \ \ \ \ \ \ 2 \ \ \ \ \ \ 0 \ \ \ \ \ \ 0 \ \ \ \ \ \ 0 \ \ \ \ \ \ 0 \ \ \ \ \ \ 0 \ \ \ \ \ \ 0
+    Should Match Regexp    ${info2}    USER/GROUP \ \ \ \ \ \ \ \ \ JL/P \ \ \ \ MAX \ \ NJOBS \ \ \ PEND \ \ \ \ RUN \ \ SSUSP \ \ USUSP \ \ \ \ RSV\\s*\\ngroup1 \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ - \ \ \ \ \ \ - \ \ \ \ \ \ 0 \ \ \ \ \ \ 0 \ \ \ \ \ \ 0 \ \ \ \ \ \ 0 \ \ \ \ \ \ 0 \ \ \ \ \ \ 0
+    [Teardown]    delUserAndUserGroup    group0,group1@    group0,group1
+
+case4.11409jusers all
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyUserGroupA    group0    (user1 user2) (user1) ([user1,5])
+    addOrModifyUserGroupA    group1    (user1 user3) (user1) ([user1,5])
+    addOrModifyUserA    group0    2 -
+    addOrModifyUserA    group1@    4 -
+    jadminJhdsSched
+    checkClusterStatus
+    ${info1}    runCommand    su jhadmin -c "jusers all"
+    log    ${info1}
+    Should Contain    ${info1}    USER/GROUP \ \ \ \ \ \ \ \ \ JL/P \ \ \ \ MAX \ \ NJOBS \ \ \ PEND \ \ \ \ RUN \ \ SSUSP \ \ USUSP \ \ \ \ RSV
+    Should Contain    ${info1}    user1 \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ - \ \ \ \ \ \ 4 \ \ \ \ \ \ 0 \ \ \ \ \ \ 0 \ \ \ \ \ \ 0 \ \ \ \ \ \ 0 \ \ \ \ \ \ 0 \ \ \ \ \ \ 0
+    Should Contain    ${info1}    user2 \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ - \ \ \ \ \ \ - \ \ \ \ \ \ 0 \ \ \ \ \ \ 0 \ \ \ \ \ \ 0 \ \ \ \ \ \ 0 \ \ \ \ \ \ 0 \ \ \ \ \ \ 0
+    Should Contain    ${info1}    group0 \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ - \ \ \ \ \ \ 2 \ \ \ \ \ \ 0 \ \ \ \ \ \ 0 \ \ \ \ \ \ 0 \ \ \ \ \ \ 0 \ \ \ \ \ \ 0 \ \ \ \ \ \ 0
+    Should Contain    ${info1}    user3 \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ - \ \ \ \ \ \ 4 \ \ \ \ \ \ 0 \ \ \ \ \ \ 0 \ \ \ \ \ \ 0 \ \ \ \ \ \ 0 \ \ \ \ \ \ 0 \ \ \ \ \ \ 0
+    Should Contain    ${info1}    group1 \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ - \ \ \ \ \ \ - \ \ \ \ \ \ 0 \ \ \ \ \ \ 0 \ \ \ \ \ \ 0 \ \ \ \ \ \ 0 \ \ \ \ \ \ 0 \ \ \ \ \ \ 0
+    Should Contain    ${info1}    default \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ - \ \ \ \ \ \ - \ \ \ \ \ \ 0 \ \ \ \ \ \ 0 \ \ \ \ \ \ 0 \ \ \ \ \ \ 0 \ \ \ \ \ \ 0 \ \ \ \ \ \ 0
+    [Teardown]    delUserAndUserGroup    group0,group1@    group0,group1

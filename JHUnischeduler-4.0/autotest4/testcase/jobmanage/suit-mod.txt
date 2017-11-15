@@ -1,0 +1,520 @@
+*** Settings ***
+Suite Setup       preSuite    spooler/conf/conf-mod
+Suite Teardown    postSuite
+Library           /apps/autotest4/lib/clusterKeyword.py
+Library           /apps/autotest4/lib/clusterLib.py
+Library           /apps/autotest4/lib/common.py
+Library           /apps/autotest4/lib/hostKeyword.py
+Library           /apps/autotest4/lib/hostLib.py
+Library           /apps/autotest4/lib/hostsConfLib.py
+Library           /apps/autotest4/lib/jobKeyword.py
+Library           /apps/autotest4/lib/jobLib.py
+Library           /apps/autotest4/lib/myUtils.py
+Library           /apps/autotest4/lib/OperatingSystem.py
+Library           /apps/autotest4/lib/queueKeyword.py
+Library           /apps/autotest4/lib/queueLib.py
+Library           /apps/autotest4/lib/paramsConfLib.py
+Library           /apps/autotest4/lib/queuesConfLib.py
+Library           /apps/autotest4/lib/retry.py
+Library           /apps/autotest4/lib/schedulerConfLib.py
+Library           /apps/autotest4/lib/userGroupKeyword.py
+Library           /apps/autotest4/lib/userGroupLib.py
+Library           /apps/autotest4/lib/userKeyword.py
+Library           /apps/autotest4/lib/usersConfLib.py
+Library           /apps/autotest4/lib/userLib.py
+
+*** Test Cases ***
+case1.jmod -m
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    ${job3}    querySubmitInfo    su user1 -c "jsub -m rhela1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    runCommand    jmod -m rhelb ${jobid3}
+    runCommand    jctrl kill ${jobid1} ${jobid2}
+    checkJobStatus    ${jobid3}    RUN
+    ${exechost1}    getAndCheckJobExecHost    ${jobid3}
+    Should Be Equal    ${exechost1}    rhelb
+    [Teardown]    killJob
+
+case2.jmod -m到一个节点组
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHost    rhela1    2 ()
+    addOrModifyHost    rhelb    2 ()
+    addOrModifyHostGroup    group1    (rhela1 rhelb)
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -m rhela1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -m rhelb sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    ${job3}    querySubmitInfo    su user1 -c "jsub -n 2 -m rhelb sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid3}    PEND
+    runCommand    jmod -m group1 ${jobid3}
+    checkJobStatus    ${jobid3}    RUN
+    @{exechost1}    getAndCheckJobExecHost    ${jobid3}
+    Log Many    @{exechost1}
+    Length Should Be    ${exechost1}    2
+    ${string1}=    Catenate    @{exechost1}
+    Should Contain    ${string1}    rhela1
+    Should Contain    ${string1}    rhelb
+    log    @{exechost1}[0]
+    log    @{exechost1}[1]
+    [Teardown]    delHostGroupAndHost    group1    rhela1=1 ()    rhelb=1 ()
+
+case3.jmod -m支持排它
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub -m rhelb sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${job3}    querySubmitInfo    su user1 -c "jsub -m rhelb sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid3}    PEND
+    runCommand    jmod -m ~rhelb ${jobid3}
+    checkJobStatus    ${jobid3}    RUN
+    ${exechost1}    getAndCheckJobExecHost    ${jobid3}
+    Should Be Equal    ${exechost1}    rhela1
+    [Teardown]    killJob
+
+case4.jmod -mn
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub -m rhela1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -m rhelb sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    ${job3}    querySubmitInfo    su user1 -c "jsub -m rhela1 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid3}    PEND
+    runCommand    su jhadmin -c "jmod -mn ${jobid3}"
+    runCommand    jctrl kill ${jobid2}
+    checkJobStatus    ${jobid3}    RUN
+    ${exechost1}    getAndCheckJobExecHost    ${jobid3}
+    Should Be Equal    ${exechost1}    rhelb
+    [Teardown]    killJob
+
+case5.jmod -n
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHost    rhela1    2 ()
+    addOrModifyHost    rhelb    2 ()
+    addOrModifyHostGroup    group1    (rhela1 rhelb)
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -m rhela1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -m rhelb sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    ${job3}    querySubmitInfo    su user1 -c "jsub -n 4 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid3}    PEND
+    runCommand    jmod -n 2 ${jobid3}
+    checkJobStatus    ${jobid3}    RUN
+    @{exechost1}    getAndCheckJobExecHost    ${jobid3}
+    Log Many    @{exechost1}
+    Length Should Be    ${exechost1}    2
+    ${string1}=    Catenate    @{exechost1}
+    Should Contain    ${string1}    rhela1
+    Should Contain    ${string1}    rhelb
+    log    @{exechost1}[0]
+    log    @{exechost1}[1]
+    [Teardown]    delHostGroupAndHost    group1    rhela1=1 ()    rhelb=1 ()
+
+case6.jmod -n 1,3
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHost    rhela1    2 ()
+    addOrModifyHost    rhelb    2 ()
+    addOrModifyHostGroup    group1    (rhela1 rhelb)
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 3 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    ${job3}    querySubmitInfo    su user1 -c "jsub -n 4 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid3}    PEND
+    runCommand    jmod -n 1,3 ${jobid3}
+    runCommand    jctrl kill ${jobid1}
+    @{exechost1}    getAndCheckJobExecHost    ${jobid3}
+    Log Many    @{exechost1}
+    Length Should Be    ${exechost1}    2
+    ${string1}=    Catenate    @{exechost1}
+    Should Contain    ${string1}    rhela1
+    Should Contain    ${string1}    rhelb
+    log    @{exechost1}[0]
+    log    @{exechost1}[1]
+    [Teardown]    delHostGroupAndHost    group1    rhela1=1 ()    rhelb=1 ()
+
+case7.jmod -n
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHost    rhela1    2 ()
+    addOrModifyHost    rhelb    2 ()
+    addOrModifyHostGroup    group1    (rhela1 rhelb)
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -m rhelb sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 3 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    ${job3}    querySubmitInfo    su user1 -c "jsub -n 2,4 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid3}    PEND
+    runCommand    jmod -n 1 ${jobid3}
+    runCommand    jctrl kill ${jobid1}
+    checkJobStatus    ${jobid3}    RUN
+    ${exechost1}    getAndCheckJobExecHost    ${jobid3}
+    Should Contain    ${exechost1}    rhelb
+    [Teardown]    delHostGroupAndHost    group1    rhela1=1 ()    rhelb=1 ()
+
+case8.jmod -nn
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHost    rhela1    2 ()
+    addOrModifyHost    rhelb    2 ()
+    addOrModifyHostGroup    group1    (rhela1 rhelb)
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -m rhelb sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -m rhelb sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    ${job4}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    ${job5}    querySubmitInfo    su user1 -c "jsub -n 3 sleep 1000"
+    ${jobid5}    getJobId    ${job5}
+    checkJobStatus    ${jobid4}    PEND
+    checkJobStatus    ${jobid5}    PEND
+    runCommand    jmod -nn ${jobid4}
+    runCommand    jmod -nn ${jobid5}
+    runCommand    jctrl kill ${jobid1} ${jobid2}
+    checkJobStatus    ${jobid4}    RUN
+    checkJobStatus    ${jobid5}    RUN
+    ${exechost1}    getAndCheckJobExecHost    ${jobid4}
+    Should Contain    ${exechost1}    rhelb
+    ${exechost2}    getAndCheckJobExecHost    ${jobid5}
+    Should Contain    ${exechost1}    rhelb
+    [Teardown]    delHostGroupAndHost    group1    rhela1=1 ()    rhelb=1 ()
+
+case9.jmod -q 将作业mod到高优先级的队列中，查看作业是否可抢占
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub -q prelow1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    ${job2}    querySubmitInfo    su user1 -c "jsub -q prelow1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid1}    RUN
+    checkJobStatus    ${jobid2}    RUN
+    ${job3}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    checkJobStatus    ${jobid3}    PEND
+    runCommand    jmod -q premid1 ${jobid3}
+    checkJobStatus    ${jobid1}    SSUSP
+    checkJobStatus    ${jobid2}    SSUSP
+    checkJobStatus    ${jobid3}    RUN
+    @{exechost1}    getAndCheckJobExecHost    ${jobid3}
+    Log Many    @{exechost1}
+    Length Should Be    ${exechost1}    2
+    ${string1}=    Catenate    @{exechost1}
+    Should Contain    ${string1}    rhela1
+    Should Contain    ${string1}    rhelb
+    log    @{exechost1}[0]
+    log    @{exechost1}[1]
+    [Teardown]    killJob
+
+case10.jmod -qn
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub -q qe sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${job2}    querySubmitInfo    su user1 -c "jsub -q qe sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid2}    PEND
+    ${infoaa}    RUN    jmod -qn ${jobid2}
+    log    ${infoaa}
+    checkJobStatus    ${jobid2}    RUN
+    ${jobb}    queryJobInfo    ${jobid2}
+    ${queb}    getJobQueue    ${jobb}
+    Should Be Equal    ${queb}    normal
+    [Teardown]    killJob
+
+case11.jmod 数组作业
+    [Tags]    p1
+    [Setup]    readyTest
+    addOrModifyHost    rhela1    2 ()
+    addOrModifyHost    rhelb    2 ()
+    addOrModifyHostGroup    group1    (rhela1 rhelb)
+    jadminJhdsSched
+    checkClusterStatus
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 4 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 4 -J arr[1-3] sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    checkJobStatus    ${jobid2}[1]    PEND
+    checkJobStatus    ${jobid2}[2]    PEND
+    checkJobStatus    ${jobid2}[3]    PEND
+    sleep    5
+    runCommand    jmod -n 2 ${jobid2}[1]
+    runCommand    jmod -n 2 ${jobid2}[2]
+    runCommand    jmod -n 2 ${jobid2}[3]
+    sleep    5
+    runCommand    jctrl kill ${jobid1}
+    sleep    2
+    ${alljob}    runCommand    jjobs -u all
+    log    ${alljob}
+    checkJobStatus    ${jobid2}[1]    RUN
+    checkJobStatus    ${jobid2}[2]    RUN
+    checkJobStatus    ${jobid2}[3]    PEND
+    [Teardown]    delHostGroupAndHost    group1    rhela1=1 ()    rhelb=1 ()
+
+case12.jmod -h
+    [Tags]    p1
+    [Setup]    readyTest
+    ${filedir}    getFileDir
+    ${file}    Set Variable    ${filedir}/spooler/input/jmod-help.txt
+    log    ${file}
+    ${modhelp}    runCommand    jmod -h
+    log    ${modhelp}
+    ${modfile}    Get File    ${file}
+    log    ${modfile}
+    Should Be Equal    ${modhelp}    ${modfile}
+    [Teardown]
+
+case13.jmod -V
+    [Tags]    p2
+    [Setup]    readyTest
+    ${version}    checkVersion    jmod -V
+    log    ${version}
+
+case14.jmod 修改不了run作业的host。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub -m rhela1 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${info}    runCommand    su user1 -c "jmod -m rhelb ${jobid1}"
+    log    ${info}
+    should Contain    ${info}    Job parameters cannot be changed now; non-repetitive job is running. Job not modified
+    [Teardown]    killJob
+
+case15.jmod -m一个不存在的节点。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${job2}    querySubmitInfo    su user1 -c "jsub -m rhela1 sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    sleep    2
+    ${info}    runCommand    su user1 -c "jmod -m hostnoxwf ${jobid2}"
+    log    ${info}
+    should Contain    ${info}    hostnoxwf: Bad host name, host group name or cluster name. Job not modified
+    [Teardown]    killJob
+
+case16.bug11871jmod -m到一个节点，该节点最大的slots小于作业slots请求。
+    [Tags]    p2    bug
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 2 \ sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    sleep    2
+    ${info}    runCommand    su user1 -c "jmod -m rhelb ${jobid2}"
+    log    ${info}
+    should Contain    ${info}    Too many processors requested. Job not modified
+    [Teardown]    killJob
+
+case17.bug11378 jmod -m空格，乱字符。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${job2}    querySubmitInfo    su user1 -c "jsub -n 2 \ sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    sleep    2
+    ${info}    runCommand    su user1 -c 'jmod -m "" \ ${jobid2}'
+    log    ${info}
+    Should Contain    ${info}    Arguments is empty, too few arguments
+    ${info1}    runCommand    su user1 -c 'jmod -m "!@%$......*&^!#" \ ${jobid2}'
+    log    ${info1}
+    Should Contain    ${info1}    !@%$......*&^!#: Bad host name, host group name or cluster name. Job not modified
+    [Teardown]    killJob
+
+case18.当作业没有指定-m，给作业添加-m。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${job2}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    sleep    2
+    ${info}    runCommand    su user1 -c "jmod -m rhela1 ${jobid2}"
+    log    ${info}
+    ${info1}    runCommand    su user1 -c "jmod -m rhelb ${jobid3}"
+    log    ${info1}
+    sleep    1
+    ${killinfo}    runCommand    su jhadmin -c "jctrl kill ${jobid1}"
+    checkJobStatus    ${jobid2}    RUN
+    checkJobStatus    ${jobid3}    RUN
+    ${host1}    getAndCheckJobExecHost    ${jobid2}
+    ${host2}    getAndCheckJobExecHost    ${jobid3}
+    Should Be Equal    ${host1}    rhela1
+    Should Be Equal    ${host2}    rhelb
+    [Teardown]    killJob
+
+case19.当作业没有指定-m，对作业执行-mn操作。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${job2}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    sleep    2
+    ${info}    runCommand    su user1 -c "jmod -mn ${jobid2}"
+    log    ${info}
+    Should Be Equal    ${info}    Parameters of job <${jobid2}> are being changed
+    ${killinfo}    runCommand    jctrl kill ${jobid1}
+    log    ${killinfo}
+    checkJobStatus    ${jobid2}    RUN
+    [Teardown]    killJob
+
+case20.jmod -n乱字符、空格、小数、负数、0等。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${job2}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    sleep    2
+    ${info1}    runCommand    su user1 -c 'jmod -n "!@#$%^&*()_<>?" ${jobid2}'
+    log    ${info1}
+    Should Be Equal    ${info1}    Bad argument for option -n. Job not modified
+    ${info2}    runCommand    su user1 -c 'jmod -n 0 ${jobid2}'
+    log    ${info2}
+    Should Be Equal    ${info2}    The number of processors must be a positive integer. Job not modified
+    ${info3}    runCommand    su user1 -c 'jmod -n -1 ${jobid2}'
+    log    ${info3}
+    Should Be Equal    ${info3}    Bad argument for option -n. Job not modified
+    ${info4}    runCommand    su user1 -c 'jmod -n 1.0 ${jobid2}'
+    log    ${info4}
+    Should Be Equal    ${info4}    Bad argument for option -n. Job not modified
+    ${info5}    runCommand    su user1 -c 'jmod -n "" ${jobid2}'
+    log    ${info5}
+    Should Be Equal    ${info5}    Arguments is empty, too few arguments
+    ${info6}    runCommand    su user1 -c 'jmod -n \ " \ \ " ${jobid2}'
+    log    ${info6}
+    Should Be Equal    ${info6}    Arguments is empty, too few arguments
+    [Teardown]    killJob
+
+case21.bug11872作业没有指定-n，执行jmod -n，jmod -nn。
+    [Tags]    p2    bug
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${job2}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    sleep    2
+    ${info1}    runCommand    su user1 -c 'jmod -nn ${jobid2}'
+    log    ${info1}
+    Should Be Equal    ${info1}    Parameters of job <${jobid2}> are being changed
+    ${info2}    runCommand    su user1 -c 'jmod -n 2 ${jobid2}'
+    log    ${info2}
+    ${info3}    runCommand    su user1 -c "jctrl kill ${jobid1}"
+    log    ${info3}
+    checkJobStatus    ${jobid2}    RUN
+    @{host}    getAndCheckJobExecHost    ${jobid2}
+    ${string1}=    Catenate    @{host}
+    log    ${string1}
+    Should Contain    ${string1}    rhela1
+    Should Contain    ${string1}    rhelb
+    [Teardown]    killJob
+
+case22.jmod -q到一个不存在的队列。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${job2}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    sleep    2
+    ${info1}    runCommand    su user1 -c 'jmod -q qno ${jobid2}'
+    log    ${info1}
+    [Teardown]    killJob
+
+case23.jmod -q到多个队列。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${job2}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    sleep    2
+    ${info1}    runCommand    su user1 -c 'jmod -q "q1 q2" ${jobid2}'
+    log    ${info1}
+    Should Be Equal    ${info1}    q1 q2: No such queue. Job not modified
+    [Teardown]    killJob
+
+case24.jmod -个不存在的jobid。
+    [Tags]    p2
+    [Setup]    readyTest
+    ${info1}    runCommand    su user1 -c 'jmod -q q1 1000000'
+    log    ${info1}
+    Should Contain    ${info1}    No matching job found. Job not modified
+    [Teardown]
+
+case25.jmod -q多个jobid。
+    [Tags]    p1
+    [Setup]    readyTest
+    ${job1}    querySubmitInfo    su user1 -c "jsub -n 2 sleep 1000"
+    ${jobid1}    getJobId    ${job1}
+    checkJobStatus    ${jobid1}    RUN
+    ${job2}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid2}    getJobId    ${job2}
+    ${job3}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid3}    getJobId    ${job3}
+    ${job4}    querySubmitInfo    su user1 -c "jsub sleep 1000"
+    ${jobid4}    getJobId    ${job4}
+    sleep    2
+    ${errinfo}    runCommand    su user1 -c 'jmod -q q1 ${jobid2} ${jobid3} ${jobid4} '
+    log    ${errinfo}
+    ${info1}    runCommand    su user1 -c 'jmod -q q1 "${jobid2} ${jobid3} ${jobid4}" '
+    log    ${info1}
+    Should Be Equal    ${info1}    ${jobid2} ${jobid3} ${jobid4}: Illegal job Id
+    [Teardown]

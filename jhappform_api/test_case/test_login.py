@@ -25,6 +25,8 @@ class TestLogin(unittest.TestCase):
     def tearDown(self):
         print("【login api】 访问的URL地址为：")
         print(self.url)
+        print("【login api】 测试数据为：")
+        print(self.data)
         print("【login api】 测试返回值：")
         print(self.result)
         print("【login api】 测试结束...")
@@ -32,12 +34,15 @@ class TestLogin(unittest.TestCase):
 
     def actions(self, arg1, arg2 ,arg3, arg4):
         self.url = arg4[0] + "login?username=" + arg1 + "&password=" + arg2
-        self.result = Tools().access_web(self.url)  
+        self.result = Tools().access_web(self.url) 
+        self.data = "期望值:" + arg3 + "\n用户名：" +  arg1 + "\n密码：" + arg2
         if arg3 == "0":
             self.assertNotEqual(self.result['result'],"success", msg = "用户:" + arg1 + "登录appform失败！用户名或密码错误，没有获取到token值。")
         else:
+            self.token = self.result['data'][0]['token']
+            Tools().access_web(arg4[0] + "logout?token=" + arg1 + "&password=" + self.token)
             self.assertEqual(self.result['result'],"success", msg = "用户：" + arg1 + "登录appform失败！")
-            self.assertEqual(len(self.result['data'][0]['token']),160,msg="没有获得对应的token值。")
+            self.assertEqual(len(self.token),160,msg="没有获得对应的token值。")
 
 
 

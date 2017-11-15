@@ -1,0 +1,7 @@
+#!/bin/sh
+. $JH_SUB_PARM_FILE
+if [ $JH_SUB_QUEUE == "q2" ]
+then
+echo 'JH_SUB_RES_REQ="rusage[mem=100]"'>$JH_SUB_MODIFY_FILE
+#exec 1>&2
+fi
